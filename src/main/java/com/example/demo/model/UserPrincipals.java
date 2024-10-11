@@ -1,5 +1,6 @@
 package com.example.demo.model;
 
+import com.example.demo.entity.UserEntity;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -8,24 +9,24 @@ import java.util.Collection;
 import java.util.Collections;
 
 public class UserPrincipals implements UserDetails {
-    private final User user;
-    public UserPrincipals(User user) {
-        this.user = user;
+    private final UserEntity userEntity;
+    public UserPrincipals(UserEntity userEntity) {
+        this.userEntity = userEntity;
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singleton(new SimpleGrantedAuthority(user.getRole().name()));
+        return Collections.singleton(new SimpleGrantedAuthority(userEntity.getRole().name()));
     }
 
     @Override
     public String getPassword() {
-        return user.getPassword();
+        return userEntity.getPassword();
     }
 
     @Override
     public String getUsername() {
-        return user.getEmail();
+        return userEntity.getEmail();
     }
 
     @Override

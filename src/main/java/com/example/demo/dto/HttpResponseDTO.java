@@ -1,4 +1,4 @@
-package com.example.demo.model;
+package com.example.demo.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
@@ -10,7 +10,7 @@ import java.util.Map;
 @Data
 @SuperBuilder
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-public class HttpResponse {
+public class HttpResponseDTO {
     protected String timestamp;
     protected int statusCode;
     protected HttpStatus status;

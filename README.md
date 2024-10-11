@@ -1,4 +1,4 @@
-The first step is to add application.properties file do resources folder like this:
+The first step is to add application.properties file to resources folder like this:
     
     spring.application.name=<application name>
     spring.datasource.url=jdbc:postgresql://localhost:5432/<database name>
