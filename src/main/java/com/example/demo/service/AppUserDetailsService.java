@@ -1,6 +1,6 @@
 package com.example.demo.service;
 
-import com.example.demo.model.User;
+import com.example.demo.entity.UserEntity;
 import com.example.demo.model.UserPrincipals;
 import com.example.demo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,12 +16,12 @@ public class AppUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(email);
-        if(user == null){
+        UserEntity userEntity = userRepository.findByEmail(email);
+        if(userEntity == null){
             System.out.println("User not found");
             throw new UsernameNotFoundException("user not found");
         }
 
-        return new UserPrincipals(user);
+        return new UserPrincipals(userEntity);
     }
 }

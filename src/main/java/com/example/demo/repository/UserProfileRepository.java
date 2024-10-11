@@ -1,11 +1,11 @@
 package com.example.demo.repository;
 
-import com.example.demo.model.UserProfile;
+import com.example.demo.entity.UserProfileEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 
 @Repository
-public interface UserProfileRepository extends JpaRepository<UserProfile, Long> {
-    UserProfile findByUserId(Long userId);
+public interface UserProfileRepository extends JpaRepository<UserProfileEntity, Long> {
+    UserProfileEntity findByUserId(Long userId);
 }
