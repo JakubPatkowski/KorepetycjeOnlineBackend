@@ -1,6 +1,6 @@
 package com.example.demo.exception;
 
-import com.example.demo.model.HttpResponse;
+import com.example.demo.dto.HttpResponseDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -12,9 +12,9 @@ import java.time.LocalDateTime;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ApiException.class)
-    public ResponseEntity<HttpResponse> handleApiException(ApiException ex) {
+    public ResponseEntity<HttpResponseDTO> handleApiException(ApiException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
-                HttpResponse.builder()
+                HttpResponseDTO.builder()
                         .timestamp(LocalDateTime.now().toString())
                         .message(ex.getMessage())
                         .status(HttpStatus.UNAUTHORIZED)
