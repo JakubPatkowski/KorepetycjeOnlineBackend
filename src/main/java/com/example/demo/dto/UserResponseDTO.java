@@ -11,11 +11,9 @@ public class UserResponseDTO {
     private String email;
     private int points;
     private String role;
-    private boolean verified;
-    private boolean blocked;
-    private boolean mfa;
     private byte[] picture;
     private String[] badges;
+    private String description;
 
 
 }

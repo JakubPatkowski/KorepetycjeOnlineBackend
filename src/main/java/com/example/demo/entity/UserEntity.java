@@ -41,16 +41,10 @@ public class UserEntity {
     private int points = 0;
 
     @Column(nullable = false)
-    private boolean verified = false;
-
-    @Column(nullable = false)
     private boolean blocked = false;
 
-    @Column(nullable = false)
-    private boolean mfa = false;
-
     public enum Role implements GrantedAuthority{
-        USER, TEACHER, ADMIN;
+        USER, VERIFIED, TEACHER, ADMIN;
 
         @Override
         public String getAuthority() {

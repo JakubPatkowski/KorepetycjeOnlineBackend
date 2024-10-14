@@ -39,9 +39,9 @@ import org.springframework.validation.annotation.Validated;
     @Autowired
     public final RefreshTokenService refreshTokenService;
 
-    private final VerificationTokenService verificationTokenService;
+//    private final VerificationTokenService verificationTokenService;
 
-    private final EmailService emailService;
+//    private final EmailService emailService;
 
     public final BCryptPasswordEncoder encoder;
 
@@ -71,10 +71,8 @@ import org.springframework.validation.annotation.Validated;
                 userDTO.setEmail(userEntity.getEmail());
                 userDTO.setPoints(userEntity.getPoints());
                 userDTO.setRole(userEntity.getRole().toString());
-                userDTO.setVerified(userEntity.isVerified());
-                userDTO.setBlocked(userEntity.isBlocked());
-                userDTO.setMfa(userEntity.isMfa());
                 userDTO.setPicture(userProfileEntity.getPicture());
+                userDTO.setDescription(userProfileEntity.getDescription());
                 return userDTO;
 
             }
@@ -99,16 +97,14 @@ import org.springframework.validation.annotation.Validated;
             userEntity.setPassword(encoder.encode(userRegisterDTO.password()));
             userEntity.setPoints(0);
             userEntity.setRole(UserEntity.Role.USER);
-            userEntity.setVerified(false);
             userEntity.setBlocked(false);
-            userEntity.setMfa(false);
 
             userRepository.save(userEntity);
             userProfileService.addUserProfileToUser(userRegisterDTO.fullName(), userEntity.getId());
 
-            String token = verificationTokenService.generateToken(userEntity, VerificationTokenEntity.TokenType.EMAIL_VERIFICATION);
-            String verificationLink = "http://localhost:8080/user/verify-email?token="+token;
-            emailService.sendVerificationEmail(userEntity.getEmail(), verificationLink);
+//            String token = verificationTokenService.generateToken(userEntity, VerificationTokenEntity.TokenType.EMAIL_VERIFICATION);
+//            String verificationLink = "http://localhost:8080/user/verify-email?token="+token;
+//            emailService.sendVerificationEmail(userEntity.getEmail(), verificationLink);
 
             return true;
         } catch (Exception exception) {
