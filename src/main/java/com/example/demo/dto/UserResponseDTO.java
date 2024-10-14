@@ -7,7 +7,7 @@ public class UserResponseDTO {
     private String accessToken;
     private String refreshToken;
     private Long id;
-    private String nameAndSurname;
+    private String fullName;
     private String email;
     private int points;
     private String role;
@@ -15,6 +15,7 @@ public class UserResponseDTO {
     private boolean blocked;
     private boolean mfa;
     private byte[] picture;
+    private String[] badges;
 
 
 }

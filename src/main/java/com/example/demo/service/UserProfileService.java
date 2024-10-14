@@ -16,7 +16,7 @@ public class UserProfileService {
 
     void addUserProfileToUser(String nameAndSurname, Long userId){
         UserProfileEntity userProfileEntity = new UserProfileEntity();
-        userProfileEntity.setNameAndSurname(nameAndSurname);
+        userProfileEntity.setFullName(nameAndSurname);
         userProfileEntity.setUserId(userId);
         userProfileEntity.setCreatedAt(new Date());
         userProfileRepository.save(userProfileEntity);

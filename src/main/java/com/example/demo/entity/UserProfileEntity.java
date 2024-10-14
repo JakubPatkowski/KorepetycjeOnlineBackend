@@ -28,7 +28,7 @@ public class UserProfileEntity {
 
     @NotEmpty(message = "Name and Surname cannot be empty")
     @Column(nullable = false, length = 50, name = "name_and_surname")
-    private String nameAndSurname;
+    private String fullName;
 
     @Column(nullable = false, name = "user_id")
     @JoinColumn(name = "user_id", referencedColumnName = "id")

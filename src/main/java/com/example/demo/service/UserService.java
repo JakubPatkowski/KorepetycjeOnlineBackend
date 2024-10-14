@@ -3,6 +3,7 @@ package com.example.demo.service;
 import com.example.demo.dto.UserResponseDTO;
 import com.example.demo.dto.UserLoginDTO;
 import com.example.demo.dto.UserRegisterDTO;
+import com.example.demo.entity.VerificationTokenEntity;
 import com.example.demo.exception.ApiException;
 import com.example.demo.entity.UserEntity;
 import com.example.demo.entity.UserProfileEntity;
@@ -38,6 +39,10 @@ import org.springframework.validation.annotation.Validated;
     @Autowired
     public final RefreshTokenService refreshTokenService;
 
+    private final VerificationTokenService verificationTokenService;
+
+    private final EmailService emailService;
+
     public final BCryptPasswordEncoder encoder;
 
     public final AuthenticationManager authenticationManager;
@@ -62,7 +67,7 @@ import org.springframework.validation.annotation.Validated;
                 userDTO.setId(userEntity.getId());
                 UserProfileEntity userProfileEntity = userProfileRepository.findByUserId(userEntity.getId());
 
-                userDTO.setNameAndSurname(userProfileEntity.getNameAndSurname());
+                userDTO.setFullName(userProfileEntity.getFullName());
                 userDTO.setEmail(userEntity.getEmail());
                 userDTO.setPoints(userEntity.getPoints());
                 userDTO.setRole(userEntity.getRole().toString());
@@ -87,19 +92,24 @@ import org.springframework.validation.annotation.Validated;
 
     public boolean registerUser(UserRegisterDTO userRegisterDTO) {
         if (userRepository.existsByEmail(userRegisterDTO.email()))
-            throw new ApiException("Email already in use. Please use a different email and try again.");
+            throw new ApiException("Email already in use.");
         try {
             UserEntity userEntity = new UserEntity();
             userEntity.setEmail(userRegisterDTO.email());
             userEntity.setPassword(encoder.encode(userRegisterDTO.password()));
             userEntity.setPoints(0);
-            userEntity.setRole(UserEntity.Role.ADMIN);
+            userEntity.setRole(UserEntity.Role.USER);
             userEntity.setVerified(false);
             userEntity.setBlocked(false);
             userEntity.setMfa(false);
 
             userRepository.save(userEntity);
             userProfileService.addUserProfileToUser(userRegisterDTO.fullName(), userEntity.getId());
+
+            String token = verificationTokenService.generateToken(userEntity, VerificationTokenEntity.TokenType.EMAIL_VERIFICATION);
+            String verificationLink = "http://localhost:8080/user/verify-email?token="+token;
+            emailService.sendVerificationEmail(userEntity.getEmail(), verificationLink);
+
             return true;
         } catch (Exception exception) {
             System.err.println(exception.getMessage());
