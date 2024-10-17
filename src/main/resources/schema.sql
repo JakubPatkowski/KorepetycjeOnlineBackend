@@ -13,7 +13,7 @@ search_path TO demo;
 
 -- Usuwanie tabel jeśli istnieją
 DROP TABLE IF EXISTS Course_User, Chapter, Course, Files, Login_session, Certificates, Review, Conversation_User, Conversation, Badges, User_Badges, Private_lesson, User_Private_lesson, Token_price, Transaction_history, Report, Message, Commision, User_Commision, permission_role, permission, lesson_commision, exercise_commision CASCADE;
-DROP TABLE IF EXISTS users, user_profile, refresh_token CASCADE;
+DROP TABLE IF EXISTS users, user_profile, refresh_token, verification_token CASCADE;
 
 
 DROP TYPE IF EXISTS role_enum;
@@ -36,12 +36,12 @@ CREATE TABLE users
 -- Tworzenie tabeli User_profile
 CREATE TABLE user_profile
 (
-    id          BIGSERIAL PRIMARY KEY,
-    name_and_surname     VARCHAR(255) NOT NULL,
-    user_id     BIGSERIAL    NOT NULL REFERENCES users (id),
-    description VARCHAR(500) DEFAULT NULL,
-    created_at  DATE         DEFAULT CURRENT_TIMESTAMP,
-    picture     BYTEA        DEFAULT NULL
+    id               BIGSERIAL PRIMARY KEY,
+    name_and_surname VARCHAR(255) NOT NULL,
+    user_id          BIGSERIAL    NOT NULL REFERENCES users (id),
+    description      VARCHAR(500) DEFAULT NULL,
+    created_at       DATE         DEFAULT CURRENT_TIMESTAMP,
+    picture          BYTEA        DEFAULT NULL
 );
 
 CREATE TABLE refresh_token
@@ -52,6 +52,17 @@ CREATE TABLE refresh_token
     ip         VARCHAR(200) NOT NULL,
     expiration TIMESTAMP    NOT NULL,
     created_at TIMESTAMP    NOT NULL
+);
+
+CREATE TABLE verification_token
+(
+    id          BIGSERIAL PRIMARY KEY,
+    token       VARCHAR(255) NOT NULL UNIQUE,
+    user_id     BIGSERIAL NOT NULL,
+    expiration  TIMESTAMP NOT NULL,
+    token_type  VARCHAR(50) NOT NULL,
+    new_email   VARCHAR(255)
+
 );
 
 -- -- Tworzenie tabeli Course
