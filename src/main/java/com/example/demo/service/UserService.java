@@ -15,9 +15,12 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.parameters.P;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
+
+import java.util.Optional;
 
 
 @Service
@@ -39,9 +42,9 @@ import org.springframework.validation.annotation.Validated;
     @Autowired
     public final RefreshTokenService refreshTokenService;
 
-//    private final VerificationTokenService verificationTokenService;
+    private final VerificationTokenService verificationTokenService;
 
-//    private final EmailService emailService;
+    private final EmailService emailService;
 
     public final BCryptPasswordEncoder encoder;
 
@@ -102,9 +105,9 @@ import org.springframework.validation.annotation.Validated;
             userRepository.save(userEntity);
             userProfileService.addUserProfileToUser(userRegisterDTO.fullName(), userEntity.getId());
 
-//            String token = verificationTokenService.generateToken(userEntity, VerificationTokenEntity.TokenType.EMAIL_VERIFICATION);
-//            String verificationLink = "http://localhost:8080/user/verify-email?token="+token;
-//            emailService.sendVerificationEmail(userEntity.getEmail(), verificationLink);
+            String verificationToken = verificationTokenService.generateEmailVerificationToken(userEntity);
+            String verificationLink = "http://localhost:8080/user/verify-email?token="+verificationToken;
+            emailService.sendEmailVerificationLink(userEntity.getEmail(), verificationLink);
 
             return true;
         } catch (Exception exception) {
@@ -113,14 +116,66 @@ import org.springframework.validation.annotation.Validated;
         }
     }
 
-    public boolean changeEmail(Long userId, String newEmail){
-        UserEntity userEntity = userRepository.findById(userId)
-                .orElseThrow(() -> new ApiException("User not found"));
-        if (userRepository.existsByEmail(newEmail)) {
-            throw new ApiException("Email already in use");
+    public boolean verifyEmail(String token){
+        Optional<UserEntity> optionalUser = verificationTokenService.getUserByToken(token, VerificationTokenEntity.TokenType.EMAIL_VERIFICATION);
+        if(optionalUser.isPresent()){
+            UserEntity user = optionalUser.get();
+            user.setRole(UserEntity.Role.VERIFIED);
+            userRepository.save(user);
+            verificationTokenService.deleteToken(token);
+            return true;
         }
-        userEntity.setEmail(newEmail);
-        userRepository.save(userEntity);
+        return false;
+    }
+
+    public boolean initiateEmailChange(Long userId){
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new ApiException("User not found"));
+        String code = verificationTokenService.generateEmailChangeCode(user);
+        emailService.sendEmailChangeCode(user.getEmail(), code);
         return true;
     }
+
+    public boolean completeEmailChange(String code, String newEmail){
+        Optional<UserEntity> optionalUser = verificationTokenService.getUserByToken(code, VerificationTokenEntity.TokenType.EMAIL_CHANGE);
+        if (optionalUser.isPresent()){
+            UserEntity userEntity = optionalUser.get();
+            if (userRepository.existsByEmail(newEmail)){
+                throw new ApiException("Email alredy in use");
+            }
+            userEntity.setEmail(newEmail);
+            userEntity.setRole(UserEntity.Role.USER);
+            userRepository.save(userEntity);
+            verificationTokenService.deleteToken(code);
+
+            String verificationToken = verificationTokenService.generateEmailVerificationToken(userEntity);
+            String verificationLink = "http://localhost:8080/user/verify-email?token="+verificationToken;
+            emailService.sendEmailVerificationLink(userEntity.getEmail(), verificationLink);
+
+            return true;
+        }
+        return false;
+    }
+
+
+    public boolean initiatePasswordChange(Long userId) {
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new ApiException("User not found"));
+        String code = verificationTokenService.generatePasswordChangeCode(user);
+        emailService.sendPasswordChangeCode(user.getEmail(), code);
+        return true;
+    }
+
+    public boolean completePasswordChange(String code, String newPassword) {
+        Optional<UserEntity> optionalUser = verificationTokenService.getUserByToken(code, VerificationTokenEntity.TokenType.PASSWORD_CHANGE);
+        if (optionalUser.isPresent()) {
+            UserEntity userEntity = optionalUser.get();
+            userEntity.setPassword(encoder.encode(newPassword));
+            userRepository.save(userEntity);
+            verificationTokenService.deleteToken(code);
+            return true;
+        }
+        return false;
+    }
+
 }
