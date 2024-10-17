@@ -45,8 +45,16 @@ public class SecurityConfiguration {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // CORS configuration
 
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("user/register", "user/login", "access-token").permitAll()
+                        .requestMatchers(
+                                "user/register",
+                                "user/login",
+                                "user/verify-email",
+                                "access-token"
+
+                        ).permitAll()
                         .requestMatchers("api/user-test").hasAuthority("USER")
+                        .requestMatchers("user/change-email/").hasAuthority("VERIFIED")
+                        .requestMatchers("user/change-password/").hasAuthority("VERIFIED")
                         .requestMatchers("api/admin-test").hasAuthority("ADMIN")
 
                         .anyRequest().authenticated()

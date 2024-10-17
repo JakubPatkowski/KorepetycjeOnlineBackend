@@ -111,6 +111,116 @@ public class UserController {
         }
     }
 
+    @GetMapping("/verify-email")
+    public ResponseEntity<HttpResponseDTO> verifyEmail(@RequestParam String token){
+        boolean verified = userService.verifyEmail(token);
+        if(verified){
+            return ResponseEntity.ok(HttpResponseDTO.builder()
+                    .timestamp(now().toString())
+                    .message("Email verified successfully")
+                    .status(HttpStatus.OK)
+                    .statusCode(HttpStatus.OK.value())
+                    .build());
+        } else {
+            return ResponseEntity.ok(HttpResponseDTO.builder()
+                    .timestamp(now().toString())
+                    .message("Invalid or expired verification link")
+                    .status(HttpStatus.BAD_REQUEST)
+                    .statusCode(HttpStatus.BAD_REQUEST.value())
+                    .build());
+        }
+    }
+
+    @PostMapping("/change-email/initiate")
+    public ResponseEntity<HttpResponseDTO> initiateEmailChange(@RequestBody Map<String, String> body){
+        Long userId = Long.valueOf(body.get("userId"));
+        boolean initiated = userService.initiateEmailChange(userId);
+        if(initiated){
+            return ResponseEntity.ok(HttpResponseDTO.builder()
+                    .timestamp(now().toString())
+                    .message("Verification code sent to current email")
+                    .status(HttpStatus.OK)
+                    .statusCode(HttpStatus.OK.value())
+                    .build());
+        } else {
+            return ResponseEntity.ok(HttpResponseDTO.builder()
+                    .timestamp(now().toString())
+                    .message("Failed to initiate email change")
+                    .status(HttpStatus.BAD_REQUEST)
+                    .statusCode(HttpStatus.BAD_REQUEST.value())
+                    .build());
+        }
+    }
+
+    @PostMapping("/change-email/complete")
+    public ResponseEntity<HttpResponseDTO> completeEmailChange(@RequestBody Map<String, String> body){
+        String code = body.get("code");
+        String newEmail = body.get("newEmail");
+
+        boolean changed = userService.completeEmailChange(code, newEmail);
+
+        if(changed){
+            return ResponseEntity.ok(HttpResponseDTO.builder()
+                    .timestamp(now().toString())
+                    .message("Email changed successfully. Please check your new email to verify your account.")
+                    .status(HttpStatus.OK)
+                    .statusCode(HttpStatus.OK.value())
+                    .build());
+        } else {
+            return ResponseEntity.ok(HttpResponseDTO.builder()
+                    .timestamp(now().toString())
+                    .message("Invalid or expired code")
+                    .status(HttpStatus.BAD_REQUEST)
+                    .statusCode(HttpStatus.BAD_REQUEST.value())
+                    .build());
+        }
+    }
+
+    @PostMapping("/change-password/initiate")
+    public ResponseEntity<HttpResponseDTO> initiatePasswordChange(@RequestBody Map<String, String> body) {
+        Long userId = Long.valueOf(body.get("userId"));
+        boolean initiated = userService.initiatePasswordChange(userId);
+        if (initiated) {
+            return ResponseEntity.ok(HttpResponseDTO.builder()
+                    .timestamp(now().toString())
+                    .message("Verification code sent to your email")
+                    .status(HttpStatus.OK)
+                    .statusCode(HttpStatus.OK.value())
+                    .build());
+        } else {
+            return ResponseEntity.ok(HttpResponseDTO.builder()
+                    .timestamp(now().toString())
+                    .message("Failed to initiate password change")
+                    .status(HttpStatus.BAD_REQUEST)
+                    .statusCode(HttpStatus.BAD_REQUEST.value())
+                    .build());
+        }
+    }
+
+    @PostMapping("/change-password/complete")
+    public ResponseEntity<HttpResponseDTO> completePasswordChange(@RequestBody Map<String, String> body) {
+        String code = body.get("code");
+        String newPassword = body.get("newPassword");
+
+        boolean changed = userService.completePasswordChange(code, newPassword);
+
+        if (changed) {
+            return ResponseEntity.ok(HttpResponseDTO.builder()
+                    .timestamp(now().toString())
+                    .message("Password changed successfully.")
+                    .status(HttpStatus.OK)
+                    .statusCode(HttpStatus.OK.value())
+                    .build());
+        } else {
+            return ResponseEntity.ok(HttpResponseDTO.builder()
+                    .timestamp(now().toString())
+                    .message("Invalid or expired code")
+                    .status(HttpStatus.BAD_REQUEST)
+                    .statusCode(HttpStatus.BAD_REQUEST.value())
+                    .build());
+        }
+    }
+
 //    @PutMapping("/change-email")
 //    public ResponseEntity<HttpResponseDTO> updateUserEmail(@Valid @RequestBody Map<String, String> body, BindingResult result) {
 //        if (result.hasErrors()) {
