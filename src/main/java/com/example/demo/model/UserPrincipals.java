@@ -56,4 +56,8 @@ public class UserPrincipals implements UserDetails {
         return true;
 
     }
+
+    public Long getId(){
+        return userEntity.getId();
+    }
 }

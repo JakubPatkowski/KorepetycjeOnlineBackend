@@ -11,6 +11,7 @@ import com.example.demo.repository.UserProfileRepository;
 import com.example.demo.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -128,18 +129,22 @@ import java.util.Optional;
         return false;
     }
 
-    public boolean initiateEmailChange(Long userId){
-        UserEntity user = userRepository.findById(userId)
+    public boolean initiateEmailChange(Long loggedInUserId){
+        UserEntity user = userRepository.findById(loggedInUserId)
                 .orElseThrow(() -> new ApiException("User not found"));
         String code = verificationTokenService.generateEmailChangeCode(user);
         emailService.sendEmailChangeCode(user.getEmail(), code);
         return true;
     }
 
-    public boolean completeEmailChange(String code, String newEmail){
+    public boolean completeEmailChange(String code, String newEmail, Long loggedInUserId){
         Optional<UserEntity> optionalUser = verificationTokenService.getUserByToken(code, VerificationTokenEntity.TokenType.EMAIL_CHANGE);
         if (optionalUser.isPresent()){
             UserEntity userEntity = optionalUser.get();
+            if(!userEntity.getId().equals(loggedInUserId)){
+                throw new AccessDeniedException("You do not have permission to change this email");
+
+            }
             if (userRepository.existsByEmail(newEmail)){
                 throw new ApiException("Email alredy in use");
             }
@@ -158,18 +163,21 @@ import java.util.Optional;
     }
 
 
-    public boolean initiatePasswordChange(Long userId) {
-        UserEntity user = userRepository.findById(userId)
+    public boolean initiatePasswordChange(Long loggedInUserId) {
+        UserEntity user = userRepository.findById(loggedInUserId)
                 .orElseThrow(() -> new ApiException("User not found"));
         String code = verificationTokenService.generatePasswordChangeCode(user);
         emailService.sendPasswordChangeCode(user.getEmail(), code);
         return true;
     }
 
-    public boolean completePasswordChange(String code, String newPassword) {
+    public boolean completePasswordChange(String code, String newPassword, Long loggedInUserId) {
         Optional<UserEntity> optionalUser = verificationTokenService.getUserByToken(code, VerificationTokenEntity.TokenType.PASSWORD_CHANGE);
         if (optionalUser.isPresent()) {
             UserEntity userEntity = optionalUser.get();
+            if (!userEntity.getId().equals(loggedInUserId)) {
+                throw new AccessDeniedException("You do not have permission to change this password");
+            }
             userEntity.setPassword(encoder.encode(newPassword));
             userRepository.save(userEntity);
             verificationTokenService.deleteToken(code);
