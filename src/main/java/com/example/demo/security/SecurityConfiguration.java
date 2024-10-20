@@ -53,8 +53,11 @@ public class SecurityConfiguration {
 
                         ).permitAll()
                         .requestMatchers("api/user-test").hasAuthority("USER")
-                        .requestMatchers("user/change-email/").hasAuthority("VERIFIED")
-                        .requestMatchers("user/change-password/").hasAuthority("VERIFIED")
+                        .requestMatchers("user/change-email/initiate").hasAuthority("VERIFIED")
+                        .requestMatchers("user/change-email/complete").hasAuthority("VERIFIED")
+                        .requestMatchers("user/change-password/initiate").hasAuthority("VERIFIED")
+                        .requestMatchers("user/change-password/complete").hasAuthority("VERIFIED")
+                        .requestMatchers("user-profile/update").hasAuthority("VERIFIED")
                         .requestMatchers("api/admin-test").hasAuthority("ADMIN")
 
                         .anyRequest().authenticated()
