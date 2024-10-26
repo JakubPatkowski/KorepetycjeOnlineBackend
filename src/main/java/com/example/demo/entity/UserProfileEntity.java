@@ -16,7 +16,7 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_DEFAULT;
 
 @Data
 @Entity
-@Table(schema = "demo", name = "user_profile")
+@Table(schema = "demo", name = "user_profiles")
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -27,7 +27,7 @@ public class UserProfileEntity {
     private Long id;
 
     @NotEmpty(message = "Name and Surname cannot be empty")
-    @Column(nullable = false, length = 50, name = "name_and_surname")
+    @Column(nullable = false, length = 50, name = "full_name")
     private String fullName;
 
     @Column(nullable = false, name = "user_id")

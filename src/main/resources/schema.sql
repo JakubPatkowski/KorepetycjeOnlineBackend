@@ -12,13 +12,7 @@ SET
 search_path TO demo;
 
 -- Usuwanie tabel jeśli istnieją
-DROP TABLE IF EXISTS Course_User, Chapter, Course, Files, Login_session, Certificates, Review, Conversation_User, Conversation, Badges, User_Badges, Private_lesson, User_Private_lesson, Token_price, Transaction_history, Report, Message, Commision, User_Commision, permission_role, permission, lesson_commision, exercise_commision CASCADE;
-DROP TABLE IF EXISTS users, user_profile, refresh_token, verification_token CASCADE;
-
-
-DROP TYPE IF EXISTS role_enum;
-
-CREATE TYPE role_enum AS ENUM ('USER', 'TEACHER', 'ADMIN');
+DROP TABLE IF EXISTS users, user_profiles, refresh_tokens, verification_tokens, courses, chapters, subchapters, content_items, files CASCADE;
 
 -- Tworzenie tabeli Users
 CREATE TABLE users
@@ -33,48 +27,148 @@ CREATE TABLE users
     role          VARCHAR(255)
 );
 
+CREATE TABLE files (
+                       id BIGSERIAL PRIMARY KEY,
+                       file_name VARCHAR(255) NOT NULL,
+                       mime_type VARCHAR(127) NOT NULL,
+                       file_size BIGINT NOT NULL,
+                       file_content BYTEA NOT NULL,
+                       uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Tworzenie tabeli User_profile
-CREATE TABLE user_profile
+CREATE TABLE user_profiles
 (
     id               BIGSERIAL PRIMARY KEY,
-    name_and_surname VARCHAR(255) NOT NULL,
-    user_id          BIGSERIAL    NOT NULL REFERENCES users (id),
+    full_name VARCHAR(255) NOT NULL,
+    user_id          BIGINT    NOT NULL REFERENCES users (id),
     description      VARCHAR(500) DEFAULT NULL,
     created_at       DATE         DEFAULT CURRENT_TIMESTAMP,
     picture          BYTEA        DEFAULT NULL
 );
 
-CREATE TABLE refresh_token
+CREATE TABLE refresh_tokens
 (
     id         BIGSERIAL PRIMARY KEY,
     ref_token  VARCHAR(100) NOT NULL,
-    user_id    BIGSERIAL    NOT NULL REFERENCES users (id),
+    user_id    BIGINT    NOT NULL REFERENCES users (id),
     ip         VARCHAR(200) NOT NULL,
     expiration TIMESTAMP    NOT NULL,
     created_at TIMESTAMP    NOT NULL
 );
 
-CREATE TABLE verification_token
+CREATE TABLE verification_tokens
 (
     id          BIGSERIAL PRIMARY KEY,
     token       VARCHAR(255) NOT NULL UNIQUE,
-    user_id     BIGSERIAL NOT NULL,
+    user_id     BIGINT NOT NULL REFERENCES  users (id),
     expiration  TIMESTAMP NOT NULL,
     token_type  VARCHAR(50) NOT NULL,
     new_email   VARCHAR(255)
 
 );
 
--- -- Tworzenie tabeli Course
--- CREATE TABLE Course
--- (
---     id          BIGSERIAL PRIMARY KEY,
---     owner_id    BIGINT        NOT NULL REFERENCES Users (id),
---     description VARCHAR(5000) NOT NULL,
---     price       INTEGER       NOT NULL,
---     banner      BYTEA   DEFAULT NULL,
---     visibility  BOOLEAN DEFAULT TRUE
+CREATE TABLE courses
+(
+    id  BIGSERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    banner_file_id BIGINT,
+    review DECIMAL(2,1),
+    price DECIMAL(10,2) NOT NULL,
+    duration DECIMAL(10,2),
+    user_id BIGINT REFERENCES users(id),
+    tags  VARCHAR(255)[],
+    review_number INTEGER DEFAULT 0,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE chapters
+(
+    id        BIGSERIAL PRIMARY KEY,
+    course_id BIGINT REFERENCES courses(id) ON DELETE CASCADE,
+    name      VARCHAR(255) NOT NULL,
+    "order"     INTEGER NOT NULL,
+    review    DECIMAL(2,1) DEFAULT  0,
+    review_number INTEGER DEFAULT 0
+);
+
+CREATE TABLE subchapters (
+    id BIGSERIAL PRIMARY KEY,
+    chapter_id BIGINT REFERENCES chapters(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    "order" INTEGER NOT NULL,
+    completed BOOLEAN DEFAULT FALSE
+);
+
+CREATE TABLE content_items (
+    id BIGSERIAL PRIMARY KEY,
+    subchapter_id BIGINT REFERENCES subchapters(id) ON DELETE CASCADE,
+    type VARCHAR(50) NOT NULL,
+    "order" INTEGER NOT NULL,
+--     Text specific fields
+    text_content TEXT,
+    font_size VARCHAR(20),  -- 'small', 'medium', 'large'
+    font_weight VARCHAR(20), -- 'normal', 'bold'
+    italics BOOLEAN,
+    emphasis BOOLEAN,
+    -- File specific fields
+    file_id BIGINT REFERENCES files(id),-- For video and image content
+        -- Quiz specific fields (using JSONB for flexible structure)
+    quiz_data JSONB, -- Stores quiz questions and answers in this format:
+    /*
+    {
+        "questions": [
+            {
+                "id": 1,
+                "question": "What is...?",
+                "order": 1,
+                "singleAnswer": true,
+                "answers": [
+                    {
+                        "id": 1,
+                        "answer": "Option A",
+                        "order": 1,
+                        "isCorrect": true
+                    },
+                    {
+                        "id": 2,
+                        "answer": "Option B",
+                        "order": 2,
+                        "isCorrect": false
+                    }
+                ]
+            }
+        ]
+    }
+    */
+
+    CHECK (
+        (type = 'text' AND text_content IS NOT NULL) OR
+        (type IN ('video', 'image') AND file_id IS NOT NULL) OR
+        (type = 'quiz' AND quiz_data IS NOT NULL)
+        )
+
+);
+
+
+
+-- CREATE TABLE quiz_question (
+--     id BIGSERIAL PRIMARY KEY,
+--     content_item_id BIGINT REFERENCES content_items(id) ON DELETE CASCADE,
+--     question TEXT NOT NULL,
+--     order INTEGER NOT NULL,
+--     single_answer BOOLEAN NOT NULL DEFAULT TRUE
 -- );
+--
+-- CREATE TABLE answers(
+--     id BIGSERIAL PRIMARY KEY,
+--     quiz_question_id BIGINT REFERENCES  quiz_question(id) ON DELETE CASCADE,
+--     answer TEXT N
+-- );
+
+
 --
 -- -- Tworzenie tabeli Course_User
 -- CREATE TABLE Course_User

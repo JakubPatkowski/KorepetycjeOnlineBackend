@@ -13,7 +13,7 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_DEFAULT;
 
 @Data
 @Entity
-@Table(schema = "demo", name = "refresh_token")
+@Table(schema = "demo", name = "refresh_tokens")
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
