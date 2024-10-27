@@ -49,7 +49,7 @@ public class SecurityConfiguration {
                                 "user/register",
                                 "user/login",
                                 "user/verify-email",
-                                "access-token"
+                                "user/access-token"
 
                         ).permitAll()
                         .requestMatchers("api/user-test").hasAuthority("USER")

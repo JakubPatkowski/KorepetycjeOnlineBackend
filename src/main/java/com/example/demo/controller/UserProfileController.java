@@ -2,10 +2,8 @@ package com.example.demo.controller;
 
 import com.example.demo.dto.HttpResponseDTO;
 import com.example.demo.dto.UserProfileUpdateDTO;
-import com.example.demo.entity.UserEntity;
-import com.example.demo.entity.UserProfileEntity;
 import com.example.demo.model.UserPrincipals;
-import com.example.demo.service.UserProfileService;
+import com.example.demo.service.entity.UserProfileService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -14,8 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 import static java.time.LocalDateTime.now;
 

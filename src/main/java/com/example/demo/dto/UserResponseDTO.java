@@ -13,6 +13,7 @@ public class UserResponseDTO {
     private String role;
     private byte[] picture;
     private String[] badges;
+    private Boolean badgesVisible;
     private String description;
 
 

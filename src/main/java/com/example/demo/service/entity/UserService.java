@@ -1,4 +1,4 @@
-package com.example.demo.service;
+package com.example.demo.service.entity;
 
 import com.example.demo.dto.UserResponseDTO;
 import com.example.demo.dto.UserLoginDTO;
@@ -9,6 +9,8 @@ import com.example.demo.entity.UserEntity;
 import com.example.demo.entity.UserProfileEntity;
 import com.example.demo.repository.UserProfileRepository;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.service.EmailService;
+import com.example.demo.service.JWTService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
@@ -16,7 +18,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.parameters.P;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
@@ -70,6 +71,9 @@ import java.util.Optional;
 
                 userDTO.setId(userEntity.getId());
                 UserProfileEntity userProfileEntity = userProfileRepository.findByUserId(userEntity.getId());
+
+                //TODO dodać badge
+                userDTO.setBadgesVisible(false);
 
                 userDTO.setFullName(userProfileEntity.getFullName());
                 userDTO.setEmail(userEntity.getEmail());

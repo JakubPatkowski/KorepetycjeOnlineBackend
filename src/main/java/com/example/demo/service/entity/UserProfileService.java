@@ -1,4 +1,4 @@
-package com.example.demo.service;
+package com.example.demo.service.entity;
 
 import com.example.demo.dto.UserProfileUpdateDTO;
 import com.example.demo.entity.UserProfileEntity;
