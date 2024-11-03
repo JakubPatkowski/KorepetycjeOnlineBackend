@@ -43,4 +43,7 @@ public class UserProfileEntity {
     @Lob
     @JdbcTypeCode(Types.BINARY)
     private byte[] picture;
+
+    @Column(name = "badges_visible")
+    private Boolean badgesVisible;
 }

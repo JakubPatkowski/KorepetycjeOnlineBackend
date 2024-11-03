@@ -1,4 +1,4 @@
-package com.example.demo.dto;
+package com.example.demo.dto.user;
 
 import com.example.demo.validators.ValidPassword;
 import jakarta.validation.constraints.*;

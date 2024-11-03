@@ -1,7 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.exception.ApiException;
-import com.example.demo.dto.HttpResponseDTO;
+import com.example.demo.dto.http.HttpResponseDTO;
 import com.example.demo.service.entity.RefreshTokenService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;

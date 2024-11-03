@@ -1,8 +1,8 @@
 package com.example.demo.service.entity;
 
-import com.example.demo.dto.UserResponseDTO;
-import com.example.demo.dto.UserLoginDTO;
-import com.example.demo.dto.UserRegisterDTO;
+import com.example.demo.dto.user.UserResponseDTO;
+import com.example.demo.dto.user.UserLoginDTO;
+import com.example.demo.dto.user.UserRegisterDTO;
 import com.example.demo.entity.VerificationTokenEntity;
 import com.example.demo.exception.ApiException;
 import com.example.demo.entity.UserEntity;
@@ -11,6 +11,7 @@ import com.example.demo.repository.UserProfileRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.service.EmailService;
 import com.example.demo.service.JWTService;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
@@ -20,6 +21,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
 import java.util.Optional;
@@ -95,7 +97,7 @@ import java.util.Optional;
         }
     }
 
-
+    @Transactional
     public boolean registerUser(UserRegisterDTO userRegisterDTO) {
         if (userRepository.existsByEmail(userRegisterDTO.email()))
             throw new ApiException("Email already in use.");
@@ -189,5 +191,35 @@ import java.util.Optional;
         }
         return false;
     }
+
+    public UserResponseDTO getUserEntity(Long userId){
+        Optional<UserEntity> optionalUser = userRepository.findById(userId);
+        if(optionalUser.isPresent()){
+            UserEntity userEntity = optionalUser.get();
+            UserResponseDTO userDTO = new UserResponseDTO();
+
+            userDTO.setId(userEntity.getId());
+            UserProfileEntity userProfileEntity = userProfileRepository.findByUserId(userEntity.getId());
+
+            //TODO dodać badge
+            userDTO.setBadgesVisible(false);
+
+            userDTO.setFullName(userProfileEntity.getFullName());
+            userDTO.setEmail(userEntity.getEmail());
+            userDTO.setPoints(userEntity.getPoints());
+            userDTO.setRole(userEntity.getRole().toString());
+            userDTO.setPicture(userProfileEntity.getPicture());
+            userDTO.setDescription(userProfileEntity.getDescription());
+            return userDTO;
+        } else {
+            throw new EntityNotFoundException("User not found");
+        }
+    }
+
+//    public boolean buyPoints(int value, Long loggedInUserId){
+//
+//    }
+
+
 
 }
