@@ -74,7 +74,6 @@ import java.util.Optional;
                 userDTO.setId(userEntity.getId());
                 UserProfileEntity userProfileEntity = userProfileRepository.findByUserId(userEntity.getId());
 
-                //TODO dodać badge
                 userDTO.setBadgesVisible(false);
 
                 userDTO.setFullName(userProfileEntity.getFullName());

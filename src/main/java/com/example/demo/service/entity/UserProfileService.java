@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
-import org.apache.tika.Tika;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -24,7 +23,6 @@ public class UserProfileService {
     @Autowired
     private final UserProfileRepository userProfileRepository;
 
-    Tika tika = new Tika();
 
 
     void addUserProfileToUser(String nameAndSurname, Long userId){
@@ -80,12 +78,6 @@ public class UserProfileService {
         }
 
         return userProfile;
-    }
-
-    private String convertPictureToBase64WithPrefix(byte[] fileBytes) {
-        String mimeType = tika.detect(fileBytes);
-        String base64Data = Base64.getEncoder().encodeToString(fileBytes);
-        return String.format("data:%s;base64,%s", mimeType, base64Data);
     }
 
     private void validatePictureFile(MultipartFile file) {
