@@ -1,9 +1,10 @@
-package com.example.demo.service;
+package com.example.demo.service.entity;
 
 import com.example.demo.entity.RefreshTokenEntity;
 import com.example.demo.entity.UserEntity;
 import com.example.demo.repository.RefreshTokenRepository;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.service.JWTService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;

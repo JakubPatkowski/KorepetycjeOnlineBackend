@@ -1,12 +1,13 @@
 package com.example.demo.controller;
 
-import com.example.demo.dto.UserResponseDTO;
-import com.example.demo.dto.UserLoginDTO;
-import com.example.demo.dto.UserRegisterDTO;
-import com.example.demo.dto.HttpResponseDTO;
+import com.example.demo.dto.user.UserResponseDTO;
+import com.example.demo.dto.user.UserLoginDTO;
+import com.example.demo.dto.user.UserRegisterDTO;
+import com.example.demo.dto.http.HttpResponseDTO;
 import com.example.demo.entity.UserEntity;
 import com.example.demo.model.UserPrincipals;
-import com.example.demo.service.UserService;
+import com.example.demo.service.entity.UserService;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -313,6 +314,54 @@ public class UserController {
                     .build());
         }
 
+    }
+
+    @GetMapping("/get")
+    public ResponseEntity<HttpResponseDTO> getLoggedInUser(Authentication authentication){
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        Long loggedInUserId = ((UserPrincipals) userDetails).getId();
+
+
+        try{
+            UserResponseDTO userResponseDTO = userService.getUserEntity(loggedInUserId);
+            if(userResponseDTO != null) {
+                return ResponseEntity.ok().body(
+                        HttpResponseDTO.builder()
+                                .timestamp(now().toString())
+                                .data(of("user", userResponseDTO))
+                                .message("User data")
+                                .status(HttpStatus.OK)
+                                .statusCode(HttpStatus.OK.value())
+                                .build());
+            }
+            else {
+                return ResponseEntity.ok().body(
+                        HttpResponseDTO.builder()
+                                .timestamp(now().toString())
+                                .message("Failed to get user")
+                                .status(HttpStatus.OK)
+                                .statusCode(HttpStatus.OK.value())
+                                .build());
+            }
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                    HttpResponseDTO.builder()
+                            .timestamp(now().toString())
+                            .message("User profile not found")
+                            .status(HttpStatus.NOT_FOUND)
+                            .statusCode(HttpStatus.NOT_FOUND.value())
+                            .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    HttpResponseDTO.builder()
+                            .timestamp(now().toString())
+                            .message("An error occurred while getting the user profile. Eroor: " + e)
+                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .build()
+            );
+        }
     }
 
     private URI getUri() {

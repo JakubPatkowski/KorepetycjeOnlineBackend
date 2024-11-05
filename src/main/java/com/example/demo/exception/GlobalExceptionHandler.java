@@ -1,6 +1,6 @@
 package com.example.demo.exception;
 
-import com.example.demo.dto.HttpResponseDTO;
+import com.example.demo.dto.http.HttpResponseDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;

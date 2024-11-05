@@ -1,4 +1,4 @@
-package com.example.demo.dto;
+package com.example.demo.dto.userProfile;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -11,9 +11,7 @@ import java.util.Optional;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserProfileUpdateDTO {
-    @NotNull(message = "User ID cannot be null")
-    private Long userId;
     private Optional<String> fullName;
     private Optional<String> description;
-    private Optional<byte[]> picture;
+    private Optional<Boolean> badgesVisible;
 }

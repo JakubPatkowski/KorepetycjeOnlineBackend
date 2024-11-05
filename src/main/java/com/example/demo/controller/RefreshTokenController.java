@@ -1,8 +1,8 @@
 package com.example.demo.controller;
 
 import com.example.demo.exception.ApiException;
-import com.example.demo.dto.HttpResponseDTO;
-import com.example.demo.service.RefreshTokenService;
+import com.example.demo.dto.http.HttpResponseDTO;
+import com.example.demo.service.entity.RefreshTokenService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
@@ -22,6 +23,7 @@ import static java.time.LocalDate.now;
 import static java.util.Map.of;
 
 @RestController
+@RequestMapping(path = "/user")
 public class RefreshTokenController {
 
     @Autowired

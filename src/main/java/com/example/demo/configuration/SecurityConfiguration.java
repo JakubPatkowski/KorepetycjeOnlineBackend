@@ -1,4 +1,4 @@
-package com.example.demo.security;
+package com.example.demo.configuration;
 
 import com.example.demo.filter.JWTFilter;
 import com.example.demo.service.AppUserDetailsService;
@@ -49,16 +49,27 @@ public class SecurityConfiguration {
                                 "user/register",
                                 "user/login",
                                 "user/verify-email",
-                                "access-token"
+                                "user/access-token"
 
                         ).permitAll()
-                        .requestMatchers("api/user-test").hasAuthority("USER")
-                        .requestMatchers("user/change-email/initiate").hasAuthority("VERIFIED")
-                        .requestMatchers("user/change-email/complete").hasAuthority("VERIFIED")
-                        .requestMatchers("user/change-password/initiate").hasAuthority("VERIFIED")
-                        .requestMatchers("user/change-password/complete").hasAuthority("VERIFIED")
-                        .requestMatchers("user-profile/update").hasAuthority("VERIFIED")
-                        .requestMatchers("api/admin-test").hasAuthority("ADMIN")
+                        //for testing all user
+                        .requestMatchers("course/create").hasAuthority("USER")
+                        .requestMatchers("course/update").hasAuthority("USER")
+                        .requestMatchers("course/user").hasAuthority("USER")
+                        .requestMatchers("course/data").hasAuthority("USER")
+                        .requestMatchers("course/add-chapter").hasAuthority("USER")
+                        .requestMatchers("course/add-subchapter").hasAuthority("USER")
+                        .requestMatchers("user/change-email/initiate").hasAuthority("User")
+                        .requestMatchers("user/change-email/complete").hasAuthority("User")
+                        .requestMatchers("user/change-password/initiate").hasAuthority("User")
+                        .requestMatchers("user/change-password/complete").hasAuthority("User")
+                        .requestMatchers("user-profile/update").hasAuthority("User")
+                        .requestMatchers("user-profile/get").hasAuthority("USER")
+                        .requestMatchers("user/get").hasAuthority("USER")
+                        .requestMatchers("points/get-offers").hasAuthority("USER")
+                        .requestMatchers("points/buy").hasAuthority("USER")
+
+
 
                         .anyRequest().authenticated()
 

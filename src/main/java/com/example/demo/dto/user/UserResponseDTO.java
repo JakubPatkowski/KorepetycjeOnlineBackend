@@ -1,4 +1,4 @@
-package com.example.demo.dto;
+package com.example.demo.dto.user;
 
 import lombok.Data;
 
@@ -13,6 +13,7 @@ public class UserResponseDTO {
     private String role;
     private byte[] picture;
     private String[] badges;
+    private Boolean badgesVisible;
     private String description;
 
 
