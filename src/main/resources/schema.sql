@@ -12,7 +12,7 @@ SET
 search_path TO demo;
 
 -- Usuwanie tabel jeśli istnieją
-DROP TABLE IF EXISTS users, user_profiles, refresh_tokens, verification_tokens, courses, chapters, subchapters, content_items, files CASCADE;
+DROP TABLE IF EXISTS users, user_profiles, refresh_tokens, verification_tokens, courses, chapters, subchapters, content_items, files, points_offers CASCADE;
 
 -- Tworzenie tabeli Users
 CREATE TABLE users
@@ -25,15 +25,6 @@ CREATE TABLE users
     blocked       BOOLEAN   DEFAULT FALSE,
     mfa           BOOLEAN   DEFAULT FALSE,
     role          VARCHAR(255)
-);
-
-CREATE TABLE files (
-                       id BIGSERIAL PRIMARY KEY,
-                       file_name VARCHAR(255) NOT NULL,
-                       mime_type VARCHAR(127) NOT NULL,
-                       file_size BIGINT NOT NULL,
-                       file_content BYTEA NOT NULL,
-                       uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Tworzenie tabeli User_profile
@@ -73,7 +64,7 @@ CREATE TABLE courses
 (
     id  BIGSERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    banner_file_id BIGINT REFERENCES files(id),
+    banner BYTEA,
     review DECIMAL(2,1),
     price DECIMAL(10,2) NOT NULL,
     duration DECIMAL(10,2),
@@ -114,8 +105,7 @@ CREATE TABLE content_items (
     italics BOOLEAN,
     emphasis BOOLEAN,
     -- File specific fields
-    file_id BIGINT REFERENCES files(id),-- For video and image content
-        -- Quiz specific fields (using JSONB for flexible structure)
+    file BYTEA,
     quiz_data JSONB, -- Stores quiz questions and answers in this format:
     /*
     {
@@ -146,10 +136,16 @@ CREATE TABLE content_items (
 
     CHECK (
         (type = 'text' AND text_content IS NOT NULL) OR
-        (type IN ('video', 'image') AND file_id IS NOT NULL) OR
+        (type IN ('video', 'image') AND file IS NOT NULL) OR
         (type = 'quiz' AND quiz_data IS NOT NULL)
         )
 
 );
 
+CREATE TABLE points_offers (
+    id BIGSERIAL PRIMARY KEY,
+    points INTEGER NOT NULL,
+    price INTEGER NOT NULL,
+    active BOOLEAN NOT NULL
+);
 
