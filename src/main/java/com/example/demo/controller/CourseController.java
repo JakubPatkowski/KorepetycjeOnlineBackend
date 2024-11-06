@@ -67,29 +67,44 @@ public class CourseController {
                     .build());
         }
     }
-    //TODO FIX
-//    @GetMapping("/update")
-//    public ResponseEntity<HttpResponseDTO> getCourseEditData(@RequestBody Map<String, String> body, Authentication authentication){
-//        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-//        Long loggedInUserId = ((UserPrincipals) userDetails).getId();
-//        try {
-//            CourseUpdateDTO courseUpdateDTO = courseService.getEditCourseData(loggedInUserId, Long.valueOf(body.get("courseId")));
-//            return ResponseEntity.ok(HttpResponseDTO.builder()
-//                    .timestamp(now().toString())
-//                    .message("Course Edit Data Response")
-//                    .status(HttpStatus.OK)
-//                    .data(of("course", courseUpdateDTO))
-//                    .statusCode(HttpStatus.OK.value())
-//                    .build());
-//        } catch (Exception e){
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(HttpResponseDTO.builder()
-//                    .timestamp(now().toString())
-//                    .message("An error occurred getting data: " + e.getMessage())
-//                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-//                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-//                    .build());
-//        }
-//    }
+    @PutMapping(value = "/update", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<HttpResponseDTO> updateCourse(
+            @RequestPart(value = "courseData") String courseDataJson,
+            @RequestPart(value = "banner", required = false) MultipartFile bannerFile,
+            @RequestPart(value = "contentFiles", required = false) MultipartFile[] contentFiles,
+            Authentication authentication) {
+
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        Long loggedInUserId = ((UserPrincipals) userDetails).getId();
+
+        try {
+            boolean isUpdated = courseService.updateCourse(courseDataJson, bannerFile, contentFiles, loggedInUserId);
+
+            if (isUpdated) {
+                return ResponseEntity.ok(HttpResponseDTO.builder()
+                        .timestamp(now().toString())
+                        .message("Course updated successfully")
+                        .status(HttpStatus.OK)
+                        .statusCode(HttpStatus.OK.value())
+                        .build());
+            } else {
+                return ResponseEntity.badRequest().body(HttpResponseDTO.builder()
+                        .timestamp(now().toString())
+                        .message("Failed to update course")
+                        .status(HttpStatus.BAD_REQUEST)
+                        .statusCode(HttpStatus.BAD_REQUEST.value())
+                        .build());
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(HttpResponseDTO.builder()
+                    .timestamp(now().toString())
+                    .message("An error occurred while updating course: " + e.getMessage())
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .build());
+        }
+    }
+
 
     @GetMapping("/user")
     public ResponseEntity<HttpResponseDTO> getUserCourses(@RequestBody Map<String, String> body){
