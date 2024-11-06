@@ -26,6 +26,9 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import jakarta.persistence.EntityNotFoundException;
+
+
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -240,6 +243,31 @@ public class CourseService {
                 .sorted(Comparator.comparing(ChapterShortDTO::getOrder))
                 .collect(Collectors.toList());
     }
+
+    @Transactional(readOnly = true)
+    public CourseUpdateDTO getCourseForEdit(Long courseId, Long loggedInUserId) {
+        CourseEntity course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new EntityNotFoundException("Course not found"));
+
+        if (!course.getUser().getId().equals(loggedInUserId)) {
+            throw new ApiException("You don't have permission to edit this course");
+        }
+
+        return mapCourseToUpdateDTO(course);
+    }
+
+    private CourseUpdateDTO mapCourseToUpdateDTO(CourseEntity course) {
+        return CourseUpdateDTO.builder()
+                .id(course.getId())
+                .name(Optional.ofNullable(course.getName()))
+                .description(Optional.ofNullable(course.getDescription()))
+                .price(Optional.ofNullable(course.getPrice()))
+                .duration(Optional.ofNullable(course.getDuration()))
+                .tags(Optional.ofNullable(course.getTags()))
+                .chapters(Optional.of(chapterService.mapChaptersToUpdateDTO(course.getChapters())))
+                .build();
+    }
+
 
     private void validateFile(MultipartFile file) {
         if (file.getSize() > 10 * 1024 * 1024) { // 10MB limit

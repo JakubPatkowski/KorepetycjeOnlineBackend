@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -87,6 +88,22 @@ public class SubchapterService {
         subchapterDTO.getName().ifPresent(subchapter::setName);
         subchapterDTO.getOrder().ifPresent(subchapter::setOrder);
         subchapterRepository.save(subchapter);
+    }
+
+    public List<SubchapterUpdateDTO> mapSubchaptersToUpdateDTO(List<SubchapterEntity> subchapters) {
+        return subchapters.stream()
+                .map(this::mapSubchapterToUpdateDTO)
+                .collect(Collectors.toList());
+    }
+
+    public SubchapterUpdateDTO mapSubchapterToUpdateDTO(SubchapterEntity subchapter) {
+        return SubchapterUpdateDTO.builder()
+                .id(subchapter.getId())
+                .name(Optional.ofNullable(subchapter.getName()))
+                .order(Optional.ofNullable(subchapter.getOrder()))
+                .contentItems(Optional.of(contentItemService.mapContentItemsToUpdateDTO(subchapter.getContentItems())))
+                .deleted(Optional.of(false))
+                .build();
     }
 
 }

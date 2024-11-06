@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -182,6 +183,28 @@ public class ContentItemService {
         if (contentType == null || !(contentType.startsWith("image/") || contentType.startsWith("video/"))) {
             throw new ApiException("Only image and video files are allowed");
         }
+    }
+
+    public List<ContentItemUpdateDTO> mapContentItemsToUpdateDTO(List<ContentItemEntity> contentItems) {
+        return contentItems.stream()
+                .map(this::mapContentItemToUpdateDTO)
+                .collect(Collectors.toList());
+    }
+
+    public ContentItemUpdateDTO mapContentItemToUpdateDTO(ContentItemEntity item) {
+        return ContentItemUpdateDTO.builder()
+                .id(item.getId())
+                .type(Optional.ofNullable(item.getType()))
+                .order(Optional.ofNullable(item.getOrder()))
+                .textContent(Optional.ofNullable(item.getTextContent()))
+                .fontSize(Optional.ofNullable(item.getFontSize()))
+                .fontWeight(Optional.ofNullable(item.getFontWeight()))
+                .italics(Optional.ofNullable(item.getItalics()))
+                .emphasis(Optional.ofNullable(item.getEmphasis()))
+                .quizData(Optional.ofNullable(item.getQuizData()))
+                .deleted(Optional.of(false))
+                .updateFile(Optional.of(false))
+                .build();
     }
 }
 

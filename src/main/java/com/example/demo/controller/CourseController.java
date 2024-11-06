@@ -4,9 +4,11 @@ import com.example.demo.dto.course.CourseCreateDTO;
 import com.example.demo.dto.http.HttpResponseDTO;
 import com.example.demo.dto.course.CourseInfoDTO;
 import com.example.demo.dto.course.CourseUpdateDTO;
+import com.example.demo.exception.ApiException;
 import com.example.demo.model.UserPrincipals;
 import com.example.demo.service.entity.CourseService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -67,6 +69,47 @@ public class CourseController {
                     .build());
         }
     }
+
+    @GetMapping("/edit")
+    public ResponseEntity<HttpResponseDTO> getCourseForEdit(
+            @RequestBody Map<String, String> body,
+            Authentication authentication) {
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        Long loggedInUserId = ((UserPrincipals) userDetails).getId();
+
+        try {
+            CourseUpdateDTO courseData = courseService.getCourseForEdit(Long.valueOf(body.get("courseId")), loggedInUserId);
+            return ResponseEntity.ok(HttpResponseDTO.builder()
+                    .timestamp(now().toString())
+                    .data(Map.of("course", courseData))
+                    .message("Course data retrieved successfully")
+                    .status(HttpStatus.OK)
+                    .statusCode(HttpStatus.OK.value())
+                    .build());
+        } catch (ApiException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(HttpResponseDTO.builder()
+                    .timestamp(now().toString())
+                    .message(e.getMessage())
+                    .status(HttpStatus.FORBIDDEN)
+                    .statusCode(HttpStatus.FORBIDDEN.value())
+                    .build());
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(HttpResponseDTO.builder()
+                    .timestamp(now().toString())
+                    .message("Course not found")
+                    .status(HttpStatus.NOT_FOUND)
+                    .statusCode(HttpStatus.NOT_FOUND.value())
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(HttpResponseDTO.builder()
+                    .timestamp(now().toString())
+                    .message("An error occurred while retrieving course data: " + e.getMessage())
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .build());
+        }
+    }
+
     @PutMapping(value = "/update", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<HttpResponseDTO> updateCourse(
             @RequestPart(value = "courseData") String courseDataJson,

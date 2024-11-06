@@ -15,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -87,5 +88,21 @@ public class ChapterService {
         chapterDTO.getName().ifPresent(chapter::setName);
         chapterDTO.getOrder().ifPresent(chapter::setOrder);
         chapterRepository.save(chapter);
+    }
+
+    public List<ChapterUpdateDTO> mapChaptersToUpdateDTO(List<ChapterEntity> chapters) {
+        return chapters.stream()
+                .map(this::mapChapterToUpdateDTO)
+                .collect(Collectors.toList());
+    }
+
+    public ChapterUpdateDTO mapChapterToUpdateDTO(ChapterEntity chapter) {
+        return ChapterUpdateDTO.builder()
+                .id(chapter.getId())
+                .name(Optional.ofNullable(chapter.getName()))
+                .order(Optional.ofNullable(chapter.getOrder()))
+                .subchapters(Optional.of(subchapterService.mapSubchaptersToUpdateDTO(chapter.getSubchapters())))
+                .deleted(Optional.of(false))
+                .build();
     }
 }
