@@ -1,11 +1,14 @@
 package com.example.demo.dto.chapter;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import org.springframework.data.relational.core.sql.In;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class ChapterShortDTO {
     private Long id;

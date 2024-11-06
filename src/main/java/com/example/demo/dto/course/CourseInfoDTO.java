@@ -1,15 +1,18 @@
 package com.example.demo.dto.course;
 
 import com.example.demo.dto.chapter.ChapterShortDTO;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import org.springframework.context.annotation.Primary;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class CourseInfoDTO {
     private Long id;

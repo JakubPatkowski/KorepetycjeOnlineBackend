@@ -8,9 +8,9 @@ import lombok.NoArgsConstructor;
 
 
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class ContentItemCreateDTO {
     @NotBlank(message = "Content type cannot be empty")
     private String type;
@@ -23,7 +23,7 @@ public class ContentItemCreateDTO {
     private Boolean italics;
     private Boolean emphasis;
 
-    private String quizData;
+    private Object quizData;
 
 
 
