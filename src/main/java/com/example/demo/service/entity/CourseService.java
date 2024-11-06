@@ -1,7 +1,10 @@
 package com.example.demo.service.entity;
 import com.example.demo.dto.chapter.ChapterCreateDTO;
+import com.example.demo.dto.chapter.ChapterUpdateDTO;
 import com.example.demo.dto.contentItem.ContentItemCreateDTO;
+import com.example.demo.dto.contentItem.ContentItemUpdateDTO;
 import com.example.demo.dto.subchapter.SubchapterCreateDTO;
+import com.example.demo.dto.subchapter.SubchapterUpdateDTO;
 import com.example.demo.entity.*;
 import com.example.demo.repository.ChapterRepository;
 import com.example.demo.repository.SubchapterRepository;
@@ -40,21 +43,24 @@ public class CourseService {
     private final UserRepository userRepository;
 
     @Autowired
-    private final ChapterRepository chapterRepository;
+    private final ChapterService chapterService;
 
     @Autowired
-    private final SubchapterRepository subchapterRepository;
+    private final SubchapterService subchapterService;
 
     @Autowired
-    private final ContentItemRepository contentItemRepository;
+    private final ContentItemService contentItemService;
+
+    @Autowired
+    private final ObjectMapper objectMapper;
 
     @Transactional
     public boolean createCourse(
             CourseCreateDTO createDTO,
             MultipartFile bannerFile,
             MultipartFile[] contentFiles,
-            Long loggedInUserId){
-        try{
+            Long loggedInUserId) {
+        try {
             UserEntity teacher = userRepository.findById(loggedInUserId)
                     .orElseThrow(() -> new UsernameNotFoundException("Teacher not found"));
 
@@ -78,18 +84,19 @@ public class CourseService {
 
             courseRepository.save(course);
 
-            if (createDTO.getChapters() != null){
-                for(int i = 0; i < createDTO.getChapters().size(); i++){
+            // Tworzenie rozdziałów i ich zawartości
+            if (createDTO.getChapters() != null) {
+                for (int i = 0; i < createDTO.getChapters().size(); i++) {
                     ChapterCreateDTO chapterDTO = createDTO.getChapters().get(i);
-                    ChapterEntity chapter = createChapter(chapterDTO, course, i);
+                    ChapterEntity chapter = chapterService.createChapter(chapterDTO, course, i);
 
-                    if(chapterDTO.getSubchapters() != null){
-                        for (int j = 0; j < chapterDTO.getSubchapters().size(); j++){
+                    if (chapterDTO.getSubchapters() != null) {
+                        for (int j = 0; j < chapterDTO.getSubchapters().size(); j++) {
                             SubchapterCreateDTO subchapterDTO = chapterDTO.getSubchapters().get(j);
-                            SubchapterEntity subchapter = createSubchapter(subchapterDTO, chapter, j);
+                            SubchapterEntity subchapter = subchapterService.createSubchapter(subchapterDTO, chapter, j);
 
-                            if(subchapterDTO.getContentItems() != null){
-                                createContentItems(subchapterDTO.getContentItems(), subchapter, contentFiles);
+                            if (subchapterDTO.getContentItems() != null) {
+                                contentItemService.createContentItems(subchapterDTO.getContentItems(), subchapter, contentFiles);
                             }
                         }
                     }
@@ -97,31 +104,80 @@ public class CourseService {
             }
 
             return true;
-
         } catch (Exception exception) {
             throw new ApiException("Error occurred while creating course", exception);
         }
     }
 
-    @Transactional //do zwracania właścicielowi kursu do edycji
-    public CourseUpdateDTO getEditCourseData(Long userId, Long courseId){
-        Optional<CourseEntity> optionalCourseEntity = courseRepository.findByUserIdAndId(userId,courseId);
-        if (optionalCourseEntity.isPresent()){
-            CourseEntity courseEntity = optionalCourseEntity.get();
-            return CourseUpdateDTO.builder()
-                    .id(courseEntity.getId())
-                    .name(courseEntity.getName())
-                    .bannerField(courseEntity.getBanner())
-                    .price(courseEntity.getPrice())
-                    .duration(courseEntity.getDuration())
-                    .tags(courseEntity.getTags())
-                    .description(courseEntity.getDescription())
-                    .chaptersShortInfo(mapChaptersToShortInfo(courseEntity.getChapters()))
-                    .build();
-        } else {
-            throw new ApiException("Course not found");
+    @Transactional
+    public boolean updateCourse(
+            String courseDataJson,
+            MultipartFile bannerFile,
+            MultipartFile[] contentFiles,
+            Long loggedInUserId) {
+        try {
+            // Deserializacja JSON do CourseUpdateDTO
+            CourseUpdateDTO updateDTO = objectMapper.readValue(courseDataJson, CourseUpdateDTO.class);
+
+            CourseEntity existingCourse = courseRepository.findById(updateDTO.getId())
+                    .orElseThrow(() -> new ApiException("Course not found"));
+
+            // Sprawdzenie uprawnień
+            if (!existingCourse.getUser().getId().equals(loggedInUserId)) {
+                throw new ApiException("You don't have permission to update this course");
+            }
+
+            // Aktualizacja podstawowych danych kursu
+            updateBasicCourseInfo(existingCourse, updateDTO);
+
+            // Obsługa bannera
+            if (bannerFile != null && !bannerFile.isEmpty()) {
+                validateFile(bannerFile);
+                existingCourse.setBanner(bannerFile.getBytes());
+            }
+
+            // Aktualizacja rozdziałów i ich zawartości
+            updateDTO.getChapters().ifPresent(chapters ->
+                    chapterService.updateChapters(existingCourse, chapters, contentFiles));
+
+            existingCourse.setUpdatedAt(LocalDateTime.now());
+            courseRepository.save(existingCourse);
+            return true;
+
+        } catch (Exception e) {
+            throw new ApiException("Error occurred while updating course: " + e.getMessage(), e);
         }
     }
+
+    private void updateBasicCourseInfo(CourseEntity course, CourseUpdateDTO updateDTO) {
+        updateDTO.getName().ifPresent(course::setName);
+        updateDTO.getDescription().ifPresent(course::setDescription);
+        updateDTO.getPrice().ifPresent(course::setPrice);
+        updateDTO.getDuration().ifPresent(course::setDuration);
+        updateDTO.getTags().ifPresent(course::setTags);
+    }
+
+//    @Transactional //do zwracania właścicielowi kursu do edycji
+//    public CourseUpdateDTO getEditCourseData(Long userId, Long courseId){
+//        Optional<CourseEntity> optionalCourseEntity = courseRepository.findByUserIdAndId(userId,courseId);
+//        if (optionalCourseEntity.isPresent()){
+//            CourseEntity courseEntity = optionalCourseEntity.get();
+//            return CourseUpdateDTO.builder()
+//                    .id(courseEntity.getId())
+//                    .name(courseEntity.getName())
+//                    .bannerField(courseEntity.getBanner())
+//                    .price(courseEntity.getPrice())
+//                    .duration(courseEntity.getDuration())
+//                    .tags(courseEntity.getTags())
+//                    .description(courseEntity.getDescription())
+//                    .chaptersShortInfo(mapChaptersToShortInfo(courseEntity.getChapters()))
+//                    .build();
+//        } else {
+//            throw new ApiException("Course not found");
+//        }
+//    }
+
+
 
     public List<CourseInfoDTO> getUserCourses(Long userId){
         Optional<List<CourseEntity>> optionalCourseEntityList = courseRepository.findAllByUserId(userId);
@@ -183,77 +239,6 @@ public class CourseService {
                         .build())
                 .sorted(Comparator.comparing(ChapterShortDTO::getOrder))
                 .collect(Collectors.toList());
-    }
-
-    private ChapterEntity createChapter(ChapterCreateDTO dto, CourseEntity course, int order) {
-        ChapterEntity chapter = ChapterEntity.builder()
-                .course(course)
-                .name(dto.getName())
-                .order(order)
-                .review(BigDecimal.ZERO)
-                .reviewNumber(0)
-                .build();
-
-        return chapterRepository.save(chapter);
-    }
-
-    private SubchapterEntity createSubchapter(SubchapterCreateDTO dto, ChapterEntity chapter, int order) {
-        SubchapterEntity subchapter = SubchapterEntity.builder()
-                .chapter(chapter)
-                .name(dto.getName())
-                .order(order)
-                .build();
-
-        return subchapterRepository.save(subchapter);
-    }
-
-    private void createContentItems(List<ContentItemCreateDTO> dtos,
-                                    SubchapterEntity subchapter,
-                                    MultipartFile[] contentFiles) throws IOException {
-        int fileIndex = 0;
-        ObjectMapper objectMapper = new ObjectMapper();
-
-        for(int i = 0; i < dtos.size(); i++){
-            ContentItemCreateDTO dto = dtos.get(i);
-            ContentItemEntity contentItem = ContentItemEntity.builder()
-                    .subchapter(subchapter)
-                    .type(dto.getType())
-                    .order(i)
-                    .build();
-
-            switch (dto.getType().toLowerCase()){
-                case "text":
-                    contentItem.setTextContent(dto.getTextContent());
-                    contentItem.setFontSize(dto.getFontSize());
-                    contentItem.setFontWeight(dto.getFontWeight());
-                    contentItem.setItalics(dto.getItalics());
-                    contentItem.setEmphasis(dto.getEmphasis());
-                    break;
-                case "video":
-                case "image":
-                    if (contentFiles != null && fileIndex < contentFiles.length) {
-                        MultipartFile file = contentFiles[fileIndex++];
-                        validateFile(file);
-                        contentItem.setFile(file.getBytes());
-                    }
-                    break;
-                case "quiz":
-                    if (dto.getQuizData() != null) {
-                        try {
-                            // Konwersja String na JsonNode i z powrotem do String
-                            // aby upewnić się, że mamy poprawny format JSON
-                            JsonNode jsonNode = objectMapper.readTree(dto.getQuizData());
-                            contentItem.setQuizData(objectMapper.writeValueAsString(jsonNode));
-                        } catch (JsonProcessingException e) {
-                            throw new ApiException("Invalid quiz data format", e);
-                        }
-                    }
-                    break;
-                default:
-                    throw new ApiException("Invalid content type: " + dto.getType());
-            }
-            contentItemRepository.save(contentItem);
-        }
     }
 
     private void validateFile(MultipartFile file) {
