@@ -34,49 +34,35 @@ public class UserProfileService {
     }
 
     @Transactional
-    public boolean updateUserProfile(UserProfileUpdateDTO updateDTO, MultipartFile picture, Long loggedInUserId) {
-        try {
-            UserProfileEntity userProfile = userProfileRepository.findByUserId(loggedInUserId);
+    public void updateUserProfile(UserProfileUpdateDTO updateDTO, MultipartFile picture, Long loggedInUserId) {
 
-            if (userProfile == null) {
-                throw new EntityNotFoundException("User Profile not found");
-            }
+        UserProfileEntity userProfile = userProfileRepository.findByUserId(loggedInUserId)
+                .orElseThrow(() -> new EntityNotFoundException("User Profile not found"));;
 
-            if (updateDTO.getFullName() != null) {
-                updateDTO.getFullName().ifPresent(userProfile::setFullName);
-            }
-            if (updateDTO.getDescription() != null) {
-                updateDTO.getDescription().ifPresent(userProfile::setDescription);
-            }
-            if (picture != null && !picture.isEmpty()) {
-                try {
-                    validatePictureFile(picture);
-                    userProfile.setPicture(picture.getBytes());
-                } catch (IOException e) {
-                    throw new RuntimeException("Failed to process picture file", e);
-                }
-            }
-            if (updateDTO.getBadgesVisible() != null) {
-                updateDTO.getBadgesVisible().ifPresent(userProfile::setBadgesVisible);
-            }
-
-            userProfileRepository.save(userProfile);
-            return true;
-        } catch (EntityNotFoundException e) {
-            System.err.println("Error: " + e.getMessage());
-            return false;
-        } catch (Exception e) {
-            System.err.println("An unexpected error occurred: " + e.getMessage());
-            return false;
+        if (updateDTO.getFullName() != null) {
+            updateDTO.getFullName().ifPresent(userProfile::setFullName);
         }
+        if (updateDTO.getDescription() != null) {
+            updateDTO.getDescription().ifPresent(userProfile::setDescription);
+        }
+        if (picture != null && !picture.isEmpty()) {
+            try {
+                validatePictureFile(picture);
+                userProfile.setPicture(picture.getBytes());
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to process picture file", e);
+            }
+        }
+        if (updateDTO.getBadgesVisible() != null) {
+            updateDTO.getBadgesVisible().ifPresent(userProfile::setBadgesVisible);
+        }
+
+        userProfileRepository.save(userProfile);
     }
 
     public UserProfileEntity getUserProfile(Long loggedInUserId) {
-        UserProfileEntity userProfile = userProfileRepository.findByUserId(loggedInUserId);
-        if (userProfile == null) {
-            throw new EntityNotFoundException("User Profile not found for user ID: " + loggedInUserId);
-        }
-
+        UserProfileEntity userProfile = userProfileRepository.findByUserId(loggedInUserId)
+                .orElseThrow(() -> new EntityNotFoundException("User Profile not found"));;
         return userProfile;
     }
 

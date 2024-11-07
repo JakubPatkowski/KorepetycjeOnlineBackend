@@ -1,4 +1,4 @@
-package com.example.demo.configuration;
+package com.example.demo.configuration.security;
 
 import com.example.demo.filter.JWTFilter;
 import com.example.demo.service.AppUserDetailsService;

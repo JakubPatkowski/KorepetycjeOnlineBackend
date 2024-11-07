@@ -40,12 +40,12 @@ public class PointsController {
         );
     }
 
-    @PostMapping("/buy")
-    public ResponseEntity<HttpResponseDTO> buyPoints(@RequestBody Map<String, Long> body, Authentication authentication) {
+    @PostMapping("/buy/{offerId}")
+    public ResponseEntity<HttpResponseDTO> buyPoints(@PathVariable Long offerId, Authentication authentication) {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         Long loggedInUserId = ((UserPrincipals) userDetails).getId();
 
-        Long offerId = body.get("offerId");
+
 
         if (offerId == null) {
             return ResponseEntity.badRequest().body(

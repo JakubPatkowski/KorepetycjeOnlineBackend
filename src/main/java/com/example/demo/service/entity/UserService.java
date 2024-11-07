@@ -19,6 +19,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -72,7 +73,8 @@ import java.util.Optional;
                 userDTO.setRefreshToken(refreshToken);
 
                 userDTO.setId(userEntity.getId());
-                UserProfileEntity userProfileEntity = userProfileRepository.findByUserId(userEntity.getId());
+                UserProfileEntity userProfileEntity = userProfileRepository.findByUserId(userEntity.getId())
+                        .orElseThrow(() -> new EntityNotFoundException("User Profile not found"));
 
                 userDTO.setBadgesVisible(false);
 
@@ -198,7 +200,9 @@ import java.util.Optional;
             UserResponseDTO userDTO = new UserResponseDTO();
 
             userDTO.setId(userEntity.getId());
-            UserProfileEntity userProfileEntity = userProfileRepository.findByUserId(userEntity.getId());
+            UserProfileEntity userProfileEntity = userProfileRepository.findByUserId(userEntity.getId())
+                    .orElseThrow(() -> new EntityNotFoundException("User Profile not found"));
+
 
             //TODO dodać badge
             userDTO.setBadgesVisible(false);

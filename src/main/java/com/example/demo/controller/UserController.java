@@ -1,8 +1,6 @@
 package com.example.demo.controller;
 
-import com.example.demo.dto.user.UserResponseDTO;
-import com.example.demo.dto.user.UserLoginDTO;
-import com.example.demo.dto.user.UserRegisterDTO;
+import com.example.demo.dto.user.*;
 import com.example.demo.dto.http.HttpResponseDTO;
 import com.example.demo.entity.UserEntity;
 import com.example.demo.model.UserPrincipals;
@@ -191,14 +189,12 @@ public class UserController {
     }
 
     @PostMapping("/change-email/complete")
-    public ResponseEntity<HttpResponseDTO> completeEmailChange(@RequestBody Map<String, String> body, Authentication authentication){
+    public ResponseEntity<HttpResponseDTO> completeEmailChange(@Valid @RequestBody EmailChangeDTO emailChangeDTO, Authentication authentication){
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         Long loggedInUserId = ((UserPrincipals) userDetails).getId();
 
-        String code = body.get("code");
-        String newEmail = body.get("newEmail");
         try {
-            boolean changed = userService.completeEmailChange(code, newEmail, loggedInUserId);
+            boolean changed = userService.completeEmailChange(emailChangeDTO.code(), emailChangeDTO.newEmail(), loggedInUserId);
 
             if(changed){
                 return ResponseEntity.ok(HttpResponseDTO.builder()
@@ -273,15 +269,12 @@ public class UserController {
     }
 
     @PostMapping("/change-password/complete")
-    public ResponseEntity<HttpResponseDTO> completePasswordChange(@RequestBody Map<String, String> body, Authentication authentication) {
+    public ResponseEntity<HttpResponseDTO> completePasswordChange(@Valid @RequestBody PasswordChangeDTO passwordChangeDTO, Authentication authentication) {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         Long loggedInUserId = ((UserPrincipals) userDetails).getId();
 
-        String code = body.get("code");
-        String newPassword = body.get("newPassword");
-
         try{
-            boolean changed = userService.completePasswordChange(code, newPassword, loggedInUserId);
+            boolean changed = userService.completePasswordChange(passwordChangeDTO.code(), passwordChangeDTO.newPassword(), loggedInUserId);
 
             if (changed) {
                 return ResponseEntity.ok(HttpResponseDTO.builder()

@@ -70,15 +70,15 @@ public class CourseController {
         }
     }
 
-    @GetMapping("/edit")
+    @GetMapping("{courseId}/edit")
     public ResponseEntity<HttpResponseDTO> getCourseForEdit(
-            @RequestBody Map<String, String> body,
+            @PathVariable Long courseId,
             Authentication authentication) {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         Long loggedInUserId = ((UserPrincipals) userDetails).getId();
 
         try {
-            CourseUpdateDTO courseData = courseService.getCourseForEdit(Long.valueOf(body.get("courseId")), loggedInUserId);
+            CourseUpdateDTO courseData = courseService.getCourseForEdit(courseId, loggedInUserId);
             return ResponseEntity.ok(HttpResponseDTO.builder()
                     .timestamp(now().toString())
                     .data(Map.of("course", courseData))
@@ -149,9 +149,8 @@ public class CourseController {
     }
 
 
-    @GetMapping("/user")
-    public ResponseEntity<HttpResponseDTO> getUserCourses(@RequestBody Map<String, String> body){
-        Long userId = Long.valueOf(body.get("userId"));
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<HttpResponseDTO> getUserCourses(@PathVariable Long userId){
         try {
             List<CourseInfoDTO> userCourses = courseService.getUserCourses(userId);
             return ResponseEntity.ok(HttpResponseDTO.builder()
@@ -171,10 +170,10 @@ public class CourseController {
         }
     }
 
-    @GetMapping("/data")
-    public ResponseEntity<HttpResponseDTO> getCourseData(@RequestBody Map<String, String> body){
+    @GetMapping("/{courseId}")
+    public ResponseEntity<HttpResponseDTO> getCourseData(@PathVariable Long courseId){
         try{
-            CourseInfoDTO courseInfoDTO = courseService.getCourseData(Long.valueOf(body.get("courseId")));
+            CourseInfoDTO courseInfoDTO = courseService.getCourseData(Long.valueOf(courseId));
 
             return ResponseEntity.ok(HttpResponseDTO.builder()
                     .timestamp(now().toString())
