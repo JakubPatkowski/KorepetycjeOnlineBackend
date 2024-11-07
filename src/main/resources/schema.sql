@@ -101,7 +101,8 @@ CREATE TABLE content_items (
 --     Text specific fields
     text_content TEXT,
     font_size VARCHAR(20),  -- 'small', 'medium', 'large'
-    font_weight VARCHAR(20), -- 'normal', 'bold'
+    bolder BOOLEAN,
+    text_color VARCHAR(255),
     italics BOOLEAN,
     emphasis BOOLEAN,
     -- File specific fields

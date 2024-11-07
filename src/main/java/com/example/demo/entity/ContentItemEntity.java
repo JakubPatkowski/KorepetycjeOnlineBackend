@@ -38,8 +38,11 @@ public class ContentItemEntity {
     @Column(name = "font_size", length = 20)
     private String fontSize;
 
-    @Column(name = "font_weight", length = 20)
-    private String fontWeight;
+    @Column(name = "bolder", length = 20)
+    private Boolean bolder;
+
+    @Column(name = "text_color")
+    private String textColor;
 
     @Column
     private Boolean italics;

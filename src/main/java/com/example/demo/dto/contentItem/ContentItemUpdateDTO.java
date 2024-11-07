@@ -18,9 +18,10 @@ public class ContentItemUpdateDTO {
     // Pola dla typu 'text'
     private Optional<String> textContent;
     private Optional<String> fontSize;
-    private Optional<String> fontWeight;
+    private Optional<Boolean> bolder;
     private Optional<Boolean> italics;
     private Optional<Boolean> emphasis;
+    private Optional<String> textColor;
 
     // Pole dla typu 'quiz'
     private Optional<String> quizData;

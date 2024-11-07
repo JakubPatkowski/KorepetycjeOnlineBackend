@@ -19,9 +19,10 @@ public class ContentItemCreateDTO {
 
     private String textContent;
     private String fontSize;
-    private String fontWeight;
+    private Boolean bolder;
     private Boolean italics;
     private Boolean emphasis;
+    private String textColor;
 
     private Object quizData;
 

@@ -88,9 +88,10 @@ public class ContentItemService {
             case "text":
                 contentItem.setTextContent(dto.getTextContent());
                 contentItem.setFontSize(dto.getFontSize());
-                contentItem.setFontWeight(dto.getFontWeight());
+                contentItem.setBolder(dto.getBolder());
                 contentItem.setItalics(dto.getItalics());
                 contentItem.setEmphasis(dto.getEmphasis());
+                contentItem.setTextColor(dto.getTextColor());
                 break;
             case "video":
             case "image":
@@ -136,9 +137,10 @@ public class ContentItemService {
         if ("text".equals(item.getType())) {
             itemDTO.getTextContent().ifPresent(item::setTextContent);
             itemDTO.getFontSize().ifPresent(item::setFontSize);
-            itemDTO.getFontWeight().ifPresent(item::setFontWeight);
+            itemDTO.getBolder().ifPresent(item::setBolder);
             itemDTO.getItalics().ifPresent(item::setItalics);
             itemDTO.getEmphasis().ifPresent(item::setEmphasis);
+            itemDTO.getTextColor().ifPresent(item::setTextColor);
         } else if ("quiz".equals(item.getType())) {
             updateQuizData(item, itemDTO);
         } else if (Arrays.asList("video", "image").contains(item.getType())) {
@@ -198,9 +200,10 @@ public class ContentItemService {
                 .order(Optional.ofNullable(item.getOrder()))
                 .textContent(Optional.ofNullable(item.getTextContent()))
                 .fontSize(Optional.ofNullable(item.getFontSize()))
-                .fontWeight(Optional.ofNullable(item.getFontWeight()))
+                .bolder(Optional.ofNullable(item.getBolder()))
                 .italics(Optional.ofNullable(item.getItalics()))
                 .emphasis(Optional.ofNullable(item.getEmphasis()))
+                .textColor(Optional.ofNullable(item.getTextColor()))
                 .quizData(Optional.ofNullable(item.getQuizData()))
                 .deleted(Optional.of(false))
                 .updateFile(Optional.of(false))
