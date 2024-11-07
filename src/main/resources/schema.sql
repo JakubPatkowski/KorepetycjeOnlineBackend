@@ -12,7 +12,7 @@ SET
 search_path TO demo;
 
 -- Usuwanie tabel jeśli istnieją
-DROP TABLE IF EXISTS users, user_profiles, refresh_tokens, verification_tokens, courses, chapters, subchapters, content_items, files, points_offers CASCADE;
+DROP TABLE IF EXISTS users, user_profiles, refresh_tokens, verification_tokens, courses, chapters, subchapters, content_items, files, points_offers, purchased_courses CASCADE;
 
 -- Tworzenie tabeli Users
 CREATE TABLE users
@@ -149,3 +149,11 @@ CREATE TABLE points_offers (
     active BOOLEAN NOT NULL
 );
 
+CREATE TABLE purchased_courses (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT REFERENCES users(id),
+    course_id BIGINT REFERENCES courses(id),
+    purchase_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    points_spent INTEGER NOT NULL,
+    UNIQUE(user_id, course_id)
+);

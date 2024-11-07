@@ -54,6 +54,35 @@ public class PointsService {
         return true;
     }
 
+    @Transactional
+    public void deductPoints(Long userId, int points) {
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new ApiException("User not found"));
+
+        if (user.getPoints() < points) {
+            throw new ApiException("Insufficient points balance");
+        }
+
+        user.setPoints(user.getPoints() - points);
+        userRepository.save(user);
+    }
+
+    @Transactional
+    public void addPoints(Long userId, int points) {
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new ApiException("User not found"));
+
+        user.setPoints(user.getPoints() + points);
+        userRepository.save(user);
+    }
+
+    public boolean hasEnoughPoints(Long userId, int requiredPoints) {
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new ApiException("User not found"));
+
+        return user.getPoints() >= requiredPoints;
+    }
+
     public int getUserPoints(Long userId) {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new ApiException("User not found"));

@@ -160,28 +160,6 @@ public class CourseService {
         updateDTO.getTags().ifPresent(course::setTags);
     }
 
-//    @Transactional //do zwracania właścicielowi kursu do edycji
-//    public CourseUpdateDTO getEditCourseData(Long userId, Long courseId){
-//        Optional<CourseEntity> optionalCourseEntity = courseRepository.findByUserIdAndId(userId,courseId);
-//        if (optionalCourseEntity.isPresent()){
-//            CourseEntity courseEntity = optionalCourseEntity.get();
-//            return CourseUpdateDTO.builder()
-//                    .id(courseEntity.getId())
-//                    .name(courseEntity.getName())
-//                    .bannerField(courseEntity.getBanner())
-//                    .price(courseEntity.getPrice())
-//                    .duration(courseEntity.getDuration())
-//                    .tags(courseEntity.getTags())
-//                    .description(courseEntity.getDescription())
-//                    .chaptersShortInfo(mapChaptersToShortInfo(courseEntity.getChapters()))
-//                    .build();
-//        } else {
-//            throw new ApiException("Course not found");
-//        }
-//    }
-
-
-
     public List<CourseInfoDTO> getUserCourses(Long userId){
         Optional<List<CourseEntity>> optionalCourseEntityList = courseRepository.findAllByUserId(userId);
         if(optionalCourseEntityList.isPresent()){
@@ -205,7 +183,7 @@ public class CourseService {
         }
     }
 
-    private CourseInfoDTO mapToCourseInfo(CourseEntity course){
+    public CourseInfoDTO mapToCourseInfo(CourseEntity course){
         Hibernate.initialize(course.getChapters());
         return CourseInfoDTO.builder()
                 .id(course.getId())

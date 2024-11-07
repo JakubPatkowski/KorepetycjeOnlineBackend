@@ -1,4 +1,4 @@
-package com.example.demo.configuration.security;
+package com.example.demo.configuration;
 
 import com.example.demo.filter.JWTFilter;
 import com.example.demo.service.AppUserDetailsService;
@@ -58,6 +58,10 @@ public class SecurityConfiguration {
                         .requestMatchers("course/user").hasAuthority("USER")
                         .requestMatchers("course/data").hasAuthority("USER")
                         .requestMatchers("course/edit").hasAuthority("USER")
+                        .requestMatchers("course/buy").hasAuthority("USER")
+                        .requestMatchers("course/get-purchased").hasAuthority("USER")
+
+
 //                        .requestMatchers("course/add-chapter").hasAuthority("USER")
 //                        .requestMatchers("course/add-subchapter").hasAuthority("USER")
                         .requestMatchers("user/change-email/initiate").hasAuthority("USER")
