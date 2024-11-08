@@ -136,6 +136,7 @@ import java.util.Optional;
         return false;
     }
 
+    @Transactional
     public boolean initiateEmailChange(Long loggedInUserId){
         UserEntity user = userRepository.findById(loggedInUserId)
                 .orElseThrow(() -> new ApiException("User not found"));
@@ -143,7 +144,7 @@ import java.util.Optional;
         emailService.sendEmailChangeCode(user.getEmail(), code);
         return true;
     }
-
+    @Transactional
     public boolean completeEmailChange(String code, String newEmail, Long loggedInUserId){
         Optional<UserEntity> optionalUser = verificationTokenService.getUserByToken(code, VerificationTokenEntity.TokenType.EMAIL_CHANGE);
         if (optionalUser.isPresent()){
@@ -169,7 +170,7 @@ import java.util.Optional;
         return false;
     }
 
-
+    @Transactional
     public boolean initiatePasswordChange(Long loggedInUserId) {
         UserEntity user = userRepository.findById(loggedInUserId)
                 .orElseThrow(() -> new ApiException("User not found"));
@@ -177,7 +178,7 @@ import java.util.Optional;
         emailService.sendPasswordChangeCode(user.getEmail(), code);
         return true;
     }
-
+    @Transactional
     public boolean completePasswordChange(String code, String newPassword, Long loggedInUserId) {
         Optional<UserEntity> optionalUser = verificationTokenService.getUserByToken(code, VerificationTokenEntity.TokenType.PASSWORD_CHANGE);
         if (optionalUser.isPresent()) {

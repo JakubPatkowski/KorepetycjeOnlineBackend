@@ -28,10 +28,10 @@ public class UserProfileController {
 
     @PutMapping("/update")
     public ResponseEntity<HttpResponseDTO> updateUserProfile(
-            @RequestPart(value = "fullName", required = false) String fullName,
-            @RequestPart(value = "description", required = false) String description,
-            @RequestPart(value = "picture", required = false) MultipartFile picture,
-            @RequestPart(value = "badgesVisible", required = false) Boolean badgesVisible,
+            @RequestParam(value = "fullName", required = false) String fullName,
+            @RequestParam(value = "description", required = false) String description,
+            @RequestParam(value = "picture", required = false) MultipartFile picture,
+            @RequestParam(value = "badgesVisible", required = false) Boolean badgesVisible,
             Authentication authentication
     ) {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();

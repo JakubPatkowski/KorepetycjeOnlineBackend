@@ -86,11 +86,11 @@ public class ContentItemService {
                                     MultipartFile[] contentFiles, int fileIndex, ObjectMapper objectMapper) {
         switch (dto.getType().toLowerCase()) {
             case "text":
-                contentItem.setTextContent(dto.getTextContent());
+                contentItem.setText(dto.getText());
                 contentItem.setFontSize(dto.getFontSize());
                 contentItem.setBolder(dto.getBolder());
                 contentItem.setItalics(dto.getItalics());
-                contentItem.setEmphasis(dto.getEmphasis());
+                contentItem.setUnderline(dto.getUnderline());
                 contentItem.setTextColor(dto.getTextColor());
                 break;
             case "video":
@@ -135,11 +135,11 @@ public class ContentItemService {
         itemDTO.getOrder().ifPresent(item::setOrder);
 
         if ("text".equals(item.getType())) {
-            itemDTO.getTextContent().ifPresent(item::setTextContent);
+            itemDTO.getText().ifPresent(item::setText);
             itemDTO.getFontSize().ifPresent(item::setFontSize);
             itemDTO.getBolder().ifPresent(item::setBolder);
             itemDTO.getItalics().ifPresent(item::setItalics);
-            itemDTO.getEmphasis().ifPresent(item::setEmphasis);
+            itemDTO.getUnderline().ifPresent(item::setUnderline);
             itemDTO.getTextColor().ifPresent(item::setTextColor);
         } else if ("quiz".equals(item.getType())) {
             updateQuizData(item, itemDTO);
@@ -198,11 +198,11 @@ public class ContentItemService {
                 .id(item.getId())
                 .type(Optional.ofNullable(item.getType()))
                 .order(Optional.ofNullable(item.getOrder()))
-                .textContent(Optional.ofNullable(item.getTextContent()))
+                .text(Optional.ofNullable(item.getText()))
                 .fontSize(Optional.ofNullable(item.getFontSize()))
                 .bolder(Optional.ofNullable(item.getBolder()))
                 .italics(Optional.ofNullable(item.getItalics()))
-                .emphasis(Optional.ofNullable(item.getEmphasis()))
+                .underline(Optional.ofNullable(item.getUnderline()))
                 .textColor(Optional.ofNullable(item.getTextColor()))
                 .quizData(Optional.ofNullable(item.getQuizData()))
                 .deleted(Optional.of(false))

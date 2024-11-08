@@ -99,12 +99,12 @@ CREATE TABLE content_items (
     type VARCHAR(50) NOT NULL,
     "order" INTEGER NOT NULL,
 --     Text specific fields
-    text_content TEXT,
+    text TEXT,
     font_size VARCHAR(20),  -- 'small', 'medium', 'large'
     bolder BOOLEAN,
     text_color VARCHAR(255),
     italics BOOLEAN,
-    emphasis BOOLEAN,
+    underline BOOLEAN,
     -- File specific fields
     file BYTEA,
     quiz_data JSONB, -- Stores quiz questions and answers in this format:
@@ -136,7 +136,7 @@ CREATE TABLE content_items (
     */
 
     CHECK (
-        (type = 'text' AND text_content IS NOT NULL) OR
+        (type = 'text' AND text IS NOT NULL) OR
         (type IN ('video', 'image') AND file IS NOT NULL) OR
         (type = 'quiz' AND quiz_data IS NOT NULL)
         )

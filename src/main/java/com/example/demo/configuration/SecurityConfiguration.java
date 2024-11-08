@@ -60,6 +60,7 @@ public class SecurityConfiguration {
                         .requestMatchers("course/edit").hasAuthority("USER")
                         .requestMatchers("course/buy").hasAuthority("USER")
                         .requestMatchers("course/get-purchased").hasAuthority("USER")
+                        .requestMatchers("course/get-info").hasAuthority("USER")
 
 
 //                        .requestMatchers("course/add-chapter").hasAuthority("USER")

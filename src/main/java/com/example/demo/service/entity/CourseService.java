@@ -238,6 +238,7 @@ public class CourseService {
         return CourseUpdateDTO.builder()
                 .id(course.getId())
                 .name(Optional.ofNullable(course.getName()))
+                .banner(Optional.ofNullable(course.getBanner()))
                 .description(Optional.ofNullable(course.getDescription()))
                 .price(Optional.ofNullable(course.getPrice()))
                 .duration(Optional.ofNullable(course.getDuration()))

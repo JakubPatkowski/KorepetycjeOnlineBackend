@@ -170,7 +170,7 @@ public class CourseController {
         }
     }
 
-    @GetMapping("/{courseId}")
+    @GetMapping("/get-info/{courseId}")
     public ResponseEntity<HttpResponseDTO> getCourseData(@PathVariable Long courseId){
         try{
             CourseInfoDTO courseInfoDTO = courseService.getCourseData(Long.valueOf(courseId));

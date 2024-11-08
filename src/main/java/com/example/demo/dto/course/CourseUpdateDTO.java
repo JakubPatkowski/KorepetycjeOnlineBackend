@@ -17,6 +17,7 @@ import java.util.Optional;
 public class CourseUpdateDTO {
     private Long id;
     private Optional<String> name;
+    private Optional<byte[]> banner;
     private Optional<BigDecimal> price;
     private Optional<BigDecimal> duration;
     private Optional<List<String>> tags;

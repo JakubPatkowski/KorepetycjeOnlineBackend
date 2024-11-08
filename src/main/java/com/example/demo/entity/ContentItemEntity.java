@@ -32,8 +32,8 @@ public class ContentItemEntity {
     @Column(name = "\"order\"", nullable = false)
     private Integer order;
 
-    @Column(name = "text_content", columnDefinition = "text")
-    private String textContent;
+    @Column(name = "text", columnDefinition = "text")
+    private String text;
 
     @Column(name = "font_size", length = 20)
     private String fontSize;
@@ -48,7 +48,7 @@ public class ContentItemEntity {
     private Boolean italics;
 
     @Column
-    private Boolean emphasis;
+    private Boolean underline;
 
     @Lob
     @JdbcTypeCode(Types.BINARY)

@@ -16,11 +16,11 @@ public class ContentItemUpdateDTO {
     private Optional<Integer> order;
 
     // Pola dla typu 'text'
-    private Optional<String> textContent;
+    private Optional<String> text;
     private Optional<String> fontSize;
     private Optional<Boolean> bolder;
     private Optional<Boolean> italics;
-    private Optional<Boolean> emphasis;
+    private Optional<Boolean> underline;
     private Optional<String> textColor;
 
     // Pole dla typu 'quiz'

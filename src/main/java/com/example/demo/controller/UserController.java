@@ -9,6 +9,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -27,12 +28,15 @@ import java.util.Map;
 import static java.util.Map.of;
 
 import static java.time.LocalDateTime.now;
+import org.slf4j.LoggerFactory;
+
 
 @RestController
 @RequestMapping(path = "/user")
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
+    private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
     @PostMapping("/register")
     public ResponseEntity<HttpResponseDTO> saveUser(@Valid @RequestBody UserRegisterDTO userRegisterDTO, BindingResult result){
@@ -170,6 +174,8 @@ public class UserController {
             }
         }
         catch (AccessDeniedException e) {
+            logger.warn("Access denied "+e.getMessage());
+
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(HttpResponseDTO.builder()
                     .timestamp(now().toString())
                     .message(e.getMessage())
@@ -177,6 +183,7 @@ public class UserController {
                     .statusCode(HttpStatus.FORBIDDEN.value())
                     .build());
         } catch (Exception e) {
+            logger.warn("Error occurred "+e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(HttpResponseDTO.builder()
                     .timestamp(now().toString())
                     .message("An error occurred while initiating email change: " + e.getMessage())
@@ -212,6 +219,7 @@ public class UserController {
                         .build());
             }
         } catch (AccessDeniedException e) {
+            logger.warn("Access Denied "+e.getMessage());
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(HttpResponseDTO.builder()
                     .timestamp(now().toString())
                     .message(e.getMessage())
@@ -219,6 +227,7 @@ public class UserController {
                     .statusCode(HttpStatus.FORBIDDEN.value())
                     .build());
         } catch (Exception e) {
+            logger.warn("Error occurred"+e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(HttpResponseDTO.builder()
                     .timestamp(now().toString())
                     .message("An error occurred while completing email change: " + e.getMessage())
@@ -230,7 +239,7 @@ public class UserController {
     }
 
     @PostMapping("/change-password/initiate")
-    public ResponseEntity<HttpResponseDTO> initiatePasswordChange(@RequestBody Map<String, String> body, Authentication authentication) {
+    public ResponseEntity<HttpResponseDTO> initiatePasswordChange(Authentication authentication) {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         Long loggedInUserId = ((UserPrincipals) userDetails).getId();
         try {
@@ -251,6 +260,7 @@ public class UserController {
                         .build());
             }
         } catch (AccessDeniedException e) {
+            logger.warn("Access Denied "+e.getMessage());
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(HttpResponseDTO.builder()
                     .timestamp(now().toString())
                     .message(e.getMessage())
@@ -258,6 +268,7 @@ public class UserController {
                     .statusCode(HttpStatus.FORBIDDEN.value())
                     .build());
         } catch (Exception e) {
+            logger.warn("Error occurred"+e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(HttpResponseDTO.builder()
                     .timestamp(now().toString())
                     .message("An error occurred while initiating password change: " + e.getMessage())
@@ -292,6 +303,7 @@ public class UserController {
                         .build());
             }
         } catch (AccessDeniedException e) {
+            logger.warn("Access Denied "+e.getMessage());
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(HttpResponseDTO.builder()
                     .timestamp(now().toString())
                     .message(e.getMessage())
@@ -299,6 +311,7 @@ public class UserController {
                     .statusCode(HttpStatus.FORBIDDEN.value())
                     .build());
         } catch (Exception e) {
+            logger.warn("Error occurred"+e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(HttpResponseDTO.builder()
                     .timestamp(now().toString())
                     .message("An error occurred while completing password change: " + e.getMessage())
@@ -337,6 +350,7 @@ public class UserController {
                                 .build());
             }
         } catch (EntityNotFoundException e) {
+            logger.warn("User profile not found "+e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
                     HttpResponseDTO.builder()
                             .timestamp(now().toString())
@@ -346,6 +360,7 @@ public class UserController {
                             .build()
             );
         } catch (Exception e) {
+            logger.warn("Error occurred"+e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
                     HttpResponseDTO.builder()
                             .timestamp(now().toString())

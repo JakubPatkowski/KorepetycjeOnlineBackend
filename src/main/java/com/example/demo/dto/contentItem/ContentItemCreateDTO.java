@@ -17,11 +17,11 @@ public class ContentItemCreateDTO {
 
     private Integer order;
 
-    private String textContent;
+    private String text;
     private String fontSize;
     private Boolean bolder;
     private Boolean italics;
-    private Boolean emphasis;
+    private Boolean underline;
     private String textColor;
 
     private Object quizData;
