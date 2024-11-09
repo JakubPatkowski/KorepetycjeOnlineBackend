@@ -36,7 +36,7 @@ public class ContentItemService {
         int fileIndex = 0;
         ObjectMapper objectMapper = new ObjectMapper();
 
-        for(int i = 0; i < dtos.size(); i++) {
+        for (int i = 0; i < dtos.size(); i++) {
             ContentItemCreateDTO dto = dtos.get(i);
             ContentItemEntity contentItem = ContentItemEntity.builder()
                     .subchapter(subchapter)
@@ -44,7 +44,47 @@ public class ContentItemService {
                     .order(i)
                     .build();
 
-            processContentItem(contentItem, dto, contentFiles, fileIndex++, objectMapper);
+            switch (dto.getType().toLowerCase()) {
+                case "text":
+                    contentItem.setText(dto.getText());
+                    contentItem.setFontSize(dto.getFontSize());
+                    contentItem.setBolder(dto.getBolder());
+                    contentItem.setItalics(dto.getItalics());
+                    contentItem.setUnderline(dto.getUnderline());
+                    contentItem.setTextColor(dto.getTextColor());
+                    break;
+
+                case "image":
+                case "video":
+                    if (contentFiles == null || fileIndex >= contentFiles.length) {
+                        throw new ApiException("Missing file for " + dto.getType() + " content");
+                    }
+                    MultipartFile file = contentFiles[fileIndex++];
+                    validateFile(file);
+                    contentItem.setFile(file.getBytes());
+                    break;
+
+                case "quiz":
+                    if (dto.getQuizContent() != null) {
+                        try {
+                            String quizDataJson;
+                            if (dto.getQuizContent() instanceof String) {
+                                quizDataJson = (String) dto.getQuizContent();
+                            } else {
+                                quizDataJson = objectMapper.writeValueAsString(dto.getQuizContent());
+                            }
+                            JsonNode jsonNode = objectMapper.readTree(quizDataJson);
+                            contentItem.setQuizContent(objectMapper.writeValueAsString(jsonNode));
+                        } catch (JsonProcessingException e) {
+                            throw new ApiException("Invalid quiz data format: " + e.getMessage());
+                        }
+                    }
+                    break;
+
+                default:
+                    throw new ApiException("Invalid content type: " + dto.getType());
+            }
+
             contentItemRepository.save(contentItem);
         }
     }
@@ -177,6 +217,10 @@ public class ContentItemService {
     }
 
     private void validateFile(MultipartFile file) {
+        if (file == null) {
+            throw new ApiException("File is required");
+        }
+
         if (file.getSize() > 10 * 1024 * 1024) { // 10MB limit
             throw new ApiException("File size exceeds maximum limit of 10MB");
         }
