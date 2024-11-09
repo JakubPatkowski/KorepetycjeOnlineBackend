@@ -66,7 +66,7 @@ CREATE TABLE courses
     id  BIGSERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     banner BYTEA,
-    mime_type VARCHAR(255) NOT NULL,
+--     mime_type VARCHAR(255) NOT NULL,
     review DECIMAL(2,1),
     price DECIMAL(10,2) NOT NULL,
     duration DECIMAL(10,2),

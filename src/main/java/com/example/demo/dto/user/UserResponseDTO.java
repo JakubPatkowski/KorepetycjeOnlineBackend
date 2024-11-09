@@ -12,6 +12,7 @@ public class UserResponseDTO {
     private int points;
     private String role;
     private byte[] picture;
+    private String mimeType;
     private String[] badges;
     private Boolean badgesVisible;
     private String description;

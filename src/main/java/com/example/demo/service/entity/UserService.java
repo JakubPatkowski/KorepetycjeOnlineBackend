@@ -83,6 +83,7 @@ import java.util.Optional;
                 userDTO.setPoints(userEntity.getPoints());
                 userDTO.setRole(userEntity.getRole().toString());
                 userDTO.setPicture(userProfileEntity.getPicture());
+                userDTO.setMimeType(userProfileEntity.getPictureMimeType());
                 userDTO.setDescription(userProfileEntity.getDescription());
                 return userDTO;
 
@@ -213,6 +214,7 @@ import java.util.Optional;
             userDTO.setPoints(userEntity.getPoints());
             userDTO.setRole(userEntity.getRole().toString());
             userDTO.setPicture(userProfileEntity.getPicture());
+            userDTO.setMimeType(userProfileEntity.getPictureMimeType());
             userDTO.setDescription(userProfileEntity.getDescription());
             return userDTO;
         } else {
