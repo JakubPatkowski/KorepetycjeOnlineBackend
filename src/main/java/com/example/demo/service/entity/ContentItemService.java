@@ -33,15 +33,18 @@ public class ContentItemService {
     public void createContentItems(List<ContentItemCreateDTO> dtos,
                                    SubchapterEntity subchapter,
                                    MultipartFile[] contentFiles) throws IOException {
-        int fileIndex = 0;
+        if (contentFiles == null) {
+            contentFiles = new MultipartFile[0]; // Zabezpieczenie przed null
+        }
+
+        int fileIndex = 0; // Indeks dla plików
         ObjectMapper objectMapper = new ObjectMapper();
 
-        for (int i = 0; i < dtos.size(); i++) {
-            ContentItemCreateDTO dto = dtos.get(i);
+        for (ContentItemCreateDTO dto : dtos) {
             ContentItemEntity contentItem = ContentItemEntity.builder()
                     .subchapter(subchapter)
                     .type(dto.getType())
-                    .order(i)
+                    .order(dto.getOrder())
                     .build();
 
             switch (dto.getType().toLowerCase()) {
@@ -56,12 +59,25 @@ public class ContentItemService {
 
                 case "image":
                 case "video":
-                    if (contentFiles == null || fileIndex >= contentFiles.length) {
-                        throw new ApiException("Missing file for " + dto.getType() + " content");
+                    // Sprawdź czy mamy jeszcze pliki do przetworzenia
+                    if (fileIndex >= contentFiles.length) {
+                        throw new ApiException("Missing file for " + dto.getType() + " content at index " + fileIndex);
                     }
-                    MultipartFile file = contentFiles[fileIndex++];
+
+                    MultipartFile file = contentFiles[fileIndex];
+                    if (file == null) {
+                        throw new ApiException("File is null at index " + fileIndex);
+                    }
+
                     validateFile(file);
-                    contentItem.setFile(file.getBytes());
+                    // Zapisz plik jako byte array
+                    byte[] fileBytes = file.getBytes();
+                    if (fileBytes == null || fileBytes.length == 0) {
+                        throw new ApiException("Empty file content at index " + fileIndex);
+                    }
+
+                    contentItem.setFile(fileBytes);
+                    fileIndex++; // Zwiększ indeks tylko gdy plik został przetworzony
                     break;
 
                 case "quiz":
@@ -83,6 +99,12 @@ public class ContentItemService {
 
                 default:
                     throw new ApiException("Invalid content type: " + dto.getType());
+            }
+
+            // Sprawdź czy plik został poprawnie ustawiony dla typów wymagających pliku
+            if ((dto.getType().equals("image") || dto.getType().equals("video")) &&
+                    (contentItem.getFile() == null || contentItem.getFile().length == 0)) {
+                throw new ApiException("File content is required for " + dto.getType() + " type");
             }
 
             contentItemRepository.save(contentItem);
@@ -219,6 +241,10 @@ public class ContentItemService {
     private void validateFile(MultipartFile file) {
         if (file == null) {
             throw new ApiException("File is required");
+        }
+
+        if (file.isEmpty()) {
+            throw new ApiException("File is empty");
         }
 
         if (file.getSize() > 10 * 1024 * 1024) { // 10MB limit
