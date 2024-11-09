@@ -66,6 +66,7 @@ CREATE TABLE courses
     id  BIGSERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     banner BYTEA,
+    mime_type VARCHAR(255) NOT NULL,
     review DECIMAL(2,1),
     price DECIMAL(10,2) NOT NULL,
     duration DECIMAL(10,2),
@@ -109,32 +110,7 @@ CREATE TABLE content_items (
     -- File specific fields
     file BYTEA,
     quiz_data JSONB, -- Stores quiz questions and answers in this format:
-    /*
-    {
-        "questions": [
-            {
-                "id": 1,
-                "question": "What is...?",
-                "order": 1,
-                "singleAnswer": true,
-                "answers": [
-                    {
-                        "id": 1,
-                        "answer": "Option A",
-                        "order": 1,
-                        "isCorrect": true
-                    },
-                    {
-                        "id": 2,
-                        "answer": "Option B",
-                        "order": 2,
-                        "isCorrect": false
-                    }
-                ]
-            }
-        ]
-    }
-    */
+
 
     CHECK (
         (type = 'text' AND text IS NOT NULL) OR
