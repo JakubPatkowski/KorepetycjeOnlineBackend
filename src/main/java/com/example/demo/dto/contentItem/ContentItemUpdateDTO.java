@@ -24,7 +24,7 @@ public class ContentItemUpdateDTO {
     private Optional<String> textColor;
 
     // Pole dla typu 'quiz'
-    private Optional<String> quizData;
+    private Optional<String> quizContent;
 
     // Pole wskazujące, czy element ma zostać usunięty
     private Optional<Boolean> deleted;

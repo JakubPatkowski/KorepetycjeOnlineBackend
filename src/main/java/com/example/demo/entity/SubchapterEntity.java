@@ -30,5 +30,5 @@ public class SubchapterEntity {
     private Integer order;
 
     @OneToMany(mappedBy = "subchapter", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ContentItemEntity> contentItems;
+    private List<ContentItemEntity> content;
 }

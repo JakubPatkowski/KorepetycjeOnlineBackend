@@ -24,7 +24,7 @@ public class ContentItemCreateDTO {
     private Boolean underline;
     private String textColor;
 
-    private Object quizData;
+    private Object quizContent;
 
 
 

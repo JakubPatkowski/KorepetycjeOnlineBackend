@@ -98,8 +98,8 @@ public class CourseService {
                             SubchapterCreateDTO subchapterDTO = chapterDTO.getSubchapters().get(j);
                             SubchapterEntity subchapter = subchapterService.createSubchapter(subchapterDTO, chapter, j);
 
-                            if (subchapterDTO.getContentItems() != null) {
-                                contentItemService.createContentItems(subchapterDTO.getContentItems(), subchapter, contentFiles);
+                            if (subchapterDTO.getContent() != null) {
+                                contentItemService.createContentItems(subchapterDTO.getContent(), subchapter, contentFiles);
                             }
                         }
                     }

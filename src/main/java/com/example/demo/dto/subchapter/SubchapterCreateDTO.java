@@ -18,7 +18,7 @@ public class SubchapterCreateDTO {
     @NotBlank(message = "Subchapter name cannot be empty")
     private String name;
     private Integer order;
-    private List<ContentItemCreateDTO> contentItems;
+    private List<ContentItemCreateDTO> content;
 
 
 }

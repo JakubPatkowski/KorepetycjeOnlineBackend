@@ -55,7 +55,7 @@ public class ContentItemService {
         // Usuń elementy oznaczone do usunięcia
         contentItemsDTO.stream()
                 .filter(itemDTO -> itemDTO.getId() != null && itemDTO.getDeleted().orElse(false))
-                .forEach(itemDTO -> subchapter.getContentItems().removeIf(
+                .forEach(itemDTO -> subchapter.getContent().removeIf(
                         item -> item.getId().equals(itemDTO.getId())));
 
         // Aktualizuj lub dodaj nowe elementy
@@ -63,7 +63,7 @@ public class ContentItemService {
             if (itemDTO.getDeleted().orElse(false)) continue;
 
             if (itemDTO.getId() != null) {
-                ContentItemEntity item = subchapter.getContentItems().stream()
+                ContentItemEntity item = subchapter.getContent().stream()
                         .filter(content -> content.getId().equals(itemDTO.getId()))
                         .findFirst()
                         .orElseThrow(() -> new ApiException("Content item not found: " + itemDTO.getId()));
@@ -73,10 +73,10 @@ public class ContentItemService {
             } else {
                 ContentItemEntity newItem = new ContentItemEntity();
                 newItem.setSubchapter(subchapter);
-                newItem.setOrder(itemDTO.getOrder().orElse(subchapter.getContentItems().size()));
+                newItem.setOrder(itemDTO.getOrder().orElse(subchapter.getContent().size()));
 
                 updateContentItemFields(newItem, itemDTO, contentFiles, fileIndexMap);
-                subchapter.getContentItems().add(newItem);
+                subchapter.getContent().add(newItem);
                 contentItemRepository.save(newItem);
             }
         }
@@ -106,19 +106,19 @@ public class ContentItemService {
                 }
                 break;
             case "quiz":
-                if (dto.getQuizData() != null) {
+                if (dto.getQuizContent() != null) {
                     try {
                         // Konwertuj Object na String JSON
                         String quizDataJson;
-                        if (dto.getQuizData() instanceof String) {
-                            quizDataJson = (String) dto.getQuizData();
+                        if (dto.getQuizContent() instanceof String) {
+                            quizDataJson = (String) dto.getQuizContent();
                         } else {
-                            quizDataJson = objectMapper.writeValueAsString(dto.getQuizData());
+                            quizDataJson = objectMapper.writeValueAsString(dto.getQuizContent());
                         }
 
                         // Waliduj JSON
                         JsonNode jsonNode = objectMapper.readTree(quizDataJson);
-                        contentItem.setQuizData(objectMapper.writeValueAsString(jsonNode));
+                        contentItem.setQuizContent(objectMapper.writeValueAsString(jsonNode));
                     } catch (JsonProcessingException e) {
                         throw new ApiException("Invalid quiz data format: " + e.getMessage(), e);
                     }
@@ -149,11 +149,11 @@ public class ContentItemService {
     }
 
     private void updateQuizData(ContentItemEntity item, ContentItemUpdateDTO itemDTO) {
-        itemDTO.getQuizData().ifPresent(quizData -> {
+        itemDTO.getQuizContent().ifPresent(quizData -> {
             try {
                 ObjectMapper mapper = new ObjectMapper();
                 JsonNode jsonNode = mapper.readTree(quizData);
-                item.setQuizData(mapper.writeValueAsString(jsonNode));
+                item.setQuizContent(mapper.writeValueAsString(jsonNode));
             } catch (JsonProcessingException e) {
                 throw new ApiException("Invalid quiz data format", e);
             }
@@ -204,7 +204,7 @@ public class ContentItemService {
                 .italics(Optional.ofNullable(item.getItalics()))
                 .underline(Optional.ofNullable(item.getUnderline()))
                 .textColor(Optional.ofNullable(item.getTextColor()))
-                .quizData(Optional.ofNullable(item.getQuizData()))
+                .quizContent(Optional.ofNullable(item.getQuizContent()))
                 .deleted(Optional.of(false))
                 .updateFile(Optional.of(false))
                 .build();

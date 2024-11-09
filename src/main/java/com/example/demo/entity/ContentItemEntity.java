@@ -56,5 +56,5 @@ public class ContentItemEntity {
 
     @Type(JsonBinaryType.class)
     @Column(name = "quiz_data", columnDefinition = "jsonb")
-    private String quizData;
+    private String quizContent;
 }

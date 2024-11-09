@@ -26,40 +26,65 @@ public class PurchasedCourseService {
     private final CourseService courseService;
 
     @Transactional
-    public boolean purchaseCourse(Long courseId, Long userId) {
-        if (purchasedCourseRepository.existsByUserIdAndCourseId(userId, courseId)) {
-            throw new ApiException("You already own this course");
-        }
-
+    public boolean purchaseCourse(Long courseId, Long buyerId) {
+        // Sprawdzenie czy kurs istnieje
         CourseEntity course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ApiException("Course not found"));
 
-        UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() -> new ApiException("User not found"));
+        // Sprawdzenie czy użytkownik istnieje
+        UserEntity buyer = userRepository.findById(buyerId)
+                .orElseThrow(() -> new ApiException("Buyer not found"));
 
-        int requiredPoints = course.getPrice().intValue();
+        // Sprawdzenie czy użytkownik nie jest właścicielem kursu
+        if (course.getUser().getId().equals(buyerId)) {
+            throw new ApiException("You cannot purchase your own course");
+        }
 
-        if (!pointsService.hasEnoughPoints(userId, requiredPoints)) {
+        // Sprawdzenie czy użytkownik już nie kupił tego kursu
+        if (purchasedCourseRepository.existsByUserIdAndCourseId(buyerId, courseId)) {
+            throw new ApiException("You already own this course");
+        }
+
+        // Pobierz właściciela kursu
+        UserEntity courseOwner = course.getUser();
+        int coursePrice = course.getPrice().intValue();
+
+        // Sprawdź czy kupujący ma wystarczająco punktów
+        if (!pointsService.hasEnoughPoints(buyerId, coursePrice)) {
             throw new ApiException("Insufficient points to purchase this course");
         }
 
         try {
-            pointsService.deductPoints(userId, requiredPoints);
+            // Rozpoczęcie transakcji punktowej
+            pointsService.deductPoints(buyerId, coursePrice);
+            pointsService.addPoints(courseOwner.getId(), calculateOwnerShare(coursePrice));
 
+            // Zapisz informację o zakupie
             PurchasedCourseEntity purchase = PurchasedCourseEntity.builder()
-                    .user(user)
+                    .user(buyer)
                     .course(course)
                     .purchaseDate(Instant.now())
-                    .pointsSpent(requiredPoints)
+                    .pointsSpent(coursePrice)
                     .build();
 
             purchasedCourseRepository.save(purchase);
             return true;
+
         } catch (Exception e) {
-            // If something goes wrong, return points to user
-            pointsService.addPoints(userId, requiredPoints);
+            // W przypadku błędu, cofnij transakcję punktową
+            pointsService.addPoints(buyerId, coursePrice);
+            if (courseOwner != null) {
+                pointsService.deductPoints(courseOwner.getId(), calculateOwnerShare(coursePrice));
+            }
             throw new ApiException("Failed to process purchase: " + e.getMessage());
         }
+    }
+
+    private int calculateOwnerShare(int coursePrice) {
+        // Tutaj możesz dodać logikę prowizji platformy
+        // Np. platforma pobiera 10% od każdej transakcji
+        final double PLATFORM_FEE_PERCENTAGE = 0.10; // 10%
+        return (int) (coursePrice * (1 - PLATFORM_FEE_PERCENTAGE));
     }
 
     @Transactional

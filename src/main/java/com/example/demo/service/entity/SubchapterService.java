@@ -65,7 +65,7 @@ public class SubchapterService {
 
                 updateExistingSubchapter(subchapter, subchapterDTO);
 
-                subchapterDTO.getContentItems().ifPresent(contentItems ->
+                subchapterDTO.getContent().ifPresent(contentItems ->
                         contentItemService.updateContentItems(subchapter, contentItems, contentFiles, fileIndexMap));
             } else {
                 SubchapterEntity newSubchapter = createSubchapter(
@@ -78,7 +78,7 @@ public class SubchapterService {
 
                 chapter.getSubchapters().add(newSubchapter);
 
-                subchapterDTO.getContentItems().ifPresent(contentItems ->
+                subchapterDTO.getContent().ifPresent(contentItems ->
                         contentItemService.updateContentItems(newSubchapter, contentItems, contentFiles, fileIndexMap));
             }
         }
@@ -101,7 +101,7 @@ public class SubchapterService {
                 .id(subchapter.getId())
                 .name(Optional.ofNullable(subchapter.getName()))
                 .order(Optional.ofNullable(subchapter.getOrder()))
-                .contentItems(Optional.of(contentItemService.mapContentItemsToUpdateDTO(subchapter.getContentItems())))
+                .content(Optional.of(contentItemService.mapContentItemsToUpdateDTO(subchapter.getContent())))
                 .deleted(Optional.of(false))
                 .build();
     }

@@ -16,6 +16,6 @@ public class SubchapterUpdateDTO {
     private Long id; // null jeśli nowy podrozdział
     private Optional<String> name;
     private Optional<Integer> order;
-    private Optional<List<ContentItemUpdateDTO>> contentItems;
+    private Optional<List<ContentItemUpdateDTO>> content;
     private Optional<Boolean> deleted; // true jeśli podrozdział ma zostać usunięty
 }
