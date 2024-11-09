@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Map;
 import java.util.Optional;
 @Data
 @NoArgsConstructor
@@ -25,6 +26,8 @@ public class ContentItemUpdateDTO {
 
     // Pole dla typu 'quiz'
     private Optional<String> quizContent;
+
+    private Optional<Map<String, Object>> file;
 
     // Pole wskazujące, czy element ma zostać usunięty
     private Optional<Boolean> deleted;

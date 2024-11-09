@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @Data
 @NoArgsConstructor
@@ -17,7 +18,7 @@ import java.util.List;
 public class CourseInfoDTO {
     private Long id;
     private String name;
-    private byte[] banner;
+    private Map<String, Object> banner;
     private BigDecimal review;
     private BigDecimal duration;
     private Long ownerId;

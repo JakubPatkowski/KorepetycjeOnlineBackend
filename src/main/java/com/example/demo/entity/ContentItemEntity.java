@@ -54,6 +54,9 @@ public class ContentItemEntity {
     @JdbcTypeCode(Types.BINARY)
     private byte[] file;
 
+    @Column(name = "mime_type")
+    private String mimeType;
+
     @Type(JsonBinaryType.class)
     @Column(name = "quiz_data", columnDefinition = "jsonb")
     private String quizContent;

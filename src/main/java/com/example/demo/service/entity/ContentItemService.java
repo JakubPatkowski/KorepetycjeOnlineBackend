@@ -17,10 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,10 +31,10 @@ public class ContentItemService {
                                    SubchapterEntity subchapter,
                                    MultipartFile[] contentFiles) throws IOException {
         if (contentFiles == null) {
-            contentFiles = new MultipartFile[0]; // Zabezpieczenie przed null
+            contentFiles = new MultipartFile[0];
         }
 
-        int fileIndex = 0; // Indeks dla plików
+        int fileIndex = 0;
         ObjectMapper objectMapper = new ObjectMapper();
 
         for (ContentItemCreateDTO dto : dtos) {
@@ -59,7 +56,6 @@ public class ContentItemService {
 
                 case "image":
                 case "video":
-                    // Sprawdź czy mamy jeszcze pliki do przetworzenia
                     if (fileIndex >= contentFiles.length) {
                         throw new ApiException("Missing file for " + dto.getType() + " content at index " + fileIndex);
                     }
@@ -69,15 +65,8 @@ public class ContentItemService {
                         throw new ApiException("File is null at index " + fileIndex);
                     }
 
-                    validateFile(file);
-                    // Zapisz plik jako byte array
-                    byte[] fileBytes = file.getBytes();
-                    if (fileBytes == null || fileBytes.length == 0) {
-                        throw new ApiException("Empty file content at index " + fileIndex);
-                    }
-
-                    contentItem.setFile(fileBytes);
-                    fileIndex++; // Zwiększ indeks tylko gdy plik został przetworzony
+                    processFile(contentItem, file);
+                    fileIndex++;
                     break;
 
                 case "quiz":
@@ -101,15 +90,10 @@ public class ContentItemService {
                     throw new ApiException("Invalid content type: " + dto.getType());
             }
 
-            // Sprawdź czy plik został poprawnie ustawiony dla typów wymagających pliku
-            if ((dto.getType().equals("image") || dto.getType().equals("video")) &&
-                    (contentItem.getFile() == null || contentItem.getFile().length == 0)) {
-                throw new ApiException("File content is required for " + dto.getType() + " type");
-            }
-
             contentItemRepository.save(contentItem);
         }
     }
+
 
     @Transactional
     public void updateContentItems(SubchapterEntity subchapter, List<ContentItemUpdateDTO> contentItemsDTO,
@@ -227,13 +211,8 @@ public class ContentItemService {
         if (itemDTO.getUpdateFile().orElse(false) && contentFiles != null) {
             int fileIndex = fileIndexMap.getOrDefault(item.getId(), fileIndexMap.size());
             if (fileIndex < contentFiles.length) {
-                try {
-                    validateFile(contentFiles[fileIndex]);
-                    item.setFile(contentFiles[fileIndex].getBytes());
-                    fileIndexMap.put(item.getId(), fileIndex);
-                } catch (IOException e) {
-                    throw new ApiException("Error processing file", e);
-                }
+                processFile(item, contentFiles[fileIndex]);
+                fileIndexMap.put(item.getId(), fileIndex);
             }
         }
     }
@@ -264,6 +243,13 @@ public class ContentItemService {
     }
 
     public ContentItemUpdateDTO mapContentItemToUpdateDTO(ContentItemEntity item) {
+        Map<String, Object> fileData = null;
+        if (item.getFile() != null && (item.getType().equals("image") || item.getType().equals("video"))) {
+            fileData = new HashMap<>();
+            fileData.put("data", item.getFile());
+            fileData.put("mimeType", item.getMimeType());
+        }
+
         return ContentItemUpdateDTO.builder()
                 .id(item.getId())
                 .type(Optional.ofNullable(item.getType()))
@@ -275,9 +261,20 @@ public class ContentItemService {
                 .underline(Optional.ofNullable(item.getUnderline()))
                 .textColor(Optional.ofNullable(item.getTextColor()))
                 .quizContent(Optional.ofNullable(item.getQuizContent()))
+                .file(Optional.ofNullable(fileData))
                 .deleted(Optional.of(false))
                 .updateFile(Optional.of(false))
                 .build();
+    }
+
+    private void processFile(ContentItemEntity contentItem, MultipartFile file) {
+        try {
+            validateFile(file);
+            contentItem.setFile(file.getBytes());
+            contentItem.setMimeType(file.getContentType());
+        } catch (IOException e) {
+            throw new ApiException("Error processing file", e);
+        }
     }
 }
 

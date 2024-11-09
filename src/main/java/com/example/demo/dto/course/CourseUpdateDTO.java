@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Data
@@ -17,7 +18,7 @@ import java.util.Optional;
 public class CourseUpdateDTO {
     private Long id;
     private Optional<String> name;
-    private Optional<byte[]> banner;
+    private Optional<Map<String, Object>> banner;
     private Optional<BigDecimal> price;
     private Optional<BigDecimal> duration;
     private Optional<List<String>> tags;

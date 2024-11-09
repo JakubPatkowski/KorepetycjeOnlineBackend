@@ -83,6 +83,7 @@ public class CourseService {
             if (bannerFile != null && !bannerFile.isEmpty()) {
                 validateFile(bannerFile);
                 course.setBanner(bannerFile.getBytes());
+                course.setMimeType(bannerFile.getContentType());
             }
 
             courseRepository.save(course);
@@ -119,24 +120,20 @@ public class CourseService {
             MultipartFile[] contentFiles,
             Long loggedInUserId) {
         try {
-            // Deserializacja JSON do CourseUpdateDTO
             CourseUpdateDTO updateDTO = objectMapper.readValue(courseDataJson, CourseUpdateDTO.class);
-
             CourseEntity existingCourse = courseRepository.findById(updateDTO.getId())
                     .orElseThrow(() -> new ApiException("Course not found"));
 
-            // Sprawdzenie uprawnień
             if (!existingCourse.getUser().getId().equals(loggedInUserId)) {
                 throw new ApiException("You don't have permission to update this course");
             }
 
-            // Aktualizacja podstawowych danych kursu
             updateBasicCourseInfo(existingCourse, updateDTO);
 
-            // Obsługa bannera
             if (bannerFile != null && !bannerFile.isEmpty()) {
                 validateFile(bannerFile);
                 existingCourse.setBanner(bannerFile.getBytes());
+                existingCourse.setMimeType(bannerFile.getContentType());
             }
 
             // Aktualizacja rozdziałów i ich zawartości
@@ -185,10 +182,16 @@ public class CourseService {
 
     public CourseInfoDTO mapToCourseInfo(CourseEntity course){
         Hibernate.initialize(course.getChapters());
+        Map<String, Object> bannerData = null;
+        if (course.getBanner() != null) {
+            bannerData = new HashMap<>();
+            bannerData.put("data", course.getBanner());
+            bannerData.put("mimeType", course.getMimeType());
+        }
         return CourseInfoDTO.builder()
                 .id(course.getId())
                 .name(course.getName())
-                .banner(course.getBanner())
+                .banner(bannerData)
                 .review(course.getReview())
                 .duration(course.getDuration())
                 .ownerId(course.getUser().getId())
@@ -235,11 +238,16 @@ public class CourseService {
     }
 
     private CourseUpdateDTO mapCourseToUpdateDTO(CourseEntity course) {
+        Map<String, Object> bannerData = null;
+        if (course.getBanner() != null) {
+            bannerData = new HashMap<>();
+            bannerData.put("data", course.getBanner());
+            bannerData.put("mimeType", course.getMimeType());
+        }
         return CourseUpdateDTO.builder()
                 .id(course.getId())
                 .name(Optional.ofNullable(course.getName()))
-                .banner(Optional.ofNullable(course.getBanner()))
-                .description(Optional.ofNullable(course.getDescription()))
+                .banner(Optional.ofNullable(bannerData))                .description(Optional.ofNullable(course.getDescription()))
                 .price(Optional.ofNullable(course.getPrice()))
                 .duration(Optional.ofNullable(course.getDuration()))
                 .tags(Optional.ofNullable(course.getTags()))
