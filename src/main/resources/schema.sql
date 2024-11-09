@@ -36,6 +36,7 @@ CREATE TABLE user_profiles
     description      VARCHAR(500) DEFAULT NULL,
     created_at       DATE         DEFAULT CURRENT_TIMESTAMP,
     picture          BYTEA        DEFAULT NULL,
+    mime_type        VARCHAR(255) DEFAULT NULL,
     badges_visible   BOOLEAN    DEFAULT TRUE
 );
 

@@ -15,6 +15,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -80,24 +81,28 @@ public class UserProfileController {
         Long loggedInUserId = ((UserPrincipals) userDetails).getId();
         try {
             UserProfileEntity userProfile = userProfileService.getUserProfile(loggedInUserId);
+
+            Map<String, Object> profileData = new HashMap<>();
+            profileData.put("fullName", userProfile.getFullName());
+            profileData.put("description", userProfile.getDescription());
+            profileData.put("badgesVisible", userProfile.getBadgesVisible());
+
+            if (userProfile.getPicture() != null) {
+                Map<String, Object> pictureData = new HashMap<>();
+                pictureData.put("data", userProfile.getPicture());
+                pictureData.put("mimeType", userProfile.getPictureMimeType());
+                profileData.put("picture", pictureData);
+            }
+
             return ResponseEntity.ok().body(
                     HttpResponseDTO.builder()
                             .timestamp(now().toString())
                             .message("User profile found")
-                            .data(Map.of("UserProfile", userProfile))
+                            .data(Map.of("UserProfile", profileData))
                             .status(HttpStatus.OK)
                             .statusCode(HttpStatus.OK.value())
                             .build()
             );
-        } catch (EntityNotFoundException e) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                HttpResponseDTO.builder()
-                        .timestamp(now().toString())
-                        .message("User profile not found")
-                        .status(HttpStatus.NOT_FOUND)
-                        .statusCode(HttpStatus.NOT_FOUND.value())
-                        .build()
-        );
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
                     HttpResponseDTO.builder()

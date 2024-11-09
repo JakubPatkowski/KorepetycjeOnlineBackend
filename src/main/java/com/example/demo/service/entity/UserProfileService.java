@@ -35,9 +35,8 @@ public class UserProfileService {
 
     @Transactional
     public void updateUserProfile(UserProfileUpdateDTO updateDTO, MultipartFile picture, Long loggedInUserId) {
-
         UserProfileEntity userProfile = userProfileRepository.findByUserId(loggedInUserId)
-                .orElseThrow(() -> new EntityNotFoundException("User Profile not found"));;
+                .orElseThrow(() -> new EntityNotFoundException("User Profile not found"));
 
         if (updateDTO.getFullName() != null) {
             updateDTO.getFullName().ifPresent(userProfile::setFullName);
@@ -49,6 +48,7 @@ public class UserProfileService {
             try {
                 validatePictureFile(picture);
                 userProfile.setPicture(picture.getBytes());
+                userProfile.setPictureMimeType(picture.getContentType());
             } catch (IOException e) {
                 throw new RuntimeException("Failed to process picture file", e);
             }

@@ -44,6 +44,9 @@ public class UserProfileEntity {
     @JdbcTypeCode(Types.BINARY)
     private byte[] picture;
 
+    @Column(name = "mime_type")
+    private String pictureMimeType;
+
     @Column(name = "badges_visible")
     private Boolean badgesVisible;
 }
