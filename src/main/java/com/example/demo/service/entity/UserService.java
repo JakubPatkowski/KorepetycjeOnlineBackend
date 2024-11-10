@@ -222,9 +222,27 @@ import java.util.Optional;
         }
     }
 
-//    public boolean buyPoints(int value, Long loggedInUserId){
-//
-//    }
+    @Transactional
+    public boolean resendVerificationEmail(Long userId) {
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new ApiException("User not found"));
+
+        // Sprawdź czy użytkownik już nie jest zweryfikowany
+        if (user.getRole() == UserEntity.Role.VERIFIED ||
+                user.getRole() == UserEntity.Role.TEACHER ||
+                user.getRole() == UserEntity.Role.ADMIN) {
+            throw new ApiException("User is already verified");
+        }
+
+        // Wygeneruj nowy token weryfikacyjny
+        String verificationToken = verificationTokenService.generateEmailVerificationToken(user);
+        String verificationLink = "http://localhost:8080/user/verify-email?token=" + verificationToken;
+
+        // Wyślij email
+        emailService.sendEmailVerificationLink(user.getEmail(), verificationLink);
+
+        return true;
+    }
 
 
 

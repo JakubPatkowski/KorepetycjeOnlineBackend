@@ -3,6 +3,7 @@ package com.example.demo.controller;
 import com.example.demo.dto.user.*;
 import com.example.demo.dto.http.HttpResponseDTO;
 import com.example.demo.entity.UserEntity;
+import com.example.demo.exception.ApiException;
 import com.example.demo.model.UserPrincipals;
 import com.example.demo.service.entity.UserService;
 import jakarta.persistence.EntityNotFoundException;
@@ -17,6 +18,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
@@ -130,24 +132,32 @@ public class UserController {
     }
 
     @GetMapping("/verify-email")
-    public ResponseEntity<HttpResponseDTO> verifyEmail(@RequestParam String token){
+    public Object verifyEmail(@RequestParam String token,
+                              @RequestHeader(value = "Accept", defaultValue = "") String accept) {
         boolean verified = userService.verifyEmail(token);
+
+        // Jeśli klient żąda HTML
+        if (accept.contains("text/html")) {
+            return new ModelAndView("email-verification"); // nazwa szablonu HTML
+        }
+
+        // Domyślna odpowiedź JSON
         if(verified){
             return ResponseEntity.ok(
                     HttpResponseDTO.builder()
-                        .timestamp(now().toString())
-                        .message("Email verified successfully")
-                        .status(HttpStatus.OK)
-                        .statusCode(HttpStatus.OK.value())
-                        .build());
+                            .timestamp(now().toString())
+                            .message("Email verified successfully")
+                            .status(HttpStatus.OK)
+                            .statusCode(HttpStatus.OK.value())
+                            .build());
         } else {
             return ResponseEntity.badRequest().body(
                     HttpResponseDTO.builder()
-                        .timestamp(now().toString())
-                        .message("Invalid or expired verification link")
-                        .status(HttpStatus.BAD_REQUEST)
-                        .statusCode(HttpStatus.BAD_REQUEST.value())
-                        .build());
+                            .timestamp(now().toString())
+                            .message("Invalid or expired verification link")
+                            .status(HttpStatus.BAD_REQUEST)
+                            .statusCode(HttpStatus.BAD_REQUEST.value())
+                            .build());
         }
     }
 
@@ -369,6 +379,38 @@ public class UserController {
                             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .build()
             );
+        }
+    }
+
+    @PostMapping("/resend-verification")
+    public ResponseEntity<HttpResponseDTO> resendVerificationEmail(Authentication authentication) {
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        Long loggedInUserId = ((UserPrincipals) userDetails).getId();
+
+        try {
+            boolean sent = userService.resendVerificationEmail(loggedInUserId);
+            if (sent) {
+                return ResponseEntity.ok(HttpResponseDTO.builder()
+                        .timestamp(now().toString())
+                        .message("Verification email has been resent")
+                        .status(HttpStatus.OK)
+                        .statusCode(HttpStatus.OK.value())
+                        .build());
+            } else {
+                return ResponseEntity.badRequest().body(HttpResponseDTO.builder()
+                        .timestamp(now().toString())
+                        .message("Failed to resend verification email")
+                        .status(HttpStatus.BAD_REQUEST)
+                        .statusCode(HttpStatus.BAD_REQUEST.value())
+                        .build());
+            }
+        } catch (ApiException e) {
+            return ResponseEntity.badRequest().body(HttpResponseDTO.builder()
+                    .timestamp(now().toString())
+                    .message(e.getMessage())
+                    .status(HttpStatus.BAD_REQUEST)
+                    .statusCode(HttpStatus.BAD_REQUEST.value())
+                    .build());
         }
     }
 
