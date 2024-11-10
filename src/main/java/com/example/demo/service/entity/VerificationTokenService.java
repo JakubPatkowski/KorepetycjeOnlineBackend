@@ -60,10 +60,15 @@ public class VerificationTokenService {
     public Optional<UserEntity> getUserByToken(String token, VerificationTokenEntity.TokenType tokenType) {
         Optional<VerificationTokenEntity> optionalToken = tokenRepository.findByTokenAndTokenType(token, tokenType);
 
-        return optionalToken
-                .filter(verificationTokenEntity -> !verificationTokenEntity.isExpired())
-                .map(VerificationTokenEntity::getUserId);
+        if (optionalToken.isEmpty() || optionalToken.get().isExpired()) {
+            return Optional.empty();
+        }
 
+        return Optional.of(optionalToken.get().getUserId());
+    }
+
+    public Optional<VerificationTokenEntity> findByToken(String token, VerificationTokenEntity.TokenType tokenType) {
+        return tokenRepository.findByTokenAndTokenType(token, tokenType);
     }
 
     public void deleteToken(String token){

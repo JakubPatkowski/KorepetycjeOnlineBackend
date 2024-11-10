@@ -52,7 +52,8 @@ public class SecurityConfiguration {
                                 "user/access-token",
                                 "points/get-offers",
                                 "course/tags/",
-                                "course/tags/search"
+                                "course/tags/search",
+                                "user/verify-email"
 
                         ).permitAll()
                         //for testing all user
@@ -72,7 +73,6 @@ public class SecurityConfiguration {
                         .requestMatchers("user/change-email/complete").hasAuthority("USER")
                         .requestMatchers("user/change-password/initiate").hasAuthority("USER")
                         .requestMatchers("user/change-password/complete").hasAuthority("USER")
-                        .requestMatchers("user/verify-email").hasAuthority("USER")
                         .requestMatchers("user/resend-verification").hasAuthority("USER")
                         .requestMatchers("user-profile/update").hasAuthority("USER")
                         .requestMatchers("user-profile/get").hasAuthority("USER")

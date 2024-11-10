@@ -13,6 +13,8 @@ import com.example.demo.service.EmailService;
 import com.example.demo.service.JWTService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -54,6 +56,9 @@ import java.util.Optional;
     public final BCryptPasswordEncoder encoder;
 
     public final AuthenticationManager authenticationManager;
+
+    private static final Logger logger = LoggerFactory.getLogger(UserService.class);
+
 
     public UserResponseDTO login(UserLoginDTO userLoginDTO, String clientIp) {
         try {
@@ -125,16 +130,19 @@ import java.util.Optional;
         }
     }
 
-    public boolean verifyEmail(String token){
+    @Transactional
+    public boolean verifyEmail(String token) {
         Optional<UserEntity> optionalUser = verificationTokenService.getUserByToken(token, VerificationTokenEntity.TokenType.EMAIL_VERIFICATION);
-        if(optionalUser.isPresent()){
-            UserEntity user = optionalUser.get();
-            user.setRole(UserEntity.Role.VERIFIED);
-            userRepository.save(user);
-            verificationTokenService.deleteToken(token);
-            return true;
+
+        if (optionalUser.isEmpty()) {
+            throw new ApiException("Invalid or expired verification token");
         }
-        return false;
+
+        UserEntity user = optionalUser.get();
+        user.setRole(UserEntity.Role.VERIFIED);
+        userRepository.save(user);
+        verificationTokenService.deleteToken(token);
+        return true;
     }
 
     @Transactional

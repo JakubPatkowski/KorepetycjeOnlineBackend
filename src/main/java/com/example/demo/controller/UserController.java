@@ -11,7 +11,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
@@ -20,8 +22,10 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-
+import org.springframework.core.io.Resource;
+import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,13 +36,26 @@ import static java.util.Map.of;
 import static java.time.LocalDateTime.now;
 import org.slf4j.LoggerFactory;
 
-
 @RestController
 @RequestMapping(path = "/user")
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
+
+    @Value("classpath:templates/verification-success.html")
+    private Resource successTemplate;
+
+    @Value("classpath:templates/verification-error.html")
+    private Resource errorTemplate;
+
+    private String getVerificationSuccessHtml() throws IOException {
+        return new String(successTemplate.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+    }
+
+    private String getVerificationErrorHtml() throws IOException {
+        return new String(errorTemplate.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+    }
 
     @PostMapping("/register")
     public ResponseEntity<HttpResponseDTO> saveUser(@Valid @RequestBody UserRegisterDTO userRegisterDTO, BindingResult result){
@@ -132,32 +149,16 @@ public class UserController {
     }
 
     @GetMapping("/verify-email")
-    public Object verifyEmail(@RequestParam String token,
-                              @RequestHeader(value = "Accept", defaultValue = "") String accept) {
-        boolean verified = userService.verifyEmail(token);
-
-        // Jeśli klient żąda HTML
-        if (accept.contains("text/html")) {
-            return new ModelAndView("email-verification"); // nazwa szablonu HTML
-        }
-
-        // Domyślna odpowiedź JSON
-        if(verified){
-            return ResponseEntity.ok(
-                    HttpResponseDTO.builder()
-                            .timestamp(now().toString())
-                            .message("Email verified successfully")
-                            .status(HttpStatus.OK)
-                            .statusCode(HttpStatus.OK.value())
-                            .build());
-        } else {
-            return ResponseEntity.badRequest().body(
-                    HttpResponseDTO.builder()
-                            .timestamp(now().toString())
-                            .message("Invalid or expired verification link")
-                            .status(HttpStatus.BAD_REQUEST)
-                            .statusCode(HttpStatus.BAD_REQUEST.value())
-                            .build());
+    public ResponseEntity<String> verifyEmail(@RequestParam String token) throws IOException {
+        try {
+            boolean verified = userService.verifyEmail(token);
+            String htmlSuccess = getVerificationSuccessHtml();
+            return ResponseEntity.ok().contentType(MediaType.TEXT_HTML).body(htmlSuccess);
+        } catch (ApiException e) {
+            String htmlError = getVerificationErrorHtml();
+            return ResponseEntity.ok().contentType(MediaType.TEXT_HTML).body(htmlError);
+        } catch (IOException e) {
+            throw new ApiException("error" + e);
         }
     }
 
