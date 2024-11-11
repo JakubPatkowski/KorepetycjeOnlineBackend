@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.http.HttpResponseDTO;
+import com.example.demo.dto.userProfile.UserProfileResponseDTO;
 import com.example.demo.dto.userProfile.UserProfileUpdateDTO;
 import com.example.demo.entity.UserProfileEntity;
 import com.example.demo.model.UserPrincipals;
@@ -76,29 +77,17 @@ public class UserProfileController {
     }
 
     @GetMapping("/get")
-    public ResponseEntity<HttpResponseDTO> getLoggedInUserProfile(Authentication authentication){
+    public ResponseEntity<HttpResponseDTO> getLoggedInUserProfile(Authentication authentication) {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         Long loggedInUserId = ((UserPrincipals) userDetails).getId();
         try {
-            UserProfileEntity userProfile = userProfileService.getUserProfile(loggedInUserId);
-
-            Map<String, Object> profileData = new HashMap<>();
-            profileData.put("fullName", userProfile.getFullName());
-            profileData.put("description", userProfile.getDescription());
-            profileData.put("badgesVisible", userProfile.getBadgesVisible());
-
-            if (userProfile.getPicture() != null) {
-                Map<String, Object> pictureData = new HashMap<>();
-                pictureData.put("data", userProfile.getPicture());
-                pictureData.put("mimeType", userProfile.getPictureMimeType());
-                profileData.put("picture", pictureData);
-            }
+            UserProfileResponseDTO userProfile = userProfileService.getUserProfile(loggedInUserId);
 
             return ResponseEntity.ok().body(
                     HttpResponseDTO.builder()
                             .timestamp(now().toString())
                             .message("User profile found")
-                            .data(Map.of("UserProfile", profileData))
+                            .data(Map.of("UserProfile", userProfile))
                             .status(HttpStatus.OK)
                             .statusCode(HttpStatus.OK.value())
                             .build()
@@ -107,7 +96,7 @@ public class UserProfileController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
                     HttpResponseDTO.builder()
                             .timestamp(now().toString())
-                            .message("An error occurred while getting the user profile. Eroor: " + e)
+                            .message("An error occurred while getting the user profile. Error: " + e)
                             .status(HttpStatus.INTERNAL_SERVER_ERROR)
                             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .build()

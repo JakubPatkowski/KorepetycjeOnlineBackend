@@ -2,6 +2,8 @@ package com.example.demo.dto.user;
 
 import lombok.Data;
 
+import java.util.Map;
+
 @Data
 public class UserResponseDTO {
     private String accessToken;
@@ -11,8 +13,7 @@ public class UserResponseDTO {
     private String email;
     private int points;
     private String role;
-    private byte[] picture;
-    private String mimeType;
+    private Map<String, Object> picture;
     private String[] badges;
     private Boolean badgesVisible;
     private String description;

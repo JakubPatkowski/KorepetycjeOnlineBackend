@@ -1,5 +1,7 @@
 package com.example.demo.service.entity;
 
+import com.example.demo.dto.mapper.UserProfileMapper;
+import com.example.demo.dto.userProfile.UserProfileResponseDTO;
 import com.example.demo.dto.userProfile.UserProfileUpdateDTO;
 import com.example.demo.entity.UserProfileEntity;
 import com.example.demo.repository.UserProfileRepository;
@@ -23,6 +25,8 @@ public class UserProfileService {
     @Autowired
     private final UserProfileRepository userProfileRepository;
 
+    @Autowired
+    private final UserProfileMapper userProfileMapper;
 
 
     void addUserProfileToUser(String nameAndSurname, Long userId){
@@ -60,10 +64,11 @@ public class UserProfileService {
         userProfileRepository.save(userProfile);
     }
 
-    public UserProfileEntity getUserProfile(Long loggedInUserId) {
+    public UserProfileResponseDTO getUserProfile(Long loggedInUserId) {
         UserProfileEntity userProfile = userProfileRepository.findByUserId(loggedInUserId)
-                .orElseThrow(() -> new EntityNotFoundException("User Profile not found"));;
-        return userProfile;
+                .orElseThrow(() -> new EntityNotFoundException("User Profile not found"));
+
+        return userProfileMapper.mapToDTO(userProfile);
     }
 
     private void validatePictureFile(MultipartFile file) {

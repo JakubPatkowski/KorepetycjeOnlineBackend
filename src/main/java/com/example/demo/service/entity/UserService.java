@@ -27,6 +27,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 
@@ -87,8 +89,7 @@ import java.util.Optional;
                 userDTO.setEmail(userEntity.getEmail());
                 userDTO.setPoints(userEntity.getPoints());
                 userDTO.setRole(userEntity.getRole().toString());
-                userDTO.setPicture(userProfileEntity.getPicture());
-                userDTO.setMimeType(userProfileEntity.getPictureMimeType());
+                userDTO.setPicture(createPictureData(userProfileEntity.getPicture(), userProfileEntity.getPictureMimeType()));
                 userDTO.setDescription(userProfileEntity.getDescription());
                 return userDTO;
 
@@ -214,15 +215,13 @@ import java.util.Optional;
                     .orElseThrow(() -> new EntityNotFoundException("User Profile not found"));
 
 
-            //TODO dodać badge
-            userDTO.setBadgesVisible(false);
+            userDTO.setBadgesVisible(userProfileEntity.getBadgesVisible());
 
             userDTO.setFullName(userProfileEntity.getFullName());
             userDTO.setEmail(userEntity.getEmail());
             userDTO.setPoints(userEntity.getPoints());
             userDTO.setRole(userEntity.getRole().toString());
-            userDTO.setPicture(userProfileEntity.getPicture());
-            userDTO.setMimeType(userProfileEntity.getPictureMimeType());
+            userDTO.setPicture(createPictureData(userProfileEntity.getPicture(), userProfileEntity.getPictureMimeType()));
             userDTO.setDescription(userProfileEntity.getDescription());
             return userDTO;
         } else {
@@ -252,6 +251,14 @@ import java.util.Optional;
         return true;
     }
 
-
+    private Map<String, Object> createPictureData(byte[] picture, String mimeType) {
+        if (picture != null && mimeType != null) {
+            Map<String, Object> pictureData = new HashMap<>();
+            pictureData.put("data", picture);
+            pictureData.put("mimeType", mimeType);
+            return pictureData;
+        }
+        return null;
+    }
 
 }
