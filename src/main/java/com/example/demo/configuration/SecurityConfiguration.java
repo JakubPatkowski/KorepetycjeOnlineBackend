@@ -52,6 +52,7 @@ public class SecurityConfiguration {
                                 "user/access-token",
                                 "points/get-offers",
                                 "course/tags/",
+                                "course/get",
                                 "course/tags/search",
                                 "user/verify-email"
 

@@ -157,6 +157,7 @@ public class CourseService {
         updateDTO.getTags().ifPresent(course::setTags);
     }
 
+    @Transactional
     public List<CourseInfoDTO> getUserCourses(Long userId){
         Optional<List<CourseEntity>> optionalCourseEntityList = courseRepository.findAllByUserId(userId);
         if(optionalCourseEntityList.isPresent()){
@@ -169,6 +170,7 @@ public class CourseService {
         }
     }
 
+    @Transactional
     public CourseInfoDTO getCourseData(Long courseId){
         Optional<CourseEntity> optionalCourseEntity = courseRepository.findById(courseId);
         if(optionalCourseEntity.isPresent()){
