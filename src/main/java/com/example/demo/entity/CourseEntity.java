@@ -39,8 +39,6 @@ public class CourseEntity {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
 
-
-
     @Column(precision = 10, scale = 2)
     private BigDecimal duration;
 

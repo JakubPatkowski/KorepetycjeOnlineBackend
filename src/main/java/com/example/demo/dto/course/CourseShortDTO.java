@@ -1,5 +1,6 @@
 package com.example.demo.dto.course;
 
+import com.example.demo.dto.userProfile.UserProfileResponseDTO;
 import com.example.demo.entity.UserProfileEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,5 +28,5 @@ public class CourseShortDTO {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Integer chaptersCount;
-    private UserProfileEntity owner;
+    private UserProfileResponseDTO owner;
 }

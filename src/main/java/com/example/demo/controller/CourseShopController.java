@@ -29,10 +29,10 @@ public class CourseShopController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) List<String> tags) {
+            @RequestParam(required = false) String tag) {
 
         try {
-            Page<CourseShortDTO> coursesPage = shopService.searchCourses(search, page, size, sortBy, tags);
+            Page<CourseShortDTO> coursesPage = shopService.searchCourses(search, tag, page, size, sortBy);
 
             return ResponseEntity.ok(HttpResponseDTO.builder()
                     .timestamp(now().toString())

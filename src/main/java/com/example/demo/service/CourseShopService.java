@@ -1,21 +1,20 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.course.CourseShortDTO;
+import com.example.demo.dto.mapper.UserProfileMapper;
+import com.example.demo.dto.userProfile.UserProfileResponseDTO;
 import com.example.demo.entity.CourseEntity;
 import com.example.demo.entity.UserProfileEntity;
 import com.example.demo.repository.CourseRepository;
 import com.example.demo.repository.UserProfileRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -25,106 +24,67 @@ public class CourseShopService {
     private final CourseRepository courseRepository;
     private final UserProfileRepository userProfileRepository;
 
-    @Transactional(readOnly = true)
+    @Autowired
+    private final UserProfileMapper userProfileMapper;
+
     public Page<CourseShortDTO> searchCourses(
             String search,
+            String tag,
             int page,
             int size,
-            String sortBy,
-            List<String> tags) {
+            String sortBy) {
 
-        Sort sort = createSort(sortBy);
-        Pageable pageable = PageRequest.of(page, size, sort);
-
-        try {
-            // Najpierw pobierz stronę kursów
-            Page<CourseEntity> coursesPage = courseRepository.findAll(pageable);
-
-            // Mapuj wyniki
-            return coursesPage.map(course -> {
-                try {
-                    UserProfileEntity ownerProfile = userProfileRepository
-                            .findByUserId(course.getUser().getId())
-                            .orElse(null);
-
-                    Map<String, Object> bannerData = null;
-                    if (course.getBanner() != null) {
-                        bannerData = new HashMap<>();
-                        bannerData.put("data", course.getBanner());
-                        bannerData.put("mimeType", course.getMimeType());
-                    }
-
-                    return CourseShortDTO.builder()
-                            .id(course.getId())
-                            .name(course.getName())
-                            .banner(bannerData)
-                            .price(course.getPrice())
-                            .duration(course.getDuration())
-                            .tags(course.getTags())
-                            .review(course.getReview())
-                            .reviewNumber(course.getReviewNumber())
-                            .description(course.getDescription())
-                            .createdAt(course.getCreatedAt())
-                            .updatedAt(course.getUpdatedAt())
-                            .chaptersCount(course.getChapters() != null ? course.getChapters().size() : 0)
-                            .owner(ownerProfile)
-                            .build();
-                } catch (Exception e) {
-                    throw new RuntimeException("Error mapping course to DTO", e);
-                }
-            });
-        } catch (Exception e) {
-            throw new RuntimeException("Error fetching courses", e);
+        // Domyślne sortowanie po dacie
+        if (sortBy == null || !Arrays.asList("review", "reviewNumber", "date").contains(sortBy)) {
+            sortBy = "date";
         }
+
+        List<CourseEntity> courses;
+        long total;
+
+        if (search != null && tag != null) {
+            // Przypadek 3: name i tag
+            courses = courseRepository.findByNameAndTag(search, tag, sortBy, size, (long) page * size);
+            total = courseRepository.countByNameAndTag(search, tag);
+        } else if (search != null) {
+            // Przypadek 1: tylko name
+            courses = courseRepository.findByNameContaining(search, sortBy, size, (long) page * size);
+            total = courseRepository.countByNameContaining(search);
+        } else if (tag != null) {
+            // Przypadek 2: tylko tag
+            courses = courseRepository.findByTag(tag, sortBy, size, (long) page * size);
+            total = courseRepository.countByTag(tag);
+        } else {
+            // Przypadek 4: wszystkie kursy
+            courses = courseRepository.findAllCoursesPaged(sortBy, size, (long) page * size);
+            total = courseRepository.countAll();
+        }
+
+        List<CourseShortDTO> dtos = courses.stream()
+                .map(this::mapToCourseShortDTO)
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(dtos, PageRequest.of(page, size), total);
     }
+
+
 
     public List<String> searchTags(String search) {
         return courseRepository.searchTags(search);
     }
 
-    public Page<CourseShortDTO> getCourses(int page, int size, String sortBy, List<String> tags) {
-        Sort sort = createSort(sortBy);
-        Pageable pageable = PageRequest.of(page, size, sort);
-
-        Page<CourseEntity> coursesPage;
-        if (tags != null && !tags.isEmpty()) {
-            coursesPage = courseRepository.findByTagsContainingAny(tags, pageable);
-        } else {
-            coursesPage = courseRepository.findAll(pageable);
-        }
-
-        return coursesPage.map(this::mapToCourseShortDTO);
-    }
-
-    private Sort createSort(String sortBy) {
-        if (sortBy == null) {
-            return Sort.by(Sort.Direction.DESC, "createdAt");
-        }
-
-        return switch (sortBy.toLowerCase()) {
-            case "reviews" -> Sort.by(Sort.Direction.DESC, "reviewNumber");
-            case "price_asc" -> Sort.by(Sort.Direction.ASC, "price");
-            case "price_desc" -> Sort.by(Sort.Direction.DESC, "price");
-            case "newest" -> Sort.by(Sort.Direction.DESC, "createdAt");
-            case "oldest" -> Sort.by(Sort.Direction.ASC, "createdAt");
-            case "rating" -> Sort.by(Sort.Direction.DESC, "review");
-            default -> Sort.by(Sort.Direction.DESC, "createdAt");
-        };
-    }
-
-
     private CourseShortDTO mapToCourseShortDTO(CourseEntity course) {
+        UserProfileResponseDTO ownerProfile = userProfileMapper.mapToDTO(
+                userProfileRepository.findByUserId(course.getUser().getId())
+                        .orElse(null)
+        );
+
         Map<String, Object> bannerData = null;
         if (course.getBanner() != null) {
             bannerData = new HashMap<>();
             bannerData.put("data", course.getBanner());
             bannerData.put("mimeType", course.getMimeType());
         }
-
-        UserProfileEntity ownerProfile = userProfileRepository.findByUserId(course.getUser().getId())
-                .orElseThrow(() -> new RuntimeException("Owner profile not found"));
-
-
 
         return CourseShortDTO.builder()
                 .id(course.getId())
@@ -138,12 +98,8 @@ public class CourseShopService {
                 .description(course.getDescription())
                 .createdAt(course.getCreatedAt())
                 .updatedAt(course.getUpdatedAt())
-                .chaptersCount(course.getChapters().size())
+                .chaptersCount(course.getChapters() != null ? course.getChapters().size() : 0)
                 .owner(ownerProfile)
                 .build();
-    }
-
-    public List<String> getAllTags() {
-        return courseRepository.findAllTags();
     }
 }
