@@ -46,41 +46,36 @@ public class SecurityConfiguration {
 
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(
-                                "user/register",
-                                "user/login",
-                                "user/verify-email",
-                                "user/access-token",
-                                "points/get-offers",
-                                "course/tags/",
-                                "course/get",
-                                "course/tags/search",
-                                "user/verify-email"
-
+                                "/user/register",
+                                "/user/login",
+                                "/user/verify-email",
+                                "/user/access-token",
+                                "/points/get-offers",
+                                "/course/tags/",
+                                "/course/get",
+                                "/course/tags/search",
+                                "/course/get-info/**",
+                                "/course/user/*"
                         ).permitAll()
                         //for testing all user
-                        .requestMatchers("course/create").hasAuthority("USER")
-                        .requestMatchers("course/update").hasAuthority("USER")
-                        .requestMatchers("course/user").hasAuthority("USER")
-                        .requestMatchers("course/data").hasAuthority("USER")
-                        .requestMatchers("course/edit").hasAuthority("USER")
-                        .requestMatchers("course/buy").hasAuthority("USER")
-                        .requestMatchers("course/get-purchased").hasAuthority("USER")
-                        .requestMatchers("course/get-info").hasAuthority("USER")
+                        .requestMatchers("/course/create").hasAuthority("USER")
+                        .requestMatchers("/course/update").hasAuthority("USER")
+                        .requestMatchers("/course/data").hasAuthority("USER")
+                        .requestMatchers("/course/edit").hasAuthority("USER")
+                        .requestMatchers("/course/buy").hasAuthority("USER")
+                        .requestMatchers("/course/get-purchased").hasAuthority("USER")
+                        .requestMatchers("/chapter/get/**").hasAuthority("USER")
 
+                        .requestMatchers("/user/change-email/initiate").hasAuthority("USER")
+                        .requestMatchers("/user/change-email/complete").hasAuthority("USER")
+                        .requestMatchers("/user/change-password/initiate").hasAuthority("USER")
+                        .requestMatchers("/user/change-password/complete").hasAuthority("USER")
+                        .requestMatchers("/user/resend-verification").hasAuthority("USER")
+                        .requestMatchers("/user/get").hasAuthority("USER")
 
-//                        .requestMatchers("course/add-chapter").hasAuthority("USER")
-//                        .requestMatchers("course/add-subchapter").hasAuthority("USER")
-                        .requestMatchers("user/change-email/initiate").hasAuthority("USER")
-                        .requestMatchers("user/change-email/complete").hasAuthority("USER")
-                        .requestMatchers("user/change-password/initiate").hasAuthority("USER")
-                        .requestMatchers("user/change-password/complete").hasAuthority("USER")
-                        .requestMatchers("user/resend-verification").hasAuthority("USER")
-                        .requestMatchers("user-profile/update").hasAuthority("USER")
-                        .requestMatchers("user-profile/get").hasAuthority("USER")
-                        .requestMatchers("user/get").hasAuthority("USER")
-                        .requestMatchers("points/buy").hasAuthority("USER")
-
-
+                        .requestMatchers("/user-profile/update").hasAuthority("USER")
+                        .requestMatchers("/user-profile/get").hasAuthority("USER")
+                        .requestMatchers("/points/buy").hasAuthority("USER")
 
                         .anyRequest().authenticated()
 

@@ -10,8 +10,8 @@ import java.util.Optional;
 
 @Repository
 public interface ChapterRepository extends JpaRepository<ChapterEntity, Long> {
-    List<ChapterEntity> findByCourseIdOrderByOrderAsc(Long courseId);
-
-    Optional<ChapterEntity> findByCourseIdAndId(Long courseId, Long chapterId);
+//    List<ChapterEntity> findByCourseIdOrderByOrderAsc(Long courseId);
+//
+//    Optional<ChapterEntity> findByCourseIdAndId(Long courseId, Long chapterId);
 
 }

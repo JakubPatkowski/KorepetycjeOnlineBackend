@@ -1,12 +1,16 @@
 package com.example.demo.service.entity;
 
 import com.example.demo.dto.chapter.ChapterCreateDTO;
+import com.example.demo.dto.chapter.ChapterDetailsDTO;
 import com.example.demo.dto.chapter.ChapterUpdateDTO;
+import com.example.demo.dto.subchapter.SubchapterShortDTO;
 import com.example.demo.entity.ChapterEntity;
 import com.example.demo.entity.CourseEntity;
 import com.example.demo.exception.ApiException;
 import com.example.demo.repository.ChapterRepository;
 import com.example.demo.repository.CourseRepository;
+import com.example.demo.repository.PurchasedCourseRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -24,6 +28,8 @@ public class ChapterService {
     private final ChapterRepository chapterRepository;
     @Autowired
     private final SubchapterService subchapterService;
+    
+    private final PurchasedCourseRepository purchasedCourseRepository;
 
     @Transactional
     public ChapterEntity createChapter(ChapterCreateDTO dto, CourseEntity course, int order) {
@@ -36,6 +42,41 @@ public class ChapterService {
                 .build();
 
         return chapterRepository.save(chapter);
+    }
+
+    @Transactional(readOnly = true)
+    public ChapterDetailsDTO getChapterDetails(Long chapterId, Long userId){
+        ChapterEntity chapter = chapterRepository.findById(chapterId)
+                .orElseThrow(() -> new EntityNotFoundException("Chapter not found"));
+        
+        CourseEntity course = chapter.getCourse();
+        
+        if(!course.getUser().getId().equals(userId)){
+            boolean hasPurchased = purchasedCourseRepository.existsByUserIdAndCourseId(userId, course.getId());
+            if(!hasPurchased){
+                throw new ApiException("You don`t have access to this chapter");
+            }
+        }
+        return mapToChapterDetailsDTO(chapter);
+    }
+
+    private ChapterDetailsDTO mapToChapterDetailsDTO(ChapterEntity chapter) {
+        return ChapterDetailsDTO.builder()
+                .id(chapter.getId())
+                .courseId(chapter.getCourse().getId())
+                .name(chapter.getName())
+                .order(chapter.getOrder())
+                .review(chapter.getReview())
+                .reviewNumber(chapter.getReviewNumber())
+                .subchapters(chapter.getSubchapters().stream()
+                        .map(subchapter -> SubchapterShortDTO.builder()
+                                .id(subchapter.getId())
+                                .name(subchapter.getName())
+                                .order(subchapter.getOrder())
+                                .build())
+                        .sorted(Comparator.comparing(SubchapterShortDTO::getOrder))
+                        .collect(Collectors.toList()))
+                .build();
     }
 
     @Transactional
@@ -105,4 +146,6 @@ public class ChapterService {
                 .deleted(Optional.of(false))
                 .build();
     }
+
+
 }
