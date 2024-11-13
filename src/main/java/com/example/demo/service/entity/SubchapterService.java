@@ -1,26 +1,29 @@
 package com.example.demo.service.entity;
 
 import com.example.demo.dto.contentItem.ContentItemCreateDTO;
+import com.example.demo.dto.contentItem.ContentItemResponseDTO;
 import com.example.demo.dto.subchapter.SubchapterCreateDTO;
+import com.example.demo.dto.subchapter.SubchapterDetailsDTO;
 import com.example.demo.dto.subchapter.SubchapterUpdateDTO;
 import com.example.demo.entity.ChapterEntity;
+import com.example.demo.entity.ContentItemEntity;
 import com.example.demo.entity.CourseEntity;
 import com.example.demo.entity.SubchapterEntity;
 import com.example.demo.exception.ApiException;
 import com.example.demo.repository.ChapterRepository;
+import com.example.demo.repository.PurchasedCourseRepository;
 import com.example.demo.repository.SubchapterRepository;
 import com.fasterxml.jackson.databind.annotation.JsonAppend;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,6 +34,8 @@ public class SubchapterService {
 
     @Autowired
     private final ContentItemService contentItemService;
+    
+    private final PurchasedCourseRepository purchasedCourseRepository;
 
     @Transactional
     public SubchapterEntity createSubchapter(SubchapterCreateDTO dto, ChapterEntity chapter, int order) {
@@ -83,6 +88,75 @@ public class SubchapterService {
             }
         }
     }
+
+    @Transactional(readOnly = true)
+    public SubchapterDetailsDTO getSubchapterDetails(Long subchapterId, Long userId){
+        SubchapterEntity subchapter = subchapterRepository.findById(subchapterId)
+                .orElseThrow(() -> new EntityNotFoundException("Subchapter not found"));
+
+        CourseEntity course =subchapter.getChapter().getCourse();
+        if (!course.getUser().getId().equals(userId)) {
+            boolean hasPurchased = purchasedCourseRepository.existsByUserIdAndCourseId(userId, course.getId());
+            if (!hasPurchased) {
+                throw new ApiException("You don't have access to this subchapter");
+            }
+        }
+
+        return mapToSubchapterDetailsDTO(subchapter);
+    }
+
+    private SubchapterDetailsDTO mapToSubchapterDetailsDTO(SubchapterEntity subchapter) {
+        return SubchapterDetailsDTO.builder()
+                .id(subchapter.getId())
+                .chapterId(subchapter.getChapter().getId())
+                .name(subchapter.getName())
+                .order(subchapter.getOrder())
+                .content(mapContentItems(subchapter.getContent()))
+                .build();
+    }
+
+    private List<ContentItemResponseDTO> mapContentItems(List<ContentItemEntity> contentItems) {
+        return contentItems.stream()
+                .map(this::mapContentItem)
+                .sorted(Comparator.comparing(ContentItemResponseDTO::getOrder))
+                .collect(Collectors.toList());
+    }
+
+    private ContentItemResponseDTO mapContentItem(ContentItemEntity item) {
+        ContentItemResponseDTO.ContentItemResponseDTOBuilder builder = ContentItemResponseDTO.builder()
+                .id(item.getId())
+                .subchapterId(item.getSubchapter().getId())
+                .type(item.getType())
+                .order(item.getOrder());
+
+        switch (item.getType().toLowerCase()) {
+            case "text":
+                builder.text(item.getText())
+                        .fontSize(item.getFontSize())
+                        .bolder(item.getBolder())
+                        .textColor(item.getTextColor())
+                        .Italics(String.valueOf(item.getItalics()))
+                        .underline(String.valueOf(item.getUnderline()));
+                break;
+
+            case "quiz":
+                builder.quizContent(item.getQuizContent());
+                break;
+
+            case "video":
+            case "image":
+                if (item.getFile() != null) {
+                    Map<String, Object> fileData = new HashMap<>();
+                    fileData.put("data", item.getFile());
+                    fileData.put("mimeType", item.getMimeType());
+                    builder.file(fileData);
+                }
+                break;
+        }
+
+        return builder.build();
+    }
+
 
     private void updateExistingSubchapter(SubchapterEntity subchapter, SubchapterUpdateDTO subchapterDTO) {
         subchapterDTO.getName().ifPresent(subchapter::setName);

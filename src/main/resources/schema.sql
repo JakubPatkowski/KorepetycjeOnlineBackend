@@ -136,3 +136,10 @@ CREATE TABLE purchased_courses (
     points_spent INTEGER NOT NULL,
     UNIQUE(user_id, course_id)
 );
+
+-- CREATE TABLE user_roles (
+--                             id BIGSERIAL PRIMARY KEY,
+--                             user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+--                             role VARCHAR(50) NOT NULL,
+--                             UNIQUE(user_id, role)
+-- );
