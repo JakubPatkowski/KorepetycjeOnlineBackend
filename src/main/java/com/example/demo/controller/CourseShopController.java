@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.course.CourseShortDTO;
+import com.example.demo.dto.courseShop.CourseShopResponseDTO;
 import com.example.demo.dto.http.HttpResponseDTO;
 import com.example.demo.service.CourseShopService;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +33,7 @@ public class CourseShopController {
             @RequestParam(required = false) String tag) {
 
         try {
-            Page<CourseShortDTO> coursesPage = shopService.searchCourses(search, tag, page, size, sortBy);
+            Page<CourseShopResponseDTO> coursesPage = shopService.searchCourses(search, tag, page, size, sortBy);
 
             return ResponseEntity.ok(HttpResponseDTO.builder()
                     .timestamp(now().toString())

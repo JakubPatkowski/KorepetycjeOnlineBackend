@@ -1,6 +1,9 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.course.CourseShortDTO;
+import com.example.demo.dto.courseShop.CourseDataDTO;
+import com.example.demo.dto.courseShop.CourseShopResponseDTO;
+import com.example.demo.dto.courseShop.OwnerDataDTO;
 import com.example.demo.dto.mapper.UserProfileMapper;
 import com.example.demo.dto.userProfile.UserProfileResponseDTO;
 import com.example.demo.entity.CourseEntity;
@@ -23,11 +26,9 @@ import java.util.stream.Collectors;
 public class CourseShopService {
     private final CourseRepository courseRepository;
     private final UserProfileRepository userProfileRepository;
-
-    @Autowired
     private final UserProfileMapper userProfileMapper;
 
-    public Page<CourseShortDTO> searchCourses(
+    public Page<CourseShopResponseDTO> searchCourses(
             String search,
             String tag,
             int page,
@@ -60,8 +61,8 @@ public class CourseShopService {
             total = courseRepository.countAll();
         }
 
-        List<CourseShortDTO> dtos = courses.stream()
-                .map(this::mapToCourseShortDTO)
+        List<CourseShopResponseDTO> dtos = courses.stream()
+                .map(this::mapToCourseShopResponseDTO)
                 .collect(Collectors.toList());
 
         return new PageImpl<>(dtos, PageRequest.of(page, size), total);
@@ -73,12 +74,17 @@ public class CourseShopService {
         return courseRepository.searchTags(search);
     }
 
-    private CourseShortDTO mapToCourseShortDTO(CourseEntity course) {
-        UserProfileResponseDTO ownerProfile = userProfileMapper.mapToDTO(
-                userProfileRepository.findByUserId(course.getUser().getId())
-                        .orElse(null)
-        );
+    private CourseShopResponseDTO mapToCourseShopResponseDTO(CourseEntity course) {
+        UserProfileEntity ownerProfile = userProfileRepository.findByUserId(course.getUser().getId())
+                .orElse(null);
 
+        return CourseShopResponseDTO.builder()
+                .courseData(mapToCourseDataDTO(course))
+                .ownerData(mapToOwnerDataDTO(ownerProfile))
+                .build();
+    }
+
+    private CourseDataDTO mapToCourseDataDTO(CourseEntity course) {
         Map<String, Object> bannerData = null;
         if (course.getBanner() != null) {
             bannerData = new HashMap<>();
@@ -86,7 +92,7 @@ public class CourseShopService {
             bannerData.put("mimeType", course.getMimeType());
         }
 
-        return CourseShortDTO.builder()
+        return CourseDataDTO.builder()
                 .id(course.getId())
                 .name(course.getName())
                 .banner(bannerData)
@@ -99,7 +105,30 @@ public class CourseShopService {
                 .createdAt(course.getCreatedAt())
                 .updatedAt(course.getUpdatedAt())
                 .chaptersCount(course.getChapters() != null ? course.getChapters().size() : 0)
-                .owner(ownerProfile)
+                .ownerId(course.getUser().getId())
+                .build();
+    }
+
+    private OwnerDataDTO mapToOwnerDataDTO(UserProfileEntity profile) {
+        if (profile == null) {
+            return null;
+        }
+
+        Map<String, Object> pictureData = null;
+        if (profile.getPicture() != null) {
+            pictureData = new HashMap<>();
+            pictureData.put("data", profile.getPicture());
+            pictureData.put("mimeType", profile.getPictureMimeType());
+        }
+
+        return OwnerDataDTO.builder()
+                .id(profile.getId())
+                .fullName(profile.getFullName())
+                .userId(profile.getUserId())
+                .description(profile.getDescription())
+                .createdAt(profile.getCreatedAt())
+                .picture(pictureData)
+                .badgesVisible(profile.getBadgesVisible())
                 .build();
     }
 }
