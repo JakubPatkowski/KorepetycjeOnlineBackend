@@ -73,9 +73,11 @@ public class SecurityConfiguration {
                         .requestMatchers("/user/change-password/complete").hasAnyAuthority("USER")
                         .requestMatchers("/user/resend-verification").hasAnyAuthority("USER")
                         .requestMatchers("/user/get").hasAnyAuthority("USER")
+                        .requestMatchers("/user/upgrade-to-teacher").hasAnyAuthority("USER")
 
                         .requestMatchers("/user-profile/update").hasAnyAuthority("USER")
                         .requestMatchers("/user-profile/get").hasAnyAuthority("USER")
+
                         .requestMatchers("/points/buy").hasAnyAuthority("USER")
 
                         .anyRequest().authenticated()

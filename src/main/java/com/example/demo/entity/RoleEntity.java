@@ -21,5 +21,10 @@ public class RoleEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private UserEntity.Role role;
+    private Role role;
+
+    public enum Role {
+        USER, VERIFIED, TEACHER, ADMIN
+    }
+
 }

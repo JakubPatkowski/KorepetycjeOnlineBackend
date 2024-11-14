@@ -23,8 +23,7 @@ CREATE TABLE users
     points        INTEGER   DEFAULT 0,
     verified      BOOLEAN   DEFAULT FALSE,
     blocked       BOOLEAN   DEFAULT FALSE,
-    mfa           BOOLEAN   DEFAULT FALSE,
-    role          VARCHAR(255)
+    mfa           BOOLEAN   DEFAULT FALSE
 );
 
 -- Tworzenie tabeli User_profile

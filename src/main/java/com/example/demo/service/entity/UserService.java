@@ -7,6 +7,8 @@ import com.example.demo.entity.VerificationTokenEntity;
 import com.example.demo.exception.ApiException;
 import com.example.demo.entity.UserEntity;
 import com.example.demo.entity.UserProfileEntity;
+import com.example.demo.entity.RoleEntity;
+import com.example.demo.repository.RoleRepository;
 import com.example.demo.repository.UserProfileRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.service.EmailService;
@@ -60,6 +62,8 @@ import java.util.stream.Collectors;
     public final BCryptPasswordEncoder encoder;
 
     public final AuthenticationManager authenticationManager;
+
+    private final RoleService roleService;
 
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
@@ -118,10 +122,11 @@ import java.util.stream.Collectors;
             userEntity.setEmail(userRegisterDTO.email());
             userEntity.setPassword(encoder.encode(userRegisterDTO.password()));
             userEntity.setPoints(0);
-            userEntity.addRole(UserEntity.Role.USER);
             userEntity.setBlocked(false);
-
             userRepository.save(userEntity);
+
+            roleService.addRoleToUser(userEntity, RoleEntity.Role.USER);
+
             userProfileService.addUserProfileToUser(userRegisterDTO.fullName(), userEntity.getId());
 
             String verificationToken = verificationTokenService.generateEmailVerificationToken(userEntity);
@@ -144,7 +149,7 @@ import java.util.stream.Collectors;
         }
 
         UserEntity user = optionalUser.get();
-        user.addRole(UserEntity.Role.VERIFIED);
+        roleService.addRoleToUser(user, RoleEntity.Role.VERIFIED);
 
         userRepository.save(user);
         verificationTokenService.deleteToken(token);
@@ -171,8 +176,10 @@ import java.util.stream.Collectors;
             if (userRepository.existsByEmail(newEmail)){
                 throw new ApiException("Email alredy in use");
             }
+            roleService.removeRoleFromUser(userEntity, RoleEntity.Role.VERIFIED);
+            userEntity.getRoles().removeIf(role -> role.getRole() == RoleEntity.Role.VERIFIED);
+
             userEntity.setEmail(newEmail);
-            userEntity.removeRole(UserEntity.Role.VERIFIED);
             userRepository.save(userEntity);
             verificationTokenService.deleteToken(code);
 
@@ -184,6 +191,8 @@ import java.util.stream.Collectors;
         }
         return false;
     }
+
+
 
     @Transactional
     public boolean initiatePasswordChange(Long loggedInUserId) {
@@ -242,12 +251,16 @@ import java.util.stream.Collectors;
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new ApiException("User not found"));
 
-        // Sprawdź czy użytkownik już nie jest zweryfikowany
-        if (user.hasRole(UserEntity.Role.VERIFIED) ||
-                user.hasRole(UserEntity.Role.TEACHER) ||
-                user.hasRole(UserEntity.Role.ADMIN)) {
+        if(roleService.getUserRoles(userId).contains(RoleEntity.Role.VERIFIED)){
             throw new ApiException("User is already verified");
         }
+
+//        // Sprawdź czy użytkownik już nie jest zweryfikowany
+//        if (user.hasRole(UserEntity.Role.VERIFIED) ||
+//                user.hasRole(UserEntity.Role.TEACHER) ||
+//                user.hasRole(UserEntity.Role.ADMIN)) {
+//            throw new ApiException("User is already verified");
+//        }
 
         // Wygeneruj nowy token weryfikacyjny
         String verificationToken = verificationTokenService.generateEmailVerificationToken(user);
@@ -259,6 +272,32 @@ import java.util.stream.Collectors;
         return true;
     }
 
+    @Transactional
+    public boolean upgradeToTeacher(Long userId) {
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new ApiException("User not found"));
+
+        // Sprawdź czy użytkownik już nie ma roli Teacher
+        if(roleService.getUserRoles(userId).contains(RoleEntity.Role.TEACHER)){
+            throw new ApiException("User already has Teacher role");
+        }
+
+        // Sprawdź czy użytkownik ma wystarczająco punktów
+        if (user.getPoints() < 1000) {
+            throw new ApiException("Insufficient points. Required: 1000");
+        }
+
+        // Odejmij punkty i dodaj rolę
+        try {
+            user.setPoints(user.getPoints() - 1000);
+            roleService.addRoleToUser(user, RoleEntity.Role.TEACHER);
+            userRepository.save(user);
+            return true;
+        } catch (Exception e) {
+            throw new ApiException("Error while upgrading to teacher: " + e.getMessage());
+        }
+    }
+
     private Map<String, Object> createPictureData(byte[] picture, String mimeType) {
         if (picture != null && mimeType != null) {
             Map<String, Object> pictureData = new HashMap<>();
@@ -268,5 +307,30 @@ import java.util.stream.Collectors;
         }
         return null;
     }
+
+//    @Transactional
+//    public void addRoleToUser(Long userId, RoleEntity.Role role) {
+//        UserEntity user = userRepository.findById(userId)
+//                .orElseThrow(() -> new ApiException("User not found"));
+//        if (!roleRepository.existsByUserIdAndRole(userId, role)) {
+//            user.addRole(role);
+//            userRepository.save(user);
+//        }
+//    }
+//
+//    @Transactional
+//    public void removeRoleFromUser(Long userId, UserEntity.Role role) {
+//        UserEntity user = userRepository.findById(userId)
+//                .orElseThrow(() -> new ApiException("User not found"));
+//        roleRepository.deleteByUserIdAndRole(userId, role);
+//        user.removeRole(role); // aktualizuje obiekt w pamięci
+//    }
+//
+//    @Transactional
+//    public Set<UserEntity.Role> getUserRoles(Long userId) {
+//        return roleRepository.findByUserId(userId).stream()
+//                .map(RoleEntity::getRole)
+//                .collect(Collectors.toSet());
+//    }
 
 }

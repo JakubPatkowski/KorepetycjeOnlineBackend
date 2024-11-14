@@ -45,30 +45,15 @@ public class UserEntity {
     @Column(nullable = false)
     private boolean blocked = false;
 
-    public enum Role implements GrantedAuthority{
-        USER, VERIFIED, TEACHER, ADMIN;
-
-        @Override
-        public String getAuthority() {
-            return name();
-        }
-    }
+//    public enum Role implements GrantedAuthority{
+//        USER, VERIFIED, TEACHER, ADMIN;
+//
+//        @Override
+//        public String getAuthority() {
+//            return name();
+//        }
+//    }
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<RoleEntity> roles = new HashSet<>();
-
-    public void addRole(Role role) {
-        RoleEntity userRole = new RoleEntity();
-        userRole.setUser(this);
-        userRole.setRole(role);
-        roles.add(userRole);
-    }
-
-    public void removeRole(Role role) {
-        roles.removeIf(userRole -> userRole.getRole() == role);
-    }
-
-    public boolean hasRole(Role role) {
-        return roles.stream().anyMatch(userRole -> userRole.getRole() == role);
-    }
 }

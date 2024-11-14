@@ -415,6 +415,45 @@ public class UserController {
         }
     }
 
+    @PostMapping("/upgrade-to-teacher")
+    public ResponseEntity<HttpResponseDTO> upgradeToTeacher(Authentication authentication) {
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        Long loggedInUserId = ((UserPrincipals) userDetails).getId();
+
+        try {
+            boolean upgraded = userService.upgradeToTeacher(loggedInUserId);
+            if (upgraded) {
+                return ResponseEntity.ok(HttpResponseDTO.builder()
+                        .timestamp(now().toString())
+                        .message("Successfully upgraded to Teacher role")
+                        .status(HttpStatus.OK)
+                        .statusCode(HttpStatus.OK.value())
+                        .build());
+            } else {
+                return ResponseEntity.badRequest().body(HttpResponseDTO.builder()
+                        .timestamp(now().toString())
+                        .message("Failed to upgrade to Teacher role")
+                        .status(HttpStatus.BAD_REQUEST)
+                        .statusCode(HttpStatus.BAD_REQUEST.value())
+                        .build());
+            }
+        } catch (ApiException e) {
+            return ResponseEntity.badRequest().body(HttpResponseDTO.builder()
+                    .timestamp(now().toString())
+                    .message(e.getMessage())
+                    .status(HttpStatus.BAD_REQUEST)
+                    .statusCode(HttpStatus.BAD_REQUEST.value())
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(HttpResponseDTO.builder()
+                    .timestamp(now().toString())
+                    .message("An error occurred while upgrading to teacher: " + e.getMessage())
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .build());
+        }
+    }
+
     private URI getUri() {
         return URI.create(ServletUriComponentsBuilder.fromCurrentContextPath().path("/user/get/<userId>").toUriString());
     }
