@@ -30,6 +30,8 @@ import org.springframework.validation.annotation.Validated;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -88,7 +90,9 @@ import java.util.Optional;
                 userDTO.setFullName(userProfileEntity.getFullName());
                 userDTO.setEmail(userEntity.getEmail());
                 userDTO.setPoints(userEntity.getPoints());
-                userDTO.setRole(userEntity.getRole().toString());
+                userDTO.setRoles(userEntity.getRoles().stream()
+                        .map(role -> role.getRole().toString())
+                        .collect(Collectors.toSet()));
                 userDTO.setPicture(createPictureData(userProfileEntity.getPicture(), userProfileEntity.getPictureMimeType()));
                 userDTO.setDescription(userProfileEntity.getDescription());
                 return userDTO;
@@ -114,7 +118,7 @@ import java.util.Optional;
             userEntity.setEmail(userRegisterDTO.email());
             userEntity.setPassword(encoder.encode(userRegisterDTO.password()));
             userEntity.setPoints(0);
-            userEntity.setRole(UserEntity.Role.USER);
+            userEntity.addRole(UserEntity.Role.USER);
             userEntity.setBlocked(false);
 
             userRepository.save(userEntity);
@@ -140,7 +144,8 @@ import java.util.Optional;
         }
 
         UserEntity user = optionalUser.get();
-        user.setRole(UserEntity.Role.VERIFIED);
+        user.addRole(UserEntity.Role.VERIFIED);
+
         userRepository.save(user);
         verificationTokenService.deleteToken(token);
         return true;
@@ -167,7 +172,7 @@ import java.util.Optional;
                 throw new ApiException("Email alredy in use");
             }
             userEntity.setEmail(newEmail);
-            userEntity.setRole(UserEntity.Role.USER);
+            userEntity.removeRole(UserEntity.Role.VERIFIED);
             userRepository.save(userEntity);
             verificationTokenService.deleteToken(code);
 
@@ -220,7 +225,10 @@ import java.util.Optional;
             userDTO.setFullName(userProfileEntity.getFullName());
             userDTO.setEmail(userEntity.getEmail());
             userDTO.setPoints(userEntity.getPoints());
-            userDTO.setRole(userEntity.getRole().toString());
+            Set<String> roles = userEntity.getRoles().stream()
+                    .map(roleEntity -> roleEntity.getRole().toString())
+                    .collect(Collectors.toSet());
+            userDTO.setRoles(roles);
             userDTO.setPicture(createPictureData(userProfileEntity.getPicture(), userProfileEntity.getPictureMimeType()));
             userDTO.setDescription(userProfileEntity.getDescription());
             return userDTO;
@@ -235,9 +243,9 @@ import java.util.Optional;
                 .orElseThrow(() -> new ApiException("User not found"));
 
         // Sprawdź czy użytkownik już nie jest zweryfikowany
-        if (user.getRole() == UserEntity.Role.VERIFIED ||
-                user.getRole() == UserEntity.Role.TEACHER ||
-                user.getRole() == UserEntity.Role.ADMIN) {
+        if (user.hasRole(UserEntity.Role.VERIFIED) ||
+                user.hasRole(UserEntity.Role.TEACHER) ||
+                user.hasRole(UserEntity.Role.ADMIN)) {
             throw new ApiException("User is already verified");
         }
 

@@ -6,21 +6,23 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.springframework.security.core.GrantedAuthority;
 
 
+import java.util.HashSet;
+import java.util.Set;
+
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_DEFAULT;
 
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(schema = "demo", name = "users")
 @SuperBuilder
-@NoArgsConstructor
-@AllArgsConstructor
 @JsonInclude(NON_DEFAULT)
 public class UserEntity {
     @Id
@@ -52,7 +54,21 @@ public class UserEntity {
         }
     }
 
-    @Column(nullable = false) //columnDefinition = "role_enum"
-    @Enumerated(EnumType.STRING)
-    private Role role = Role.USER;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private Set<RoleEntity> roles = new HashSet<>();
+
+    public void addRole(Role role) {
+        RoleEntity userRole = new RoleEntity();
+        userRole.setUser(this);
+        userRole.setRole(role);
+        roles.add(userRole);
+    }
+
+    public void removeRole(Role role) {
+        roles.removeIf(userRole -> userRole.getRole() == role);
+    }
+
+    public boolean hasRole(Role role) {
+        return roles.stream().anyMatch(userRole -> userRole.getRole() == role);
+    }
 }
