@@ -3,6 +3,8 @@ package com.example.demo.controller;
 import com.example.demo.dto.course.CourseShortDTO;
 import com.example.demo.dto.courseShop.CourseShopResponseDTO;
 import com.example.demo.dto.http.HttpResponseDTO;
+import com.example.demo.entity.CourseEntity;
+import com.example.demo.repository.CourseRepository;
 import com.example.demo.service.CourseShopService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -15,6 +17,8 @@ import org.springframework.web.bind.annotation.RestController;
 import static java.util.Map.of;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static java.time.LocalDate.now;
 
@@ -23,6 +27,7 @@ import static java.time.LocalDate.now;
 @RequiredArgsConstructor
 public class CourseShopController {
     private final CourseShopService shopService;
+    private final CourseRepository courseRepository;
 
     @GetMapping("/get")
     public ResponseEntity<HttpResponseDTO> getCourses(
@@ -70,5 +75,29 @@ public class CourseShopController {
                 .status(HttpStatus.OK)
                 .statusCode(HttpStatus.OK.value())
                 .build());
+    }
+
+    @GetMapping("/get-all")
+    public ResponseEntity<HttpResponseDTO> getAllCourses() {
+        try {
+            List<CourseShopResponseDTO> dtos = shopService.getAll();
+
+
+            return ResponseEntity.ok(HttpResponseDTO.builder()
+                    .timestamp(now().toString())
+                    .data(Map.of("courses", dtos))
+                    .message("All courses retrieved successfully")
+                    .status(HttpStatus.OK)
+                    .statusCode(HttpStatus.OK.value())
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(HttpResponseDTO.builder()
+                            .timestamp(now().toString())
+                            .message("An error occurred while retrieving courses: " + e.getMessage())
+                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .build());
+        }
     }
 }

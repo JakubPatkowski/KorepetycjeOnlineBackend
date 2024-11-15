@@ -126,4 +126,11 @@ public class CourseShopService {
                 .badgesVisible(profile.getBadgesVisible())
                 .build();
     }
+
+
+    public List<CourseShopResponseDTO> getAll() {
+        return courseRepository.findAll().stream()
+                .map(this::mapToCourseShopResponseDTO)
+                .collect(Collectors.toList());
+    }
 }

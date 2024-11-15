@@ -55,7 +55,8 @@ public class SecurityConfiguration {
                                 "/course/get",
                                 "/course/tags/search",
                                 "/course/get-info/**",
-                                "/course/user/*"
+                                "/course/user/*",
+                                "course/get-all"
                         ).permitAll()
                         //for testing all user
                         .requestMatchers("/course/create").hasAnyAuthority("USER")
