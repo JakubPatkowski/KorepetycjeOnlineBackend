@@ -23,12 +23,10 @@ public class UserProfileMapper {
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setBadgesVisible(entity.getBadgesVisible());
 
-        if (entity.getPicture() != null && entity.getPictureMimeType() != null) {
-            Map<String, Object> pictureData = new HashMap<>();
-            pictureData.put("data", entity.getPicture());
-            pictureData.put("mimeType", entity.getPictureMimeType());
-            dto.setPicture(pictureData);
-        }
+        Map<String, Object> pictureData = new HashMap<>();
+        pictureData.put("data", entity.getPicture());
+        pictureData.put("mimeType", entity.getPictureMimeType());
+        dto.setPicture(pictureData);
 
         return dto;
     }

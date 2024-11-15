@@ -71,7 +71,6 @@ public class PurchasedCourseService {
             return true;
 
         } catch (Exception e) {
-            // W przypadku błędu, cofnij transakcję punktową
             pointsService.addPoints(buyerId, coursePrice);
             if (courseOwner != null) {
                 pointsService.deductPoints(courseOwner.getId(), calculateOwnerShare(coursePrice));
@@ -81,9 +80,7 @@ public class PurchasedCourseService {
     }
 
     private int calculateOwnerShare(int coursePrice) {
-        // Tutaj możesz dodać logikę prowizji platformy
-        // Np. platforma pobiera 10% od każdej transakcji
-        final double PLATFORM_FEE_PERCENTAGE = 0.10; // 10%
+        final double PLATFORM_FEE_PERCENTAGE = 0.10;
         return (int) (coursePrice * (1 - PLATFORM_FEE_PERCENTAGE));
     }
 
@@ -94,8 +91,8 @@ public class PurchasedCourseService {
                 .collect(Collectors.toList());
     }
 
-    @Transactional
-    public boolean hasUserPurchasedCourse(Long userId, Long courseId) {
-        return purchasedCourseRepository.existsByUserIdAndCourseId(userId, courseId);
-    }
+//    @Transactional
+//    public boolean hasUserPurchasedCourse(Long userId, Long courseId) {
+//        return purchasedCourseRepository.existsByUserIdAndCourseId(userId, courseId);
+//    }
 }

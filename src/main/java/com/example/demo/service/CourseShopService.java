@@ -85,12 +85,9 @@ public class CourseShopService {
     }
 
     private CourseDataDTO mapToCourseDataDTO(CourseEntity course) {
-        Map<String, Object> bannerData = null;
-        if (course.getBanner() != null) {
-            bannerData = new HashMap<>();
-            bannerData.put("data", course.getBanner());
-            bannerData.put("mimeType", course.getMimeType());
-        }
+        Map<String, Object> bannerData = new HashMap<>();
+        bannerData.put("data", course.getBanner());
+        bannerData.put("mimeType", course.getMimeType());
 
         return CourseDataDTO.builder()
                 .id(course.getId())
@@ -114,12 +111,9 @@ public class CourseShopService {
             return null;
         }
 
-        Map<String, Object> pictureData = null;
-        if (profile.getPicture() != null) {
-            pictureData = new HashMap<>();
-            pictureData.put("data", profile.getPicture());
-            pictureData.put("mimeType", profile.getPictureMimeType());
-        }
+        Map<String, Object> pictureData = new HashMap<>();
+        pictureData.put("data", profile.getPicture());
+        pictureData.put("mimeType", profile.getPictureMimeType());
 
         return OwnerDataDTO.builder()
                 .id(profile.getId())

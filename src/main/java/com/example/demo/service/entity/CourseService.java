@@ -184,12 +184,9 @@ public class CourseService {
 
     public CourseInfoDTO mapToCourseInfo(CourseEntity course){
         Hibernate.initialize(course.getChapters());
-        Map<String, Object> bannerData = null;
-        if (course.getBanner() != null) {
-            bannerData = new HashMap<>();
-            bannerData.put("data", course.getBanner());
-            bannerData.put("mimeType", course.getMimeType());
-        }
+        Map<String, Object> bannerData = new HashMap<>();
+        bannerData.put("data", course.getBanner());
+        bannerData.put("mimeType", course.getMimeType());
         return CourseInfoDTO.builder()
                 .id(course.getId())
                 .name(course.getName())
@@ -240,16 +237,14 @@ public class CourseService {
     }
 
     private CourseUpdateDTO mapCourseToUpdateDTO(CourseEntity course) {
-        Map<String, Object> bannerData = null;
-        if (course.getBanner() != null) {
-            bannerData = new HashMap<>();
-            bannerData.put("data", course.getBanner());
-            bannerData.put("mimeType", course.getMimeType());
-        }
+        Map<String, Object> bannerData = new HashMap<>();
+        bannerData.put("data", course.getBanner());
+        bannerData.put("mimeType", course.getMimeType());
         return CourseUpdateDTO.builder()
                 .id(course.getId())
                 .name(Optional.ofNullable(course.getName()))
-                .banner(Optional.ofNullable(bannerData))                .description(Optional.ofNullable(course.getDescription()))
+                .banner(Optional.ofNullable(bannerData))
+                .description(Optional.ofNullable(course.getDescription()))
                 .price(Optional.ofNullable(course.getPrice()))
                 .duration(Optional.ofNullable(course.getDuration()))
                 .tags(Optional.ofNullable(course.getTags()))

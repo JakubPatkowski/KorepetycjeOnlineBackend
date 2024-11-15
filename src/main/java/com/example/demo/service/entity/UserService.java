@@ -299,13 +299,10 @@ import java.util.stream.Collectors;
     }
 
     private Map<String, Object> createPictureData(byte[] picture, String mimeType) {
-        if (picture != null && mimeType != null) {
-            Map<String, Object> pictureData = new HashMap<>();
-            pictureData.put("data", picture);
-            pictureData.put("mimeType", mimeType);
-            return pictureData;
-        }
-        return null;
+        Map<String, Object> pictureData = new HashMap<>();
+        pictureData.put("data", picture);
+        pictureData.put("mimeType", mimeType);
+        return pictureData;
     }
 
 //    @Transactional
