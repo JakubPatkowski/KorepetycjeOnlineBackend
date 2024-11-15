@@ -28,6 +28,7 @@ public class CourseShopService {
     private final UserProfileRepository userProfileRepository;
     private final UserProfileMapper userProfileMapper;
 
+    @Transactional
     public Page<CourseShopResponseDTO> searchCourses(
             String search,
             String tag,
@@ -69,7 +70,7 @@ public class CourseShopService {
     }
 
 
-
+    @Transactional
     public List<String> searchTags(String search) {
         return courseRepository.searchTags(search);
     }

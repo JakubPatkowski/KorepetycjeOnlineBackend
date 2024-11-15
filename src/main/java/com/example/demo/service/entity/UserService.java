@@ -67,7 +67,7 @@ import java.util.stream.Collectors;
 
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
-
+    @Transactional
     public UserResponseDTO login(UserLoginDTO userLoginDTO, String clientIp) {
         try {
 
@@ -218,6 +218,7 @@ import java.util.stream.Collectors;
         return false;
     }
 
+    @Transactional
     public UserResponseDTO getUserEntity(Long userId){
         Optional<UserEntity> optionalUser = userRepository.findById(userId);
         if(optionalUser.isPresent()){
@@ -297,6 +298,7 @@ import java.util.stream.Collectors;
             throw new ApiException("Error while upgrading to teacher: " + e.getMessage());
         }
     }
+
 
     private Map<String, Object> createPictureData(byte[] picture, String mimeType) {
         Map<String, Object> pictureData = new HashMap<>();

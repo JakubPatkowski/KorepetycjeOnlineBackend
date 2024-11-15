@@ -33,6 +33,7 @@ public class RoleService {
         roleRepository.delete(roleEntity);
     }
 
+    @Transactional
     public Set<RoleEntity.Role> getUserRoles(Long userId) {
         return roleRepository.findByUserId(userId).stream()
                 .map(RoleEntity::getRole)

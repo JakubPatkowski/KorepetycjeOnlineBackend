@@ -28,7 +28,7 @@ public class ChapterService {
     private final ChapterRepository chapterRepository;
     @Autowired
     private final SubchapterService subchapterService;
-    
+    @Autowired
     private final PurchasedCourseRepository purchasedCourseRepository;
 
     @Transactional
@@ -130,6 +130,7 @@ public class ChapterService {
         chapterDTO.getOrder().ifPresent(chapter::setOrder);
         chapterRepository.save(chapter);
     }
+
 
     public List<ChapterUpdateDTO> mapChaptersToUpdateDTO(List<ChapterEntity> chapters) {
         return chapters.stream()
