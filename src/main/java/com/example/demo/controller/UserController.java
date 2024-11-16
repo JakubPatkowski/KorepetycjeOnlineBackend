@@ -5,6 +5,7 @@ import com.example.demo.dto.http.HttpResponseDTO;
 import com.example.demo.entity.UserEntity;
 import com.example.demo.exception.ApiException;
 import com.example.demo.model.UserPrincipals;
+import com.example.demo.service.entity.RefreshTokenService;
 import com.example.demo.service.entity.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,6 +27,7 @@ import org.springframework.core.io.Resource;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -41,6 +43,8 @@ import org.slf4j.LoggerFactory;
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
+
+    private final RefreshTokenService refreshTokenService;
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
     @Value("classpath:templates/verification-success.html")
@@ -58,93 +62,90 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<HttpResponseDTO> saveUser(@Valid @RequestBody UserRegisterDTO userRegisterDTO, BindingResult result){
-        if(result.hasErrors()){
-
-            Map<String, List<String>> errors = new HashMap<>();
-
-            result.getFieldErrors().forEach(error -> {
-                String fieldName = error.getField();
-                String errorMessage = error.getDefaultMessage();
-                errors.computeIfAbsent(fieldName, k -> new ArrayList<>()).add(errorMessage);
-            });
-
-            return ResponseEntity.badRequest().body(
-                    HttpResponseDTO.builder()
-                            .timestamp(now().toString())
-                            .message("Invalid data")
-                            .status(HttpStatus.BAD_REQUEST)
-                            .statusCode(HttpStatus.BAD_REQUEST.value())
-                            .data(of("errors",errors))
-                            .build());
-        } else {
+    public ResponseEntity<HttpResponseDTO> saveUser(@Valid @RequestBody UserRegisterDTO userRegisterDTO) {
+        logger.debug("Attempting to register new user with email: {}", userRegisterDTO.email());
+        try {
             boolean isRegistered = userService.registerUser(userRegisterDTO);
             if (isRegistered) {
-                return ResponseEntity.created(getUri()).body(
-                        HttpResponseDTO.builder()
-                                .timestamp(now().toString())
-                                .message("User created")
+                return ResponseEntity.status(HttpStatus.CREATED)
+                        .body(HttpResponseDTO.builder()
+                                .timestamp(LocalDateTime.now().toString())
+                                .message("User registered successfully")
                                 .status(HttpStatus.CREATED)
                                 .statusCode(HttpStatus.CREATED.value())
-                                .build()
-                );
+                                .build());
             } else {
-                return ResponseEntity.badRequest().body(
-                        HttpResponseDTO.builder()
-                                .timestamp(now().toString())
-                                .message("User not created")
-                                .status(HttpStatus.BAD_REQUEST)
-                                .statusCode(HttpStatus.BAD_REQUEST.value())
-                                .build()
-                );
+                throw new ApiException("Failed to register user");
             }
+        } catch (ApiException e) {
+            throw e; // Let GlobalExceptionHandler handle it
+        } catch (Exception e) {
+            logger.error("Unexpected error during user registration", e);
+            throw new ApiException("An unexpected error occurred during registration");
         }
-
-
     }
 
     @PostMapping("/login")
-    public ResponseEntity<HttpResponseDTO> loginUser(@Valid @RequestBody UserLoginDTO userLoginDTO, BindingResult result, HttpServletRequest request) {
-        if(result.hasErrors()){
-            Map<String, List<String>> errors = new HashMap<>();
+    public ResponseEntity<HttpResponseDTO> loginUser(
+            @Valid @RequestBody UserLoginDTO userLoginDTO,
+            HttpServletRequest request) {
+        logger.debug("Login attempt for user: {}", userLoginDTO.email());
+        try {
+            String clientIp = request.getRemoteAddr();
+            UserResponseDTO userDTO = userService.login(userLoginDTO, clientIp);
 
-            result.getFieldErrors().forEach(error -> {
-                String fieldName = error.getField();
-                String errorMessage = error.getDefaultMessage();
-                errors.computeIfAbsent(fieldName, k -> new ArrayList<>()).add(errorMessage);
-            });
+            return ResponseEntity.ok(HttpResponseDTO.builder()
+                    .timestamp(LocalDateTime.now().toString())
+                    .data(Map.of("user", userDTO))
+                    .message("Login successful")
+                    .status(HttpStatus.OK)
+                    .statusCode(HttpStatus.OK.value())
+                    .build());
+        } catch (ApiException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("Unexpected error during login", e);
+            throw new ApiException("An unexpected error occurred during login");
+        }
+    }
 
-            return ResponseEntity.badRequest().body(
-                    HttpResponseDTO.builder()
-                            .timestamp(now().toString())
-                            .message("Invalid data")
-                            .status(HttpStatus.BAD_REQUEST)
-                            .statusCode(HttpStatus.BAD_REQUEST.value())
-                            .data(of("errors",errors))
-                            .build());
-        } else {
+    @PostMapping("/logout")
+    public ResponseEntity<HttpResponseDTO> logout(
+            @RequestBody Map<String, String> body,
+            HttpServletRequest request,
+            Authentication authentication) {
+        try {
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            Long loggedInUserId = ((UserPrincipals) userDetails).getId();
+            String refreshToken = body.get("refreshToken");
             String clientIp = request.getRemoteAddr();
 
-            UserResponseDTO userDTO = userService.login(userLoginDTO, clientIp);
-            if(userDTO != null) {
-                return ResponseEntity.ok().body(
-                        HttpResponseDTO.builder()
-                                .timestamp(now().toString())
-                                .data(of("user", userDTO))
-                                .message("User logged in")
-                                .status(HttpStatus.OK)
-                                .statusCode(HttpStatus.OK.value())
-                                .build());
-            }
-            else {
+            if (refreshToken == null) {
                 return ResponseEntity.badRequest().body(
                         HttpResponseDTO.builder()
                                 .timestamp(now().toString())
-                                .message("Failed to log in")
+                                .message("Refresh token is required")
                                 .status(HttpStatus.BAD_REQUEST)
                                 .statusCode(HttpStatus.BAD_REQUEST.value())
                                 .build());
             }
+
+            refreshTokenService.logout(refreshToken, clientIp, loggedInUserId);
+
+            return ResponseEntity.ok(HttpResponseDTO.builder()
+                    .timestamp(now().toString())
+                    .message("Successfully logged out")
+                    .status(HttpStatus.OK)
+                    .statusCode(HttpStatus.OK.value())
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    HttpResponseDTO.builder()
+                            .timestamp(now().toString())
+                            .message("An error occurred during logout: " + e.getMessage())
+                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .build());
         }
     }
 
@@ -453,6 +454,8 @@ public class UserController {
                     .build());
         }
     }
+
+
 
     private URI getUri() {
         return URI.create(ServletUriComponentsBuilder.fromCurrentContextPath().path("/user/get/<userId>").toUriString());

@@ -2,6 +2,7 @@ package com.example.demo.service.entity;
 
 import com.example.demo.entity.RefreshTokenEntity;
 import com.example.demo.entity.UserEntity;
+import com.example.demo.exception.ApiException;
 import com.example.demo.repository.RefreshTokenRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.service.JWTService;
@@ -69,5 +70,17 @@ public class RefreshTokenService {
         throw new RuntimeException("Invalid refresh token");
     }
 
+    public void logout(String refreshToken, String clientIp, Long userId) {
+        RefreshTokenEntity token = refreshTokenRepository.findByRefreshTokenAndIp(refreshToken, clientIp);
+        if (token == null) {
+            throw new ApiException("Invalid refresh token");
+        }
 
+        // Sprawdzamy czy token należy do zalogowanego użytkownika
+        if (!token.getUserId().equals(userId)) {
+            throw new ApiException("Unauthorized logout attempt");
+        }
+
+        refreshTokenRepository.delete(token);
+    }
 }

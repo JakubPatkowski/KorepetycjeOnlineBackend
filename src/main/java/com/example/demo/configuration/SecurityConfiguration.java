@@ -74,6 +74,7 @@ public class SecurityConfiguration {
                         .requestMatchers("/user/resend-verification").hasAnyAuthority("USER")
                         .requestMatchers("/user/get").hasAnyAuthority("USER")
                         .requestMatchers("/user/upgrade-to-teacher").hasAnyAuthority("USER")
+                        .requestMatchers("/user/logout").hasAnyAuthority("USER")
 
                         .requestMatchers("/user-profile/update").hasAnyAuthority("USER")
                         .requestMatchers("/user-profile/get").hasAnyAuthority("USER")
