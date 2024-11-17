@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.chapter.ChapterDetailsDTO;
+import com.example.demo.dto.chapter.ChapterShortDTO;
 import com.example.demo.dto.http.HttpResponseDTO;
 import com.example.demo.dto.chapter.ChapterCreateDTO;
 import com.example.demo.exception.ApiException;
@@ -15,6 +16,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 import static java.time.LocalDateTime.now;
@@ -59,6 +61,34 @@ public class ChapterController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(HttpResponseDTO.builder()
                     .timestamp(now().toString())
                     .message("An error occurred while retrieving chapter details: " + e.getMessage())
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .build());
+        }
+    }
+
+    @GetMapping("/get-by-course/{courseId}")
+    public ResponseEntity<HttpResponseDTO> getCourseChapters(@PathVariable Long courseId) {
+        try {
+            List<ChapterShortDTO> chapters = chapterService.getCourseChapters(courseId);
+            return ResponseEntity.ok(HttpResponseDTO.builder()
+                    .timestamp(now().toString())
+                    .data(Map.of("chapters", chapters))
+                    .message("Course chapters retrieved successfully")
+                    .status(HttpStatus.OK)
+                    .statusCode(HttpStatus.OK.value())
+                    .build());
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(HttpResponseDTO.builder()
+                    .timestamp(now().toString())
+                    .message("Course not found")
+                    .status(HttpStatus.NOT_FOUND)
+                    .statusCode(HttpStatus.NOT_FOUND.value())
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(HttpResponseDTO.builder()
+                    .timestamp(now().toString())
+                    .message("An error occurred while retrieving course chapters: " + e.getMessage())
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .build());

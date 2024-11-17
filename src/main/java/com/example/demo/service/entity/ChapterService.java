@@ -2,6 +2,7 @@ package com.example.demo.service.entity;
 
 import com.example.demo.dto.chapter.ChapterCreateDTO;
 import com.example.demo.dto.chapter.ChapterDetailsDTO;
+import com.example.demo.dto.chapter.ChapterShortDTO;
 import com.example.demo.dto.chapter.ChapterUpdateDTO;
 import com.example.demo.dto.subchapter.SubchapterShortDTO;
 import com.example.demo.entity.ChapterEntity;
@@ -30,6 +31,8 @@ public class ChapterService {
     private final SubchapterService subchapterService;
     @Autowired
     private final PurchasedCourseRepository purchasedCourseRepository;
+    @Autowired
+    private final CourseRepository courseRepository;
 
     @Transactional
     public ChapterEntity createChapter(ChapterCreateDTO dto, CourseEntity course, int order) {
@@ -147,6 +150,25 @@ public class ChapterService {
                 .subchapters(Optional.of(subchapterService.mapSubchaptersToUpdateDTO(chapter.getSubchapters())))
                 .deleted(Optional.of(false))
                 .build();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ChapterShortDTO> getCourseChapters(Long courseId) {
+        CourseEntity course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new EntityNotFoundException("Course not found"));
+
+        return course.getChapters().stream()
+                .map(chapter -> ChapterShortDTO.builder()
+                        .id(chapter.getId())
+                        .courseId(courseId)
+                        .name(chapter.getName())
+                        .order(chapter.getOrder())
+                        .review(chapter.getReview())
+                        .reviewNumber(chapter.getReviewNumber())
+                        .subchapterNumber(chapter.getSubchapters().size())
+                        .build())
+                .sorted(Comparator.comparing(ChapterShortDTO::getOrder))
+                .collect(Collectors.toList());
     }
 
 
