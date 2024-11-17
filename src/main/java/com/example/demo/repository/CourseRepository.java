@@ -126,5 +126,8 @@ public interface CourseRepository extends JpaRepository<CourseEntity, Long> {
             """,
             nativeQuery = true)
     List<String> searchTags(@Param("search") String search);
+
+    @Query("SELECT c FROM CourseEntity c WHERE c.id = :courseId")
+    Optional<CourseEntity> findByIdForDetails(@Param("courseId") Long courseId);
 }
 

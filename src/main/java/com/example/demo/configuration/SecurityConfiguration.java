@@ -52,6 +52,7 @@ public class SecurityConfiguration {
                                 "/points/get-offers",
                                 "/course/tags/",
                                 "/course/get",
+                                "/course/get-one/**",
                                 "/course/tags/search",
                                 "/course/get-info/**",
                                 "/course/user/*",
@@ -66,6 +67,7 @@ public class SecurityConfiguration {
                         .requestMatchers("/course/get-purchased").hasAnyAuthority("USER")
                         .requestMatchers("/chapter/get/**").hasAnyAuthority("USER")
                         .requestMatchers("/subchapter/get/**").hasAnyAuthority("USER")
+//                        .requestMatchers("course/get-one/**").hasAnyAuthority("USER")
 
                         .requestMatchers("/user/change-email/initiate").hasAnyAuthority("USER")
                         .requestMatchers("/user/change-email/complete").hasAnyAuthority("USER")

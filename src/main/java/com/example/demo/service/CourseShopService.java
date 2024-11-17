@@ -1,17 +1,19 @@
 package com.example.demo.service;
 
+import com.example.demo.dto.chapter.ChapterShortDTO;
 import com.example.demo.dto.course.CourseShortDTO;
-import com.example.demo.dto.courseShop.CourseDataDTO;
-import com.example.demo.dto.courseShop.CourseShopResponseDTO;
-import com.example.demo.dto.courseShop.OwnerDataDTO;
+import com.example.demo.dto.courseShop.*;
 import com.example.demo.dto.mapper.UserProfileMapper;
 import com.example.demo.dto.userProfile.UserProfileResponseDTO;
 import com.example.demo.entity.CourseEntity;
 import com.example.demo.entity.UserProfileEntity;
 import com.example.demo.repository.CourseRepository;
+import com.example.demo.repository.PurchasedCourseRepository;
 import com.example.demo.repository.UserProfileRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.Hibernate;
 import org.hibernate.service.spi.ServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
@@ -33,8 +35,10 @@ public class CourseShopService {
     private final CourseRepository courseRepository;
     private final UserProfileRepository userProfileRepository;
     private final UserProfileMapper userProfileMapper;
+    private final PurchasedCourseRepository purchasedCourseRepository;
 
-
+    @Autowired
+    private CacheManager cacheManager;
 
     @Transactional(readOnly = true, isolation = Isolation.READ_COMMITTED)
     public Page<CourseShopResponseDTO> searchCourses(
@@ -215,5 +219,62 @@ public class CourseShopService {
             throw new IllegalArgumentException("Page number too large");
         }
         return (long) page * size;
+    }
+
+    @Transactional
+    public CourseShopDetailsResponseDTO getCourseWithDetails(CourseEntity course, Long loggedInUserId) {
+        CourseShopDetailsDTO courseData = mapToCourseShopDetailsDTO(course, loggedInUserId);
+        UserProfileEntity ownerProfile = userProfileRepository.findByUserId(course.getUser().getId())
+                .orElseThrow(() -> new EntityNotFoundException("Course owner profile not found"));
+
+        return CourseShopDetailsResponseDTO.builder()
+                .courseData(courseData)
+                .ownerData(mapToOwnerDataDTO(ownerProfile))
+                .build();
+    }
+
+
+    private CourseShopDetailsDTO mapToCourseShopDetailsDTO(CourseEntity course, Long loggedInUserId) {
+        Map<String, Object> bannerData = new HashMap<>();
+        bannerData.put("data", course.getBanner());
+        bannerData.put("mimeType", course.getMimeType());
+
+        return CourseShopDetailsDTO.builder()
+                .id(course.getId())
+                .name(course.getName())
+                .banner(bannerData)
+                .price(course.getPrice())
+                .duration(course.getDuration())
+                .tags(course.getTags())
+                .review(course.getReview())
+                .reviewNumber(course.getReviewNumber())
+                .description(course.getDescription())
+                .createdAt(course.getCreatedAt())
+                .updatedAt(course.getUpdatedAt())
+                .chaptersCount(course.getChapters().size())
+                .ownerId(course.getUser().getId())
+                .relationshipType(determineRelationshipType(course, loggedInUserId))
+                .build();
+    }
+
+
+    private CourseRelationshipType determineRelationshipType(CourseEntity course, Long loggedInUserId) {
+        // Jeśli użytkownik nie jest zalogowany, kurs jest dostępny
+        if (loggedInUserId == null) {
+            return CourseRelationshipType.AVAILABLE;
+        }
+
+        // Sprawdzanie czy użytkownik jest właścicielem
+        if (course.getUser().getId().equals(loggedInUserId)) {
+            return CourseRelationshipType.OWNER;
+        }
+
+        // Sprawdzanie czy użytkownik kupił kurs
+        boolean isPurchased = purchasedCourseRepository.existsByUserIdAndCourseId(loggedInUserId, course.getId());
+        if (isPurchased) {
+            return CourseRelationshipType.PURCHASED;
+        }
+
+        return CourseRelationshipType.AVAILABLE;
     }
 }
