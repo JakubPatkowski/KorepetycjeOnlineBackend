@@ -131,13 +131,14 @@ public class ChapterService {
         chapterRepository.save(chapter);
     }
 
-
+    @Transactional
     public List<ChapterUpdateDTO> mapChaptersToUpdateDTO(List<ChapterEntity> chapters) {
         return chapters.stream()
                 .map(this::mapChapterToUpdateDTO)
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     public ChapterUpdateDTO mapChapterToUpdateDTO(ChapterEntity chapter) {
         return ChapterUpdateDTO.builder()
                 .id(chapter.getId())

@@ -64,6 +64,7 @@ public class UserProfileService {
         userProfileRepository.save(userProfile);
     }
 
+    @Transactional
     public UserProfileResponseDTO getUserProfile(Long loggedInUserId) {
         UserProfileEntity userProfile = userProfileRepository.findByUserId(loggedInUserId)
                 .orElseThrow(() -> new EntityNotFoundException("User Profile not found"));

@@ -34,8 +34,7 @@ public class CourseShopService {
     private final UserProfileRepository userProfileRepository;
     private final UserProfileMapper userProfileMapper;
 
-    @Autowired
-    private CacheManager cacheManager;
+
 
     @Transactional(readOnly = true, isolation = Isolation.READ_COMMITTED)
     public Page<CourseShopResponseDTO> searchCourses(
