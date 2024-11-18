@@ -12,7 +12,7 @@ SET
 search_path TO demo;
 
 -- Usuwanie tabel jeśli istnieją
-DROP TABLE IF EXISTS users, user_profiles, refresh_tokens, verification_tokens, courses, chapters, subchapters, content_items, files, points_offers, purchased_courses, roles CASCADE;
+DROP TABLE IF EXISTS users, user_profiles, refresh_tokens, verification_tokens, courses, chapters, subchapters, content_items, files, points_offers, purchased_courses, roles, reviews CASCADE;
 
 -- Tworzenie tabeli Users
 CREATE TABLE users
@@ -141,4 +141,16 @@ CREATE TABLE roles (
                             user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
                             role VARCHAR(50) NOT NULL,
                             UNIQUE(user_id, role)
+);
+
+CREATE TABLE reviews (
+                         id BIGSERIAL PRIMARY KEY,
+                         user_id BIGINT REFERENCES users(id),
+                         target_id BIGINT NOT NULL,
+                         target_type VARCHAR(50) NOT NULL CHECK (target_type IN ('COURSE', 'CHAPTER', 'TEACHER')),
+                         rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+                         content TEXT,
+                         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                         updated_at TIMESTAMP,
+                         UNIQUE(user_id, target_id, target_type)
 );

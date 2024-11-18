@@ -1,0 +1,326 @@
+package com.example.demo.service.entity;
+
+import com.example.demo.dto.review.ReviewResponseDTO;
+import com.example.demo.dto.review.ReviewTargetType;
+import com.example.demo.entity.*;
+import com.example.demo.exception.ApiException;
+import com.example.demo.repository.*;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import com.example.demo.dto.review.ReviewCreateDTO;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class ReviewService {
+    private final ReviewRepository reviewRepository;
+    private final CourseRepository courseRepository;
+    private final ChapterRepository chapterRepository;
+    private final UserRepository userRepository;
+    private final PurchasedCourseRepository purchasedCourseRepository;
+    private final UserProfileRepository userProfileRepository;
+
+    @Transactional
+    public void addCourseReview(Long courseId, Long userId, ReviewCreateDTO reviewDTO){
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new ApiException("User not found"));
+
+        CourseEntity course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ApiException("Course not found"));
+
+        if(!purchasedCourseRepository.existsByUserIdAndCourseId(userId,courseId)){
+            throw new ApiException("You must purchase the course to review it");
+        }
+
+        if(reviewRepository.existsByUserIdAndTargetIdAndTargetType(userId, courseId, ReviewTargetType.COURSE)){
+            throw new ApiException("You already reviewed this course");
+        }
+
+        ReviewEntity review = ReviewEntity.builder()
+                .user(user)
+                .targetId(courseId)
+                .targetType(ReviewTargetType.COURSE)
+                .rating(reviewDTO.getRating())
+                .content(reviewDTO.getContent())
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        reviewRepository.save(review);
+
+        int currentReviewCount = course.getReviewNumber();
+        BigDecimal currentAverage = course.getReview() != null ? course.getReview() : BigDecimal.ZERO;
+
+        BigDecimal newTotal = currentAverage.multiply(BigDecimal.valueOf(currentReviewCount))
+                .add(BigDecimal.valueOf(reviewDTO.getRating()));
+        BigDecimal newAverage = newTotal.divide(BigDecimal.valueOf(currentReviewCount + 1), 2, RoundingMode.HALF_UP);
+
+        course.setReview(newAverage);
+        course.setReviewNumber(currentReviewCount + 1);
+        courseRepository.save(course);
+
+    }
+
+    @Transactional
+    public void addChapterReview(Long chapterId, Long userId, ReviewCreateDTO reviewDTO) {
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new ApiException("User not found"));
+
+        ChapterEntity chapter = chapterRepository.findById(chapterId)
+                .orElseThrow(() -> new ApiException("Chapter not found"));
+
+        if (!purchasedCourseRepository.existsByUserIdAndCourseId(userId, chapter.getCourse().getId())) {
+            throw new ApiException("You must purchase the course to review its chapters");
+        }
+
+        if (reviewRepository.existsByUserIdAndTargetIdAndTargetType(userId, chapterId, ReviewTargetType.CHAPTER)) {
+            throw new ApiException("You have already reviewed this chapter");
+        }
+
+        ReviewEntity review = ReviewEntity.builder()
+                .user(user)
+                .targetId(chapterId)
+                .targetType(ReviewTargetType.CHAPTER)
+                .rating(reviewDTO.getRating())
+                .content(reviewDTO.getContent())
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        reviewRepository.save(review);
+
+        int currentReviewCount = chapter.getReviewNumber();
+        BigDecimal currentAverage = chapter.getReview() != null ? chapter.getReview() : BigDecimal.ZERO;
+
+        BigDecimal newTotal = currentAverage.multiply(BigDecimal.valueOf(currentReviewCount))
+                .add(BigDecimal.valueOf(reviewDTO.getRating()));
+        BigDecimal newAverage = newTotal.divide(BigDecimal.valueOf(currentReviewCount + 1), 2, RoundingMode.HALF_UP);
+
+        chapter.setReview(newAverage);
+        chapter.setReviewNumber(currentReviewCount + 1);
+        chapterRepository.save(chapter);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ReviewResponseDTO> getReviews(
+            Long targetId,
+            ReviewTargetType targetType,
+            int page,
+            int size,
+            String sortBy,
+            String sortDir) {
+
+        try {
+            validateSearchParams(page, size, sortBy, sortDir);
+
+            long offset = calculateOffset(page, size);
+
+            List<ReviewEntity> reviews = reviewRepository.findReviewsWithSorting(
+                    targetId,
+                    targetType.name(),
+                    sortBy,
+                    sortDir,
+                    size,
+                    offset
+            );
+
+            long total = reviewRepository.countReviews(targetId, targetType.name());
+
+            List<ReviewResponseDTO> dtos = reviews.stream()
+                    .map(this::mapToReviewDTO)
+                    .collect(Collectors.toList());
+
+            return new PageImpl<>(dtos, PageRequest.of(page, size), total);
+        } catch (Exception e) {
+            throw new ApiException("Error while fetching reviews: " + e.getMessage());
+        }
+    }
+
+    private ReviewResponseDTO mapToReviewDTO(ReviewEntity review) {
+        UserProfileEntity userProfile = userProfileRepository.findByUserId(review.getUser().getId())
+                .orElseThrow(() -> new ApiException("User profile not found"));
+
+        Map<String, Object> profileData = new HashMap<>();
+        profileData.put("fullName", userProfile.getFullName());
+        if (userProfile.getPicture() != null) {
+            Map<String, Object> pictureData = new HashMap<>();
+            pictureData.put("data", userProfile.getPicture());
+            pictureData.put("mimeType", userProfile.getPictureMimeType());
+            profileData.put("picture", pictureData);
+        }
+
+        return ReviewResponseDTO.builder()
+                .id(review.getId())
+                .rating(review.getRating())
+                .content(review.getContent())
+                .lastModified(review.getUpdatedAt() != null ? review.getUpdatedAt() : review.getCreatedAt())
+                .userProfile(profileData)
+                .build();
+    }
+
+    private void validateSearchParams(int page, int size, String sortBy, String sortDir) {
+        if (page < 0) {
+            throw new IllegalArgumentException("Page number cannot be negative");
+        }
+        if (size <= 0 || size > 100) {
+            throw new IllegalArgumentException("Page size must be between 1 and 100");
+        }
+
+        List<String> validSortOptions = Arrays.asList("rating", "date");
+        if (!validSortOptions.contains(sortBy)) {
+            throw new IllegalArgumentException("Invalid sort option. Valid options are: rating, date");
+        }
+
+        List<String> validSortDirections = Arrays.asList("asc", "desc");
+        if (!validSortDirections.contains(sortDir)) {
+            throw new IllegalArgumentException("Invalid sort direction. Valid options are: asc, desc");
+        }
+    }
+
+    private long calculateOffset(int page, int size) {
+        if (page > Integer.MAX_VALUE / size) {
+            throw new IllegalArgumentException("Page number too large");
+        }
+        return (long) page * size;
+    }
+
+    @Transactional
+    public void updateReview(Long reviewId, Long userId, ReviewCreateDTO updateDTO) {
+        ReviewEntity review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new ApiException("Review not found"));
+
+        // Sprawdź czy użytkownik jest właścicielem recenzji
+        if (!review.getUser().getId().equals(userId)) {
+            throw new ApiException("You can only edit your own reviews");
+        }
+
+        // Sprawdź czy ocena się zmieniła
+        boolean ratingChanged = !review.getRating().equals(updateDTO.getRating());
+        int oldRating = review.getRating();
+
+        // Aktualizuj recenzję
+        review.setRating(updateDTO.getRating());
+        review.setContent(updateDTO.getContent());
+        review.setUpdatedAt(LocalDateTime.now());
+        reviewRepository.save(review);
+
+        // Jeśli ocena się zmieniła, zaktualizuj średnią ocenę dla kursu/rozdziału
+        if (ratingChanged) {
+            updateTargetRatingAfterEdit(review.getTargetId(), review.getTargetType(), oldRating, updateDTO.getRating());
+        }
+    }
+
+    private void updateTargetRatingAfterEdit(Long targetId, ReviewTargetType targetType, int oldRating, int newRating) {
+        switch (targetType) {
+            case COURSE -> {
+                CourseEntity course = courseRepository.findById(targetId)
+                        .orElseThrow(() -> new ApiException("Course not found"));
+
+                int reviewCount = course.getReviewNumber();
+                BigDecimal currentTotal = course.getReview().multiply(BigDecimal.valueOf(reviewCount));
+
+                // Odejmij starą ocenę i dodaj nową
+                currentTotal = currentTotal.subtract(BigDecimal.valueOf(oldRating))
+                        .add(BigDecimal.valueOf(newRating));
+
+                BigDecimal newAverage = currentTotal.divide(BigDecimal.valueOf(reviewCount), 2, RoundingMode.HALF_UP);
+                course.setReview(newAverage);
+                courseRepository.save(course);
+            }
+            case CHAPTER -> {
+                ChapterEntity chapter = chapterRepository.findById(targetId)
+                        .orElseThrow(() -> new ApiException("Chapter not found"));
+
+                int reviewCount = chapter.getReviewNumber();
+                BigDecimal currentTotal = chapter.getReview().multiply(BigDecimal.valueOf(reviewCount));
+
+                // Odejmij starą ocenę i dodaj nową
+                currentTotal = currentTotal.subtract(BigDecimal.valueOf(oldRating))
+                        .add(BigDecimal.valueOf(newRating));
+
+                BigDecimal newAverage = currentTotal.divide(BigDecimal.valueOf(reviewCount), 2, RoundingMode.HALF_UP);
+                chapter.setReview(newAverage);
+                chapterRepository.save(chapter);
+            }
+        }
+    }
+
+    @Transactional
+    public void deleteReview(Long reviewId, Long userId) {
+        ReviewEntity review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new ApiException("Review not found"));
+
+        // Sprawdź czy użytkownik jest właścicielem recenzji
+        if (!review.getUser().getId().equals(userId)) {
+            throw new ApiException("You can only delete your own reviews");
+        }
+
+        // Zaktualizuj średnią ocenę przed usunięciem recenzji
+        updateTargetRatingAfterDelete(review);
+
+        // Usuń recenzję
+        reviewRepository.delete(review);
+    }
+
+    private void updateTargetRatingAfterDelete(ReviewEntity review) {
+        switch (review.getTargetType()) {
+            case COURSE -> {
+                CourseEntity course = courseRepository.findById(review.getTargetId())
+                        .orElseThrow(() -> new ApiException("Course not found"));
+
+                int newReviewCount = course.getReviewNumber() - 1;
+
+                if (newReviewCount > 0) {
+                    BigDecimal currentTotal = course.getReview()
+                            .multiply(BigDecimal.valueOf(course.getReviewNumber()))
+                            .subtract(BigDecimal.valueOf(review.getRating()));
+                    BigDecimal newAverage = currentTotal.divide(BigDecimal.valueOf(newReviewCount), 2, RoundingMode.HALF_UP);
+                    course.setReview(newAverage);
+                } else {
+                    course.setReview(BigDecimal.ZERO);
+                }
+
+                course.setReviewNumber(newReviewCount);
+                courseRepository.save(course);
+            }
+            case CHAPTER -> {
+                ChapterEntity chapter = chapterRepository.findById(review.getTargetId())
+                        .orElseThrow(() -> new ApiException("Chapter not found"));
+
+                int newReviewCount = chapter.getReviewNumber() - 1;
+
+                if (newReviewCount > 0) {
+                    BigDecimal currentTotal = chapter.getReview()
+                            .multiply(BigDecimal.valueOf(chapter.getReviewNumber()))
+                            .subtract(BigDecimal.valueOf(review.getRating()));
+                    BigDecimal newAverage = currentTotal.divide(BigDecimal.valueOf(newReviewCount), 2, RoundingMode.HALF_UP);
+                    chapter.setReview(newAverage);
+                } else {
+                    chapter.setReview(BigDecimal.ZERO);
+                }
+
+                chapter.setReviewNumber(newReviewCount);
+                chapterRepository.save(chapter);
+            }
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public ReviewResponseDTO getUserReview(Long targetId, ReviewTargetType targetType, Long userId) {
+        ReviewEntity review = reviewRepository.findByUserIdAndTargetIdAndTargetType(userId, targetId, targetType)
+                .orElseThrow(() -> new ApiException("Review not found"));
+
+        return mapToReviewDTO(review);
+    }
+
+}

@@ -57,8 +57,12 @@ public class SecurityConfiguration {
                                 "/course/get-info/**",
                                 "/course/user/*",
                                 "course/get-all",
-                                "chapter/get-by-course/**"
-                        ).permitAll()
+                                "chapter/get-by-course/**",
+                                "review/get/course/**",
+                                "review/get/chapter/**"
+
+
+                                ).permitAll()
                         //for testing all user
                         .requestMatchers("/course/create").hasAnyAuthority("USER")
                         .requestMatchers("/course/update").hasAnyAuthority("USER")
@@ -83,6 +87,12 @@ public class SecurityConfiguration {
                         .requestMatchers("/user-profile/get").hasAnyAuthority("USER")
 
                         .requestMatchers("/points/buy").hasAnyAuthority("USER")
+
+                        .requestMatchers("/review/add/course/**").hasAnyAuthority("USER")
+                        .requestMatchers("/review/add/chapter/**").hasAnyAuthority("USER")
+                        .requestMatchers("/review/delete/**").hasAnyAuthority("USER")
+                        .requestMatchers("/review/user/course/**").hasAnyAuthority("USER")
+                        .requestMatchers("/review/user/chapter/**").hasAnyAuthority("USER")
 
                         .anyRequest().authenticated()
 
