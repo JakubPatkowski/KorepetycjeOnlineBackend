@@ -5,6 +5,7 @@ import com.example.demo.dto.course.CourseShortDTO;
 import com.example.demo.dto.courseShop.*;
 import com.example.demo.dto.mapper.UserProfileMapper;
 import com.example.demo.dto.userProfile.UserProfileResponseDTO;
+import com.example.demo.entity.ChapterEntity;
 import com.example.demo.entity.CourseEntity;
 import com.example.demo.entity.UserProfileEntity;
 import com.example.demo.repository.CourseRepository;
@@ -223,7 +224,20 @@ public class CourseShopService {
 
     @Transactional
     public CourseShopDetailsResponseDTO getCourseWithDetails(CourseEntity course, Long loggedInUserId) {
-        CourseShopDetailsDTO courseData = mapToCourseShopDetailsDTO(course, loggedInUserId);
+        List<ChapterShortDTO> chapters = course.getChapters().stream()
+                .map(chapter -> ChapterShortDTO.builder()
+                        .id(chapter.getId())
+                        .courseId(course.getId())
+                        .name(chapter.getName())
+                        .order(chapter.getOrder())
+                        .review(chapter.getReview())
+                        .reviewNumber(chapter.getReviewNumber())
+                        .subchapterNumber(chapter.getSubchapters().size())
+                        .build())
+                .sorted(Comparator.comparing(ChapterShortDTO::getOrder))
+                .toList();
+
+        CourseShopDetailsDTO courseData = mapToCourseShopDetailsDTO(course, loggedInUserId, chapters);
         UserProfileEntity ownerProfile = userProfileRepository.findByUserId(course.getUser().getId())
                 .orElseThrow(() -> new EntityNotFoundException("Course owner profile not found"));
 
@@ -234,7 +248,7 @@ public class CourseShopService {
     }
 
 
-    private CourseShopDetailsDTO mapToCourseShopDetailsDTO(CourseEntity course, Long loggedInUserId) {
+    private CourseShopDetailsDTO mapToCourseShopDetailsDTO(CourseEntity course, Long loggedInUserId, List<ChapterShortDTO> chapters) {
         Map<String, Object> bannerData = new HashMap<>();
         bannerData.put("data", course.getBanner());
         bannerData.put("mimeType", course.getMimeType());
@@ -254,6 +268,7 @@ public class CourseShopService {
                 .chaptersCount(course.getChapters().size())
                 .ownerId(course.getUser().getId())
                 .relationshipType(determineRelationshipType(course, loggedInUserId))
+                .chaptersShortInfo(chapters)
                 .build();
     }
 

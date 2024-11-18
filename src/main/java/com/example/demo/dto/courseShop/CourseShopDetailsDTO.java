@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -28,7 +29,8 @@ public class CourseShopDetailsDTO {
     private LocalDateTime updatedAt;
     private Integer chaptersCount;
     private Long ownerId;
-    private CourseRelationshipType relationshipType; // Nowe pole
+    private CourseRelationshipType relationshipType;
+    private List<ChapterShortDTO> chaptersShortInfo;
 
 
 }
