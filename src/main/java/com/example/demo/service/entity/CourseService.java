@@ -3,6 +3,7 @@ import com.example.demo.dto.chapter.ChapterCreateDTO;
 import com.example.demo.dto.chapter.ChapterUpdateDTO;
 import com.example.demo.dto.contentItem.ContentItemCreateDTO;
 import com.example.demo.dto.contentItem.ContentItemUpdateDTO;
+import com.example.demo.dto.courseShop.CourseDataDTO;
 import com.example.demo.dto.subchapter.SubchapterCreateDTO;
 import com.example.demo.dto.subchapter.SubchapterUpdateDTO;
 import com.example.demo.entity.*;
@@ -158,12 +159,12 @@ public class CourseService {
     }
 
     @Transactional
-    public List<CourseInfoDTO> getUserCourses(Long userId){
+    public List<CourseDataDTO> getUserCourses(Long userId){
         Optional<List<CourseEntity>> optionalCourseEntityList = courseRepository.findAllByUserId(userId);
         if(optionalCourseEntityList.isPresent()){
             List<CourseEntity> courseEntityList = optionalCourseEntityList.get();
             return courseEntityList.stream()
-                    .map(this::mapToCourseInfo)
+                    .map(this::mapToCourseData)
                     .collect(Collectors.toList());
         } else  {
             throw new ApiException("Courses not found");
@@ -180,6 +181,28 @@ public class CourseService {
         else {
             throw new ApiException("Course not found");
         }
+    }
+
+    public CourseDataDTO mapToCourseData(CourseEntity course){
+        Hibernate.initialize(course.getChapters());
+        Map<String, Object> bannerData = new HashMap<>();
+        bannerData.put("data", course.getBanner());
+        bannerData.put("mimeType", course.getMimeType());
+        return CourseDataDTO.builder()
+                .id(course.getId())
+                .name(course.getName())
+                .banner(bannerData)
+                .price(course.getPrice())
+                .duration(course.getDuration())
+                .tags(course.getTags())
+                .review(course.getReview())
+                .reviewNumber(course.getReviewNumber())
+                .description(course.getDescription())
+                .createdAt(course.getCreatedAt())
+                .updatedAt(course.getUpdatedAt())
+                .chaptersCount(course.getChapters().size())
+                .ownerId(course.getUser().getId())
+                .build();
     }
 
     public CourseInfoDTO mapToCourseInfo(CourseEntity course){

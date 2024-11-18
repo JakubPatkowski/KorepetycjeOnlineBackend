@@ -1,6 +1,7 @@
 package com.example.demo.service.entity;
 
 import com.example.demo.dto.course.CourseInfoDTO;
+import com.example.demo.dto.courseShop.CourseShopResponseDTO;
 import com.example.demo.entity.CourseEntity;
 import com.example.demo.entity.PurchasedCourseEntity;
 import com.example.demo.entity.UserEntity;
@@ -8,6 +9,7 @@ import com.example.demo.exception.ApiException;
 import com.example.demo.repository.CourseRepository;
 import com.example.demo.repository.PurchasedCourseRepository;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.service.CourseShopService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,7 +25,7 @@ public class PurchasedCourseService {
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
     private final PointsService pointsService;
-    private final CourseService courseService;
+    private final CourseShopService courseShopService;
 
     @Transactional
     public boolean purchaseCourse(Long courseId, Long buyerId) {
@@ -85,9 +87,9 @@ public class PurchasedCourseService {
     }
 
     @Transactional
-    public List<CourseInfoDTO> getPurchasedCourses(Long userId) {
+    public List<CourseShopResponseDTO> getPurchasedCourses(Long userId) {
         return purchasedCourseRepository.findByUserId(userId).stream()
-                .map(purchase -> courseService.mapToCourseInfo(purchase.getCourse()))
+                .map(purchase -> courseShopService.mapToCourseShopResponseDTO(purchase.getCourse()))
                 .collect(Collectors.toList());
     }
 

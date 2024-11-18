@@ -1,7 +1,6 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.chapter.ChapterShortDTO;
-import com.example.demo.dto.course.CourseShortDTO;
 import com.example.demo.dto.courseShop.*;
 import com.example.demo.dto.mapper.UserProfileMapper;
 import com.example.demo.dto.userProfile.UserProfileResponseDTO;

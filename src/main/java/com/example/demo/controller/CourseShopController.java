@@ -1,6 +1,5 @@
 package com.example.demo.controller;
 
-import com.example.demo.dto.course.CourseShortDTO;
 import com.example.demo.dto.courseShop.CourseShopDetailsResponseDTO;
 import com.example.demo.dto.courseShop.CourseShopResponseDTO;
 import com.example.demo.dto.http.HttpResponseDTO;

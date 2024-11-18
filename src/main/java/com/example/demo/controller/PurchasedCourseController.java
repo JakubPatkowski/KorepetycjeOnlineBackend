@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.course.CourseInfoDTO;
+import com.example.demo.dto.courseShop.CourseShopResponseDTO;
 import com.example.demo.dto.http.HttpResponseDTO;
 import com.example.demo.exception.ApiException;
 import com.example.demo.model.UserPrincipals;
@@ -64,7 +65,8 @@ public class PurchasedCourseController {
         Long loggedInUserId = ((UserPrincipals) userDetails).getId();
 
         try {
-            List<CourseInfoDTO> purchasedCourses = purchasedCourseService.getPurchasedCourses(loggedInUserId);
+            List<CourseShopResponseDTO> purchasedCourses = purchasedCourseService.getPurchasedCourses(loggedInUserId);
+
             return ResponseEntity.ok(HttpResponseDTO.builder()
                     .timestamp(now().toString())
                     .data(Map.of("courses", purchasedCourses))

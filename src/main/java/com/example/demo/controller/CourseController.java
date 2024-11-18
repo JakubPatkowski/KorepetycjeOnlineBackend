@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.course.CourseCreateDTO;
+import com.example.demo.dto.courseShop.CourseDataDTO;
 import com.example.demo.dto.http.HttpResponseDTO;
 import com.example.demo.dto.course.CourseInfoDTO;
 import com.example.demo.dto.course.CourseUpdateDTO;
@@ -152,12 +153,12 @@ public class CourseController {
     @GetMapping("/user/{userId}")
     public ResponseEntity<HttpResponseDTO> getUserCourses(@PathVariable Long userId){
         try {
-            List<CourseInfoDTO> userCourses = courseService.getUserCourses(userId);
+            List<CourseDataDTO> userCourses = courseService.getUserCourses(userId);
             return ResponseEntity.ok(HttpResponseDTO.builder()
                     .timestamp(now().toString())
                     .message("Courses owned by user with id = " + userId)
                     .status(HttpStatus.OK)
-                    .data(of("user courses", userCourses))
+                    .data(of("userCourses", userCourses))
                     .statusCode(HttpStatus.OK.value())
                     .build());
         } catch (Exception e) {
