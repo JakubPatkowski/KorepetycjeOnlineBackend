@@ -25,6 +25,7 @@ public class PurchasedCourseService {
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
     private final PointsService pointsService;
+    private final CourseService courseService;
     private final CourseShopService courseShopService;
 
     @Transactional

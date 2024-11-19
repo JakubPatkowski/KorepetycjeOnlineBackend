@@ -1,7 +1,6 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.course.CourseCreateDTO;
-import com.example.demo.dto.courseShop.CourseDataDTO;
 import com.example.demo.dto.http.HttpResponseDTO;
 import com.example.demo.dto.course.CourseInfoDTO;
 import com.example.demo.dto.course.CourseUpdateDTO;
@@ -19,6 +18,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import com.example.demo.dto.courseShop.CourseDataDTO;
+
 
 import java.util.List;
 import java.util.Map;

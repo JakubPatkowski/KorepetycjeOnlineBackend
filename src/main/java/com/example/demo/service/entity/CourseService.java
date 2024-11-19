@@ -3,7 +3,6 @@ import com.example.demo.dto.chapter.ChapterCreateDTO;
 import com.example.demo.dto.chapter.ChapterUpdateDTO;
 import com.example.demo.dto.contentItem.ContentItemCreateDTO;
 import com.example.demo.dto.contentItem.ContentItemUpdateDTO;
-import com.example.demo.dto.courseShop.CourseDataDTO;
 import com.example.demo.dto.subchapter.SubchapterCreateDTO;
 import com.example.demo.dto.subchapter.SubchapterUpdateDTO;
 import com.example.demo.entity.*;
@@ -28,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import jakarta.persistence.EntityNotFoundException;
+import com.example.demo.dto.courseShop.CourseDataDTO;
 
 
 
@@ -171,18 +171,6 @@ public class CourseService {
         }
     }
 
-    @Transactional
-    public CourseInfoDTO getCourseData(Long courseId){
-        Optional<CourseEntity> optionalCourseEntity = courseRepository.findById(courseId);
-        if(optionalCourseEntity.isPresent()){
-            CourseEntity courseEntity = optionalCourseEntity.get();
-            return mapToCourseInfo(courseEntity);
-        }
-        else {
-            throw new ApiException("Course not found");
-        }
-    }
-
     public CourseDataDTO mapToCourseData(CourseEntity course){
         Hibernate.initialize(course.getChapters());
         Map<String, Object> bannerData = new HashMap<>();
@@ -203,6 +191,18 @@ public class CourseService {
                 .chaptersCount(course.getChapters().size())
                 .ownerId(course.getUser().getId())
                 .build();
+    }
+
+    @Transactional
+    public CourseInfoDTO getCourseData(Long courseId){
+        Optional<CourseEntity> optionalCourseEntity = courseRepository.findById(courseId);
+        if(optionalCourseEntity.isPresent()){
+            CourseEntity courseEntity = optionalCourseEntity.get();
+            return mapToCourseInfo(courseEntity);
+        }
+        else {
+            throw new ApiException("Course not found");
+        }
     }
 
     public CourseInfoDTO mapToCourseInfo(CourseEntity course){

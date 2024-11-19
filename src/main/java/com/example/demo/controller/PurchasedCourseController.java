@@ -1,7 +1,6 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.course.CourseInfoDTO;
-import com.example.demo.dto.courseShop.CourseShopResponseDTO;
 import com.example.demo.dto.http.HttpResponseDTO;
 import com.example.demo.exception.ApiException;
 import com.example.demo.model.UserPrincipals;
@@ -12,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import com.example.demo.dto.courseShop.CourseShopResponseDTO;
 
 import java.util.List;
 import java.util.Map;
@@ -65,9 +65,7 @@ public class PurchasedCourseController {
         Long loggedInUserId = ((UserPrincipals) userDetails).getId();
 
         try {
-            List<CourseShopResponseDTO> purchasedCourses = purchasedCourseService.getPurchasedCourses(loggedInUserId);
-
-            return ResponseEntity.ok(HttpResponseDTO.builder()
+            List<CourseShopResponseDTO> purchasedCourses = purchasedCourseService.getPurchasedCourses(loggedInUserId);            return ResponseEntity.ok(HttpResponseDTO.builder()
                     .timestamp(now().toString())
                     .data(Map.of("courses", purchasedCourses))
                     .message("Retrieved purchased courses")
