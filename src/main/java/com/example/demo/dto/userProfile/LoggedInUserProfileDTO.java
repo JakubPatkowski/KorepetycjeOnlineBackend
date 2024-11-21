@@ -6,7 +6,7 @@ import java.util.Date;
 import java.util.Map;
 
 @Data
-public class UserProfileResponseDTO {
+public class LoggedInUserProfileDTO {
     private Long id;
     private String fullName;
     private Long userId;
@@ -14,5 +14,4 @@ public class UserProfileResponseDTO {
     private Date createdAt;
     private Map<String, Object> picture;
     private Boolean badgesVisible;
-
 }

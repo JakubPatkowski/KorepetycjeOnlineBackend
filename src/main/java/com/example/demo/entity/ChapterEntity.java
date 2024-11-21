@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @Entity
-@Table(name = "chapters")
+@Table(schema = "demo", name = "chapters")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

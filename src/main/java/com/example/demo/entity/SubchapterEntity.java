@@ -9,7 +9,7 @@ import lombok.experimental.SuperBuilder;
 import java.util.List;
 
 @Entity
-@Table(name = "subchapters")
+@Table(schema = "demo", name = "subchapters")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

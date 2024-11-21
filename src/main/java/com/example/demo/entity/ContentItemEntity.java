@@ -12,7 +12,7 @@ import org.hibernate.annotations.Type;
 import java.sql.Types;
 
 @Entity
-@Table(name = "content_items")
+@Table(schema = "demo", name = "content_items")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

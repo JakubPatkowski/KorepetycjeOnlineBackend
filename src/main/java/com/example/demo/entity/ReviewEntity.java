@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 
 
 @Entity
-@Table(name = "reviews",
+@Table(schema = "demo", name = "reviews",
         uniqueConstraints = {
                 @UniqueConstraint(columnNames = {"user_id", "target_id", "target_type"})
         })

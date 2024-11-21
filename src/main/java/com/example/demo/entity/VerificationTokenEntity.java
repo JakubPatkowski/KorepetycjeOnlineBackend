@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 
 
 @Entity
-@Table(name = "verification_tokens")
+@Table(schema = "demo", name = "verification_tokens")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

@@ -1,7 +1,7 @@
 package com.example.demo.service.entity;
 
 import com.example.demo.dto.mapper.UserProfileMapper;
-import com.example.demo.dto.userProfile.UserProfileResponseDTO;
+import com.example.demo.dto.userProfile.LoggedInUserProfileDTO;
 import com.example.demo.dto.userProfile.UserProfileUpdateDTO;
 import com.example.demo.entity.UserProfileEntity;
 import com.example.demo.repository.UserProfileRepository;
@@ -9,14 +9,10 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Base64;
 import java.util.Date;
 
 @Service
@@ -65,9 +61,10 @@ public class UserProfileService {
     }
 
     @Transactional
-    public UserProfileResponseDTO getUserProfile(Long loggedInUserId) {
+    public LoggedInUserProfileDTO getUserProfile(Long loggedInUserId) {
         UserProfileEntity userProfile = userProfileRepository.findByUserId(loggedInUserId)
                 .orElseThrow(() -> new EntityNotFoundException("User Profile not found"));
+
 
         return userProfileMapper.mapToDTO(userProfile);
     }

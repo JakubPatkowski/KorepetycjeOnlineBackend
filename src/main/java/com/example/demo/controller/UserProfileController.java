@@ -1,13 +1,11 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.http.HttpResponseDTO;
-import com.example.demo.dto.userProfile.UserProfileResponseDTO;
+import com.example.demo.dto.userProfile.LoggedInUserProfileDTO;
 import com.example.demo.dto.userProfile.UserProfileUpdateDTO;
-import com.example.demo.entity.UserProfileEntity;
 import com.example.demo.model.UserPrincipals;
 import com.example.demo.service.entity.UserProfileService;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +14,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -81,7 +78,7 @@ public class UserProfileController {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         Long loggedInUserId = ((UserPrincipals) userDetails).getId();
         try {
-            UserProfileResponseDTO userProfile = userProfileService.getUserProfile(loggedInUserId);
+            LoggedInUserProfileDTO userProfile = userProfileService.getUserProfile(loggedInUserId);
 
             return ResponseEntity.ok().body(
                     HttpResponseDTO.builder()

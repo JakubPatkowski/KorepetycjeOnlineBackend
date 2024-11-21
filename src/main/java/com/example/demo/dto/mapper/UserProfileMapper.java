@@ -1,28 +1,27 @@
 package com.example.demo.dto.mapper;
 
-import com.example.demo.dto.userProfile.UserProfileResponseDTO;
+import com.example.demo.dto.userProfile.LoggedInUserProfileDTO;
 import com.example.demo.entity.UserProfileEntity;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 @Component
 public class UserProfileMapper {
 
-    public UserProfileResponseDTO mapToDTO(UserProfileEntity entity) {
+    public LoggedInUserProfileDTO mapToDTO(UserProfileEntity entity) {
         if (entity == null) {
             return null;
         }
-
-        UserProfileResponseDTO dto = new UserProfileResponseDTO();
+        LoggedInUserProfileDTO dto = new LoggedInUserProfileDTO();
         dto.setId(entity.getId());
         dto.setFullName(entity.getFullName());
         dto.setUserId(entity.getUserId());
         dto.setDescription(entity.getDescription());
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setBadgesVisible(entity.getBadgesVisible());
-
         Map<String, Object> pictureData = new HashMap<>();
         pictureData.put("data", entity.getPicture());
         pictureData.put("mimeType", entity.getPictureMimeType());
