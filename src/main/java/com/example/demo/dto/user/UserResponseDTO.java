@@ -1,6 +1,8 @@
 package com.example.demo.dto.user;
 
 import lombok.Data;
+
+import java.util.Date;
 import java.util.Set;
 import java.util.Map;
 
@@ -17,6 +19,7 @@ public class UserResponseDTO {
     private String[] badges;
     private Boolean badgesVisible;
     private String description;
+    private Date createdAt;
 
 
 }

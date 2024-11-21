@@ -94,6 +94,7 @@ import java.util.stream.Collectors;
                 userDTO.setFullName(userProfileEntity.getFullName());
                 userDTO.setEmail(userEntity.getEmail());
                 userDTO.setPoints(userEntity.getPoints());
+                userDTO.setCreatedAt(userProfileEntity.getCreatedAt());
                 userDTO.setRoles(userEntity.getRoles().stream()
                         .map(role -> role.getRole().toString())
                         .collect(Collectors.toSet()));
@@ -235,6 +236,7 @@ import java.util.stream.Collectors;
             userDTO.setFullName(userProfileEntity.getFullName());
             userDTO.setEmail(userEntity.getEmail());
             userDTO.setPoints(userEntity.getPoints());
+            userDTO.setCreatedAt(userProfileEntity.getCreatedAt());
             Set<String> roles = userEntity.getRoles().stream()
                     .map(roleEntity -> roleEntity.getRole().toString())
                     .collect(Collectors.toSet());
