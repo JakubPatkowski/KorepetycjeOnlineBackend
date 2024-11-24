@@ -41,19 +41,35 @@ public class CourseShopService {
             String tag,
             int page,
             int size,
-            String sortBy) {
+            String sortBy,
+            Long loggedInUserId) {
 
         try {
             validateSearchParams(page, size);
-
             sortBy = validateAndGetSortBy(sortBy);
-
             long offset = calculateOffset(page, size);
 
             List<CourseEntity> courses;
             long total;
 
-            try {
+            // Logika dla zalogowanego użytkownika
+            if (loggedInUserId != null) {
+                if (search != null && tag != null) {
+                    courses = courseRepository.findAvailableByNameAndTagForUser(search, tag, loggedInUserId, sortBy, size, offset);
+                    total = courseRepository.countAvailableByNameAndTagForUser(search, tag, loggedInUserId);
+                } else if (search != null) {
+                    courses = courseRepository.findAvailableByNameForUser(search, loggedInUserId, sortBy, size, offset);
+                    total = courseRepository.countAvailableByNameForUser(search, loggedInUserId);
+                } else if (tag != null) {
+                    courses = courseRepository.findAvailableByTagForUser(tag, loggedInUserId, sortBy, size, offset);
+                    total = courseRepository.countAvailableByTagForUser(tag, loggedInUserId);
+                } else {
+                    courses = courseRepository.findAllAvailableForUser(loggedInUserId, sortBy, size, offset);
+                    total = courseRepository.countAllAvailableForUser(loggedInUserId);
+                }
+            }
+            // Logika dla niezalogowanego użytkownika (pozostaje bez zmian)
+            else {
                 if (search != null && tag != null) {
                     courses = courseRepository.findByNameAndTag(search, tag, sortBy, size, offset);
                     total = courseRepository.countByNameAndTag(search, tag);
@@ -67,26 +83,17 @@ public class CourseShopService {
                     courses = courseRepository.findAllCoursesPaged(sortBy, size, offset);
                     total = courseRepository.countAll();
                 }
-
-                List<CourseShopResponseDTO> dtos = courses.stream()
-                        .map(this::mapToCourseShopResponseDTO)
-                        .collect(Collectors.toList());
-
-                return new PageImpl<>(dtos, PageRequest.of(page, size), total);
-            } catch (DataAccessException e) {
-                log.error("Database error while searching courses: {}", e.getMessage());
-                throw new ServiceException("Error accessing course data", e);
             }
 
+            List<CourseShopResponseDTO> dtos = courses.stream()
+                    .map(this::mapToCourseShopResponseDTO)
+                    .collect(Collectors.toList());
+
+            return new PageImpl<>(dtos, PageRequest.of(page, size), total);
         } catch (Exception e) {
             log.error("Unexpected error in searchCourses: {}", e.getMessage());
             throw new ServiceException("Error processing course search", e);
         }
-
-
-
-
-
     }
 
 
