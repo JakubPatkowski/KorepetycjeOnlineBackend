@@ -30,7 +30,7 @@ public interface CourseRepository extends JpaRepository<CourseEntity, Long> {
 
     // 1. Wyszukiwanie wszystkich
     @Query(value = """
-        SELECT c.* FROM courses c 
+        SELECT c.* FROM demo.courses c 
         """ + BASE_SORT_QUERY + """
         LIMIT :pageSize
         OFFSET :offset
@@ -43,7 +43,7 @@ public interface CourseRepository extends JpaRepository<CourseEntity, Long> {
 
     // 2. Wyszukiwanie po nazwie
     @Query(value = """
-        SELECT c.* FROM courses c 
+        SELECT c.* FROM demo.courses c 
         WHERE LOWER(c.name) LIKE LOWER(CONCAT('%', :search, '%'))
         """ + BASE_SORT_QUERY + """
         LIMIT :pageSize
@@ -58,7 +58,7 @@ public interface CourseRepository extends JpaRepository<CourseEntity, Long> {
 
     // 3. Wyszukiwanie po tagu
     @Query(value = """
-        SELECT c.* FROM courses c 
+        SELECT c.* FROM demo.courses c 
         WHERE :tag = ANY(c.tags)
         """ + BASE_SORT_QUERY + """
         LIMIT :pageSize
@@ -73,7 +73,7 @@ public interface CourseRepository extends JpaRepository<CourseEntity, Long> {
 
     // 4. Wyszukiwanie po nazwie i tagu
     @Query(value = """
-        SELECT c.* FROM courses c 
+        SELECT c.* FROM demo.courses c 
         WHERE LOWER(c.name) LIKE LOWER(CONCAT('%', :search, '%'))
         AND :tag = ANY(c.tags)
         """ + BASE_SORT_QUERY + """
@@ -91,19 +91,19 @@ public interface CourseRepository extends JpaRepository<CourseEntity, Long> {
 
     // Zapytania COUNT
     @Query(value = """
-        SELECT COUNT(*) FROM courses c 
+        SELECT COUNT(*) FROM demo.courses c 
         WHERE LOWER(c.name) LIKE LOWER(CONCAT('%', :search, '%'))
         """, nativeQuery = true)
     long countByNameContaining(@Param("search") String search);
 
     @Query(value = """
-        SELECT COUNT(*) FROM courses c 
+        SELECT COUNT(*) FROM demo.courses c 
         WHERE :tag = ANY(c.tags)
         """, nativeQuery = true)
     long countByTag(@Param("tag") String tag);
 
     @Query(value = """
-        SELECT COUNT(*) FROM courses c 
+        SELECT COUNT(*) FROM demo.courses c 
         WHERE LOWER(c.name) LIKE LOWER(CONCAT('%', :search, '%'))
         AND :tag = ANY(c.tags)
         """, nativeQuery = true)
@@ -112,13 +112,13 @@ public interface CourseRepository extends JpaRepository<CourseEntity, Long> {
             @Param("tag") String tag
     );
 
-    @Query(value = "SELECT COUNT(*) FROM courses", nativeQuery = true)
+    @Query(value = "SELECT COUNT(*) FROM demo.courses", nativeQuery = true)
     long countAll();
 
     @Query(value = """
             WITH RECURSIVE TagsList AS (
                 SELECT DISTINCT unnest(tags) as tag
-                FROM courses
+                FROM demo.courses
             )
             SELECT tag FROM TagsList
             WHERE :search IS NULL
@@ -132,10 +132,10 @@ public interface CourseRepository extends JpaRepository<CourseEntity, Long> {
 
     // Nowe zapytania dla filtrowania kursów zalogowanego użytkownika
     @Query(value = """
-        SELECT c.* FROM courses c 
+        SELECT c.* FROM demo.courses c 
         WHERE c.user_id != :userId 
         AND NOT EXISTS (
-            SELECT 1 FROM purchased_courses pc 
+            SELECT 1 FROM demo.purchased_courses pc 
             WHERE pc.course_id = c.id AND pc.user_id = :userId
         )
         AND LOWER(c.name) LIKE LOWER(CONCAT('%', :search, '%'))
@@ -152,10 +152,10 @@ public interface CourseRepository extends JpaRepository<CourseEntity, Long> {
     );
 
     @Query(value = """
-        SELECT c.* FROM courses c 
+        SELECT c.* FROM demo.courses c 
         WHERE c.user_id != :userId 
         AND NOT EXISTS (
-            SELECT 1 FROM purchased_courses pc 
+            SELECT 1 FROM demo.purchased_courses pc 
             WHERE pc.course_id = c.id AND pc.user_id = :userId
         )
         AND :tag = ANY(c.tags)
@@ -172,10 +172,10 @@ public interface CourseRepository extends JpaRepository<CourseEntity, Long> {
     );
 
     @Query(value = """
-        SELECT c.* FROM courses c 
+        SELECT c.* FROM demo.courses c 
         WHERE c.user_id != :userId 
         AND NOT EXISTS (
-            SELECT 1 FROM purchased_courses pc 
+            SELECT 1 FROM demo.purchased_courses pc 
             WHERE pc.course_id = c.id AND pc.user_id = :userId
         )
         AND LOWER(c.name) LIKE LOWER(CONCAT('%', :search, '%'))
@@ -195,10 +195,10 @@ public interface CourseRepository extends JpaRepository<CourseEntity, Long> {
 
     // Nowe zapytania COUNT dla zalogowanego użytkownika
     @Query(value = """
-        SELECT COUNT(*) FROM courses c 
+        SELECT COUNT(*) FROM demo.courses c 
         WHERE c.user_id != :userId 
         AND NOT EXISTS (
-            SELECT 1 FROM purchased_courses pc 
+            SELECT 1 FROM demo.purchased_courses pc 
             WHERE pc.course_id = c.id AND pc.user_id = :userId
         )
         AND LOWER(c.name) LIKE LOWER(CONCAT('%', :search, '%'))
@@ -209,10 +209,10 @@ public interface CourseRepository extends JpaRepository<CourseEntity, Long> {
     );
 
     @Query(value = """
-        SELECT COUNT(*) FROM courses c 
+        SELECT COUNT(*) FROM demo.courses c 
         WHERE c.user_id != :userId 
         AND NOT EXISTS (
-            SELECT 1 FROM purchased_courses pc 
+            SELECT 1 FROM demo.purchased_courses pc 
             WHERE pc.course_id = c.id AND pc.user_id = :userId
         )
         AND :tag = ANY(c.tags)
@@ -223,10 +223,10 @@ public interface CourseRepository extends JpaRepository<CourseEntity, Long> {
     );
 
     @Query(value = """
-        SELECT COUNT(*) FROM courses c 
+        SELECT COUNT(*) FROM demo.courses c 
         WHERE c.user_id != :userId 
         AND NOT EXISTS (
-            SELECT 1 FROM purchased_courses pc 
+            SELECT 1 FROM demo.purchased_courses pc 
             WHERE pc.course_id = c.id AND pc.user_id = :userId
         )
         AND LOWER(c.name) LIKE LOWER(CONCAT('%', :search, '%'))
@@ -239,10 +239,10 @@ public interface CourseRepository extends JpaRepository<CourseEntity, Long> {
     );
 
     @Query(value = """
-        SELECT c.* FROM courses c 
+        SELECT c.* FROM demo.courses c 
         WHERE c.user_id != :userId 
         AND NOT EXISTS (
-            SELECT 1 FROM purchased_courses pc 
+            SELECT 1 FROM demo.purchased_courses pc 
             WHERE pc.course_id = c.id AND pc.user_id = :userId
         )
         """ + BASE_SORT_QUERY + """
@@ -257,10 +257,10 @@ public interface CourseRepository extends JpaRepository<CourseEntity, Long> {
     );
 
     @Query(value = """
-        SELECT COUNT(*) FROM courses c 
+        SELECT COUNT(*) FROM demo.courses c 
         WHERE c.user_id != :userId 
         AND NOT EXISTS (
-            SELECT 1 FROM purchased_courses pc 
+            SELECT 1 FROM demo.purchased_courses pc 
             WHERE pc.course_id = c.id AND pc.user_id = :userId
         )
         """, nativeQuery = true)
