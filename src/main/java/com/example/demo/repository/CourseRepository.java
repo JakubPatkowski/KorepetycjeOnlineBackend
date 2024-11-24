@@ -129,5 +129,141 @@ public interface CourseRepository extends JpaRepository<CourseEntity, Long> {
 
     @Query("SELECT c FROM CourseEntity c WHERE c.id = :courseId")
     Optional<CourseEntity> findByIdForDetails(@Param("courseId") Long courseId);
+
+    // Nowe zapytania dla filtrowania kursów zalogowanego użytkownika
+    @Query(value = """
+        SELECT c.* FROM courses c 
+        WHERE c.user_id != :userId 
+        AND NOT EXISTS (
+            SELECT 1 FROM purchased_courses pc 
+            WHERE pc.course_id = c.id AND pc.user_id = :userId
+        )
+        AND LOWER(c.name) LIKE LOWER(CONCAT('%', :search, '%'))
+        """ + BASE_SORT_QUERY + """
+        LIMIT :pageSize
+        OFFSET :offset
+        """, nativeQuery = true)
+    List<CourseEntity> findAvailableByNameForUser(
+            @Param("search") String search,
+            @Param("userId") Long userId,
+            @Param("sortBy") String sortBy,
+            @Param("pageSize") int pageSize,
+            @Param("offset") long offset
+    );
+
+    @Query(value = """
+        SELECT c.* FROM courses c 
+        WHERE c.user_id != :userId 
+        AND NOT EXISTS (
+            SELECT 1 FROM purchased_courses pc 
+            WHERE pc.course_id = c.id AND pc.user_id = :userId
+        )
+        AND :tag = ANY(c.tags)
+        """ + BASE_SORT_QUERY + """
+        LIMIT :pageSize
+        OFFSET :offset
+        """, nativeQuery = true)
+    List<CourseEntity> findAvailableByTagForUser(
+            @Param("tag") String tag,
+            @Param("userId") Long userId,
+            @Param("sortBy") String sortBy,
+            @Param("pageSize") int pageSize,
+            @Param("offset") long offset
+    );
+
+    @Query(value = """
+        SELECT c.* FROM courses c 
+        WHERE c.user_id != :userId 
+        AND NOT EXISTS (
+            SELECT 1 FROM purchased_courses pc 
+            WHERE pc.course_id = c.id AND pc.user_id = :userId
+        )
+        AND LOWER(c.name) LIKE LOWER(CONCAT('%', :search, '%'))
+        AND :tag = ANY(c.tags)
+        """ + BASE_SORT_QUERY + """
+        LIMIT :pageSize
+        OFFSET :offset
+        """, nativeQuery = true)
+    List<CourseEntity> findAvailableByNameAndTagForUser(
+            @Param("search") String search,
+            @Param("tag") String tag,
+            @Param("userId") Long userId,
+            @Param("sortBy") String sortBy,
+            @Param("pageSize") int pageSize,
+            @Param("offset") long offset
+    );
+
+    // Nowe zapytania COUNT dla zalogowanego użytkownika
+    @Query(value = """
+        SELECT COUNT(*) FROM courses c 
+        WHERE c.user_id != :userId 
+        AND NOT EXISTS (
+            SELECT 1 FROM purchased_courses pc 
+            WHERE pc.course_id = c.id AND pc.user_id = :userId
+        )
+        AND LOWER(c.name) LIKE LOWER(CONCAT('%', :search, '%'))
+        """, nativeQuery = true)
+    long countAvailableByNameForUser(
+            @Param("search") String search,
+            @Param("userId") Long userId
+    );
+
+    @Query(value = """
+        SELECT COUNT(*) FROM courses c 
+        WHERE c.user_id != :userId 
+        AND NOT EXISTS (
+            SELECT 1 FROM purchased_courses pc 
+            WHERE pc.course_id = c.id AND pc.user_id = :userId
+        )
+        AND :tag = ANY(c.tags)
+        """, nativeQuery = true)
+    long countAvailableByTagForUser(
+            @Param("tag") String tag,
+            @Param("userId") Long userId
+    );
+
+    @Query(value = """
+        SELECT COUNT(*) FROM courses c 
+        WHERE c.user_id != :userId 
+        AND NOT EXISTS (
+            SELECT 1 FROM purchased_courses pc 
+            WHERE pc.course_id = c.id AND pc.user_id = :userId
+        )
+        AND LOWER(c.name) LIKE LOWER(CONCAT('%', :search, '%'))
+        AND :tag = ANY(c.tags)
+        """, nativeQuery = true)
+    long countAvailableByNameAndTagForUser(
+            @Param("search") String search,
+            @Param("tag") String tag,
+            @Param("userId") Long userId
+    );
+
+    @Query(value = """
+        SELECT c.* FROM courses c 
+        WHERE c.user_id != :userId 
+        AND NOT EXISTS (
+            SELECT 1 FROM purchased_courses pc 
+            WHERE pc.course_id = c.id AND pc.user_id = :userId
+        )
+        """ + BASE_SORT_QUERY + """
+        LIMIT :pageSize
+        OFFSET :offset
+        """, nativeQuery = true)
+    List<CourseEntity> findAllAvailableForUser(
+            @Param("userId") Long userId,
+            @Param("sortBy") String sortBy,
+            @Param("pageSize") int pageSize,
+            @Param("offset") long offset
+    );
+
+    @Query(value = """
+        SELECT COUNT(*) FROM courses c 
+        WHERE c.user_id != :userId 
+        AND NOT EXISTS (
+            SELECT 1 FROM purchased_courses pc 
+            WHERE pc.course_id = c.id AND pc.user_id = :userId
+        )
+        """, nativeQuery = true)
+    long countAllAvailableForUser(@Param("userId") Long userId);
 }
 

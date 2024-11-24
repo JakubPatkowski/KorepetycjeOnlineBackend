@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import static java.util.Map.of;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -36,14 +37,21 @@ public class CourseShopController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String tag) {
+            @RequestParam(required = false) String tag,
+            Authentication authentication) {
 
         try {
-            Page<CourseShopResponseDTO> coursesPage = shopService.searchCourses(search, tag, page, size, sortBy);
+            // Pobierz ID zalogowanego użytkownika (jeśli jest zalogowany)
+            Long loggedInUserId = null;
+            if (authentication != null && authentication.getPrincipal() instanceof UserPrincipals) {
+                loggedInUserId = ((UserPrincipals) authentication.getPrincipal()).getId();
+            }
+
+            Page<CourseShopResponseDTO> coursesPage = shopService.searchCourses(search, tag, page, size, sortBy, loggedInUserId);
 
             return ResponseEntity.ok(HttpResponseDTO.builder()
-                    .timestamp(now().toString())
-                    .data(of(
+                    .timestamp(LocalDateTime.now().toString())
+                    .data(Map.of(
                             "courses", coursesPage.getContent(),
                             "currentPage", coursesPage.getNumber(),
                             "totalItems", coursesPage.getTotalElements(),
@@ -56,7 +64,7 @@ public class CourseShopController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(HttpResponseDTO.builder()
-                            .timestamp(now().toString())
+                            .timestamp(LocalDateTime.now().toString())
                             .message("An error occurred while retrieving courses: " + e.getMessage())
                             .status(HttpStatus.INTERNAL_SERVER_ERROR)
                             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
