@@ -2,7 +2,6 @@ package com.example.demo.service;
 
 import com.example.demo.dto.chapter.ChapterShortDTO;
 import com.example.demo.dto.courseShop.*;
-import com.example.demo.dto.mapper.UserProfileMapper;
 import com.example.demo.entity.CourseEntity;
 import com.example.demo.entity.UserProfileEntity;
 import com.example.demo.repository.CourseRepository;
@@ -31,7 +30,6 @@ import java.util.stream.Collectors;
 public class CourseShopService {
     private final CourseRepository courseRepository;
     private final UserProfileRepository userProfileRepository;
-    private final UserProfileMapper userProfileMapper;
     private final PurchasedCourseRepository purchasedCourseRepository;
 
     @Autowired

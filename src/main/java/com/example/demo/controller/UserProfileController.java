@@ -1,7 +1,8 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.http.HttpResponseDTO;
-import com.example.demo.dto.userProfile.LoggedInUserProfileDTO;
+
+import com.example.demo.dto.userProfile.UserProfileResponseDTO;
 import com.example.demo.dto.userProfile.UserProfileUpdateDTO;
 import com.example.demo.model.UserPrincipals;
 import com.example.demo.service.entity.UserProfileService;
@@ -73,18 +74,18 @@ public class UserProfileController {
         }
     }
 
-    @GetMapping("/get")
+    @GetMapping("/get-logged-in")
     public ResponseEntity<HttpResponseDTO> getLoggedInUserProfile(Authentication authentication) {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         Long loggedInUserId = ((UserPrincipals) userDetails).getId();
         try {
-            LoggedInUserProfileDTO userProfile = userProfileService.getUserProfile(loggedInUserId);
+            UserProfileResponseDTO profileDTO = userProfileService.getUserProfile(loggedInUserId);
 
             return ResponseEntity.ok().body(
                     HttpResponseDTO.builder()
                             .timestamp(now().toString())
                             .message("User profile found")
-                            .data(Map.of("UserProfile", userProfile))
+                            .data(Map.of("UserProfile", profileDTO))
                             .status(HttpStatus.OK)
                             .statusCode(HttpStatus.OK.value())
                             .build()
@@ -94,6 +95,40 @@ public class UserProfileController {
                     HttpResponseDTO.builder()
                             .timestamp(now().toString())
                             .message("An error occurred while getting the user profile. Error: " + e)
+                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .build()
+            );
+        }
+    }
+
+    @GetMapping("/get/{userId}")
+    public ResponseEntity<HttpResponseDTO> getUserProfile(@PathVariable Long userId) {
+        try {
+            UserProfileResponseDTO profileDTO = userProfileService.getUserProfile(userId);
+
+            return ResponseEntity.ok(HttpResponseDTO.builder()
+                    .timestamp(now().toString())
+                    .data(Map.of("profile", profileDTO))
+                    .message("Profile retrieved successfully")
+                    .status(HttpStatus.OK)
+                    .statusCode(HttpStatus.OK.value())
+                    .build());
+
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                    HttpResponseDTO.builder()
+                            .timestamp(now().toString())
+                            .message("Profile not found")
+                            .status(HttpStatus.NOT_FOUND)
+                            .statusCode(HttpStatus.NOT_FOUND.value())
+                            .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    HttpResponseDTO.builder()
+                            .timestamp(now().toString())
+                            .message("An error occurred while retrieving the profile: " + e.getMessage())
                             .status(HttpStatus.INTERNAL_SERVER_ERROR)
                             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .build()

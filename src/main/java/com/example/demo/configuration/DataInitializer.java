@@ -32,6 +32,7 @@ public class DataInitializer {
     private final ContentItemRepository contentItemRepository;
     private final PurchasedCourseRepository purchasedCourseRepository;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final TeacherProfileRepository teacherProfileRepository;
 
     private static final Logger logger = LoggerFactory.getLogger(DataInitializer.class);
 
@@ -146,6 +147,8 @@ public class DataInitializer {
         for (int i = 1; i < 4; i++) {
             addRoles(users.get(i), Set.of(RoleEntity.Role.TEACHER,
                     RoleEntity.Role.VERIFIED, RoleEntity.Role.USER));
+            createTeacherProfile(users.get(i));
+
         }
 
         // Verified users
@@ -164,6 +167,15 @@ public class DataInitializer {
             roleEntity.setRole(role);
             roleRepository.save(roleEntity);
         }
+    }
+
+    private void createTeacherProfile(UserEntity user) {
+        TeacherProfileEntity teacherProfile = TeacherProfileEntity.builder()
+                .user(user)
+                .review(BigDecimal.ZERO)
+                .reviewNumber(0)
+                .build();
+        teacherProfileRepository.save(teacherProfile);
     }
 
     private List<CourseEntity> createCourses(List<UserEntity> users) {

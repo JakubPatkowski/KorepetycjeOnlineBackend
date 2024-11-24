@@ -8,7 +8,6 @@ import com.example.demo.exception.ApiException;
 import com.example.demo.entity.UserEntity;
 import com.example.demo.entity.UserProfileEntity;
 import com.example.demo.entity.RoleEntity;
-import com.example.demo.repository.RoleRepository;
 import com.example.demo.repository.UserProfileRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.service.EmailService;
@@ -23,7 +22,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,26 +42,34 @@ import java.util.stream.Collectors;
     private final UserRepository userRepository;
 
     @Autowired
-    public final JWTService jwtService;
+    private final JWTService jwtService;
 
     @Autowired
-    public final UserProfileService userProfileService;
+    private final UserProfileService userProfileService;
 
     @Autowired
-    public final UserProfileRepository userProfileRepository;
+    private final UserProfileRepository userProfileRepository;
 
     @Autowired
-    public final RefreshTokenService refreshTokenService;
+    private final RefreshTokenService refreshTokenService;
 
+    @Autowired
     private final VerificationTokenService verificationTokenService;
 
+    @Autowired
     private final EmailService emailService;
 
-    public final BCryptPasswordEncoder encoder;
+    @Autowired
+    private final TeacherProfileService teacherProfileService;
 
-    public final AuthenticationManager authenticationManager;
-
+    @Autowired
     private final RoleService roleService;
+
+    private final BCryptPasswordEncoder encoder;
+
+    private final AuthenticationManager authenticationManager;
+
+
 
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
@@ -295,6 +301,9 @@ import java.util.stream.Collectors;
             user.setPoints(user.getPoints() - 1000);
             roleService.addRoleToUser(user, RoleEntity.Role.TEACHER);
             userRepository.save(user);
+
+            teacherProfileService.createTeacherProfile(userId);
+
             return true;
         } catch (Exception e) {
             throw new ApiException("Error while upgrading to teacher: " + e.getMessage());
@@ -309,29 +318,6 @@ import java.util.stream.Collectors;
         return pictureData;
     }
 
-//    @Transactional
-//    public void addRoleToUser(Long userId, RoleEntity.Role role) {
-//        UserEntity user = userRepository.findById(userId)
-//                .orElseThrow(() -> new ApiException("User not found"));
-//        if (!roleRepository.existsByUserIdAndRole(userId, role)) {
-//            user.addRole(role);
-//            userRepository.save(user);
-//        }
-//    }
-//
-//    @Transactional
-//    public void removeRoleFromUser(Long userId, UserEntity.Role role) {
-//        UserEntity user = userRepository.findById(userId)
-//                .orElseThrow(() -> new ApiException("User not found"));
-//        roleRepository.deleteByUserIdAndRole(userId, role);
-//        user.removeRole(role); // aktualizuje obiekt w pamięci
-//    }
-//
-//    @Transactional
-//    public Set<UserEntity.Role> getUserRoles(Long userId) {
-//        return roleRepository.findByUserId(userId).stream()
-//                .map(RoleEntity::getRole)
-//                .collect(Collectors.toSet());
-//    }
+
 
 }
