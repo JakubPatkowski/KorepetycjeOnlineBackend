@@ -52,6 +52,7 @@ public class SecurityConfiguration {
                                 "/points/get-offers",
                                 "/course/tags/",
                                 "/course/get",
+                                "/course/get-best",
                                 "/course/get-one/**",
                                 "/course/tags/search",
                                 "/course/get-info/**",
@@ -60,7 +61,8 @@ public class SecurityConfiguration {
                                 "chapter/get-by-course/**",
                                 "review/get/course/**",
                                 "review/get/chapter/**",
-                                "user-profile/get/**"
+                                "user-profile/get/**",
+                                "user-profile/get-best"
 
 
                                 ).permitAll()

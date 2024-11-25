@@ -265,5 +265,35 @@ public interface CourseRepository extends JpaRepository<CourseEntity, Long> {
         )
         """, nativeQuery = true)
     long countAllAvailableForUser(@Param("userId") Long userId);
+
+    @Query(value = """
+    SELECT c.* FROM demo.courses c
+    WHERE c.review_number > 0
+    AND (:userId IS NULL OR (
+        c.user_id != :userId 
+        AND NOT EXISTS (
+            SELECT 1 FROM demo.purchased_courses pc 
+            WHERE pc.course_id = c.id AND pc.user_id = :userId
+        )
+    ))
+    ORDER BY 
+        (c.review + 1.96 * 1.96 / (2 * c.review_number) - 
+        1.96 * SQRT((c.review * (5 - c.review) + 1.96 * 1.96 / (4 * c.review_number)) / c.review_number)) /
+        (1 + 1.96 * 1.96 / c.review_number) DESC
+    LIMIT 3
+    """, nativeQuery = true)
+    List<CourseEntity> findBestCourses(@Param("userId") Long userId);
 }
+
+
+
+
+
+
+
+
+
+
+
+
 

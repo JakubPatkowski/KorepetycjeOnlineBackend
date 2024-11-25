@@ -152,4 +152,33 @@ public class CourseShopController {
                             .build());
         }
     }
+
+    @GetMapping("/get-best")
+    public ResponseEntity<HttpResponseDTO> getBestCourses(Authentication authentication) {
+        try {
+            // Pobierz ID zalogowanego użytkownika (jeśli jest zalogowany)
+            Long loggedInUserId = null;
+            if (authentication != null && authentication.getPrincipal() instanceof UserPrincipals) {
+                loggedInUserId = ((UserPrincipals) authentication.getPrincipal()).getId();
+            }
+
+            List<CourseShopResponseDTO> bestCourses = shopService.getBestCourses(loggedInUserId);
+
+            return ResponseEntity.ok(HttpResponseDTO.builder()
+                    .timestamp(LocalDateTime.now().toString())
+                    .data(Map.of("courses", bestCourses))
+                    .message("Best courses retrieved successfully")
+                    .status(HttpStatus.OK)
+                    .statusCode(HttpStatus.OK.value())
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(HttpResponseDTO.builder()
+                            .timestamp(LocalDateTime.now().toString())
+                            .message("An error occurred while retrieving best courses: " + e.getMessage())
+                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .build());
+        }
+    }
 }

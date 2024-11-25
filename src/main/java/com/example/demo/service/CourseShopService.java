@@ -293,4 +293,17 @@ public class CourseShopService {
 
         return CourseRelationshipType.AVAILABLE;
     }
+
+    @Transactional(readOnly = true)
+    public List<CourseShopResponseDTO> getBestCourses(Long loggedInUserId) {
+        try {
+            List<CourseEntity> bestCourses = courseRepository.findBestCourses(loggedInUserId);
+            return bestCourses.stream()
+                    .map(this::mapToCourseShopResponseDTO)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("Error while fetching best courses: {}", e.getMessage());
+            throw new ServiceException("Error retrieving best courses", e);
+        }
+    }
 }
