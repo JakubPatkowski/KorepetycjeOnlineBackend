@@ -5,6 +5,7 @@ import com.example.demo.dto.http.HttpResponseDTO;
 import com.example.demo.dto.userProfile.UserProfileResponseDTO;
 import com.example.demo.dto.userProfile.UserProfileUpdateDTO;
 import com.example.demo.model.UserPrincipals;
+import com.example.demo.service.entity.TeacherProfileService;
 import com.example.demo.service.entity.UserProfileService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -25,6 +27,7 @@ import static java.time.LocalDateTime.now;
 @RequiredArgsConstructor
 public class UserProfileController {
     private final UserProfileService userProfileService;
+    private final TeacherProfileService teacherProfileService;
 
     @PutMapping("/update")
     public ResponseEntity<HttpResponseDTO> updateUserProfile(
@@ -133,6 +136,34 @@ public class UserProfileController {
                             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .build()
             );
+        }
+    }
+
+    @GetMapping("/get-best")
+    public ResponseEntity<HttpResponseDTO> getBestTeachers(Authentication authentication) {
+        try {
+            Long loggedInUserId = null;
+            if (authentication != null && authentication.getPrincipal() instanceof UserPrincipals) {
+                loggedInUserId = ((UserPrincipals) authentication.getPrincipal()).getId();
+            }
+
+            List<UserProfileResponseDTO> bestTeachers = teacherProfileService.getBestTeachers(loggedInUserId);
+
+            return ResponseEntity.ok(HttpResponseDTO.builder()
+                    .timestamp(now().toString())
+                    .data(Map.of("teachers", bestTeachers))
+                    .message("Best teachers retrieved successfully")
+                    .status(HttpStatus.OK)
+                    .statusCode(HttpStatus.OK.value())
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(HttpResponseDTO.builder()
+                            .timestamp(now().toString())
+                            .message("An error occurred while retrieving best teachers: " + e.getMessage())
+                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .build());
         }
     }
 }

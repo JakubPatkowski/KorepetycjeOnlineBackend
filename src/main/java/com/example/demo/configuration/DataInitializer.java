@@ -172,8 +172,8 @@ public class DataInitializer {
     private void createTeacherProfile(UserEntity user) {
         TeacherProfileEntity teacherProfile = TeacherProfileEntity.builder()
                 .user(user)
-                .review(BigDecimal.ZERO)
-                .reviewNumber(0)
+                .review(BigDecimal.valueOf(3.5 + Math.random() * 1.5))
+                .reviewNumber((int)(5 + Math.random() * 45))
                 .build();
         teacherProfileRepository.save(teacherProfile);
     }
