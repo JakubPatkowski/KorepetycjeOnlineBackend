@@ -14,6 +14,7 @@ import com.example.demo.repository.ChapterRepository;
 import com.example.demo.repository.PurchasedCourseRepository;
 import com.example.demo.repository.SubchapterRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonAppend;
 import jakarta.persistence.EntityNotFoundException;
@@ -145,9 +146,13 @@ public class SubchapterService {
                 if (item.getQuizContent() != null) {
                     try {
                         ObjectMapper mapper = new ObjectMapper();
-                        // Parse the stored JSON string to Object
-                        Object quizJson = mapper.readValue(item.getQuizContent(), Object.class);
-                        builder.quizContent(quizJson);
+                        JsonNode rootNode = mapper.readTree(item.getQuizContent());
+                        // Pobierz bezpośrednio tablicę questions
+                        JsonNode questionsArray = rootNode.get("questions");
+                        if (questionsArray != null && questionsArray.isArray()) {
+                            // Ustaw samą tablicę jako quizContent
+                            builder.quizContent(mapper.treeToValue(questionsArray, Object.class));
+                        }
                     } catch (JsonProcessingException e) {
                         throw new ApiException("Error parsing quiz content: " + e.getMessage());
                     }
