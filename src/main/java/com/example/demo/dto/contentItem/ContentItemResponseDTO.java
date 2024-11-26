@@ -23,5 +23,5 @@ public class ContentItemResponseDTO {
     public String Italics;
     public String underline;
     private Map<String, Object> file;
-    public String quizContent;
+    public Object quizContent;  // Changed from String to Object
 }

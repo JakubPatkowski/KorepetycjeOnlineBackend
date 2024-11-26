@@ -13,6 +13,8 @@ import com.example.demo.exception.ApiException;
 import com.example.demo.repository.ChapterRepository;
 import com.example.demo.repository.PurchasedCourseRepository;
 import com.example.demo.repository.SubchapterRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonAppend;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -140,7 +142,16 @@ public class SubchapterService {
                 break;
 
             case "quiz":
-                builder.quizContent(item.getQuizContent());
+                if (item.getQuizContent() != null) {
+                    try {
+                        ObjectMapper mapper = new ObjectMapper();
+                        // Parse the stored JSON string to Object
+                        Object quizJson = mapper.readValue(item.getQuizContent(), Object.class);
+                        builder.quizContent(quizJson);
+                    } catch (JsonProcessingException e) {
+                        throw new ApiException("Error parsing quiz content: " + e.getMessage());
+                    }
+                }
                 break;
 
             case "video":
