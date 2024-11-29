@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -152,14 +153,22 @@ public class CourseController {
 
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<HttpResponseDTO> getUserCourses(@PathVariable Long userId){
+    public ResponseEntity<HttpResponseDTO> getUserCourses(
+            @PathVariable Long userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         try {
-            List<CourseDataDTO> userCourses = courseService.getUserCourses(userId);
+            Page<CourseDataDTO> userCourses = courseService.getUserCourses(userId, page, size);
             return ResponseEntity.ok(HttpResponseDTO.builder()
                     .timestamp(now().toString())
                     .message("Courses owned by user with id = " + userId)
                     .status(HttpStatus.OK)
-                    .data(of("userCourses", userCourses))
+                    .data(Map.of(
+                            "courses", userCourses.getContent(),
+                            "currentPage", userCourses.getNumber(),
+                            "totalItems", userCourses.getTotalElements(),
+                            "totalPages", userCourses.getTotalPages()
+                    ))
                     .statusCode(HttpStatus.OK.value())
                     .build());
         } catch (Exception e) {

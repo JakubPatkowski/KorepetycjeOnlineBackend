@@ -22,6 +22,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -158,16 +161,36 @@ public class CourseService {
         updateDTO.getTags().ifPresent(course::setTags);
     }
 
-    @Transactional
-    public List<CourseDataDTO> getUserCourses(Long userId){
+    @Transactional(readOnly = true)
+    public Page<CourseDataDTO> getUserCourses(Long userId, int page, int size) {
+        validatePaginationParams(page, size);
+
         Optional<List<CourseEntity>> optionalCourseEntityList = courseRepository.findAllByUserId(userId);
-        if(optionalCourseEntityList.isPresent()){
-            List<CourseEntity> courseEntityList = optionalCourseEntityList.get();
-            return courseEntityList.stream()
+        if (optionalCourseEntityList.isPresent()) {
+            List<CourseEntity> allCourses = optionalCourseEntityList.get();
+
+            int start = page * size;
+            int end = Math.min(start + size, allCourses.size());
+
+            List<CourseDataDTO> courseDTOs = allCourses.subList(start, end).stream()
                     .map(this::mapToCourseData)
                     .collect(Collectors.toList());
-        } else  {
-            throw new ApiException("Courses not found");
+
+            return new PageImpl<>(
+                    courseDTOs,
+                    PageRequest.of(page, size),
+                    allCourses.size()
+            );
+        }
+        throw new ApiException("Courses not found");
+    }
+
+    private void validatePaginationParams(int page, int size) {
+        if (page < 0) {
+            throw new IllegalArgumentException("Page number cannot be negative");
+        }
+        if (size <= 0 || size > 100) {
+            throw new IllegalArgumentException("Page size must be between 1 and 100");
         }
     }
 

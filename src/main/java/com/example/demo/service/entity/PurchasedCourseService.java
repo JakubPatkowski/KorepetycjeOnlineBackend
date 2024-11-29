@@ -10,9 +10,12 @@ import com.example.demo.repository.CourseRepository;
 import com.example.demo.repository.PurchasedCourseRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.service.CourseShopService;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
@@ -25,7 +28,6 @@ public class PurchasedCourseService {
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
     private final PointsService pointsService;
-    private final CourseService courseService;
     private final CourseShopService courseShopService;
 
     @Transactional
@@ -87,15 +89,32 @@ public class PurchasedCourseService {
         return (int) (coursePrice * (1 - PLATFORM_FEE_PERCENTAGE));
     }
 
-    @Transactional
-    public List<CourseShopResponseDTO> getPurchasedCourses(Long userId) {
-        return purchasedCourseRepository.findByUserId(userId).stream()
+    @Transactional(readOnly = true)
+    public Page<CourseShopResponseDTO> getPurchasedCourses(Long userId, int page, int size) {
+        validatePaginationParams(page, size);
+
+        List<PurchasedCourseEntity> allPurchases = purchasedCourseRepository.findByUserId(userId);
+
+        int start = page * size;
+        int end = Math.min(start + size, allPurchases.size());
+
+        List<CourseShopResponseDTO> purchasedCourseDTOs = allPurchases.subList(start, end).stream()
                 .map(purchase -> courseShopService.mapToCourseShopResponseDTO(purchase.getCourse()))
                 .collect(Collectors.toList());
+
+        return new PageImpl<>(
+                purchasedCourseDTOs,
+                PageRequest.of(page, size),
+                allPurchases.size()
+        );
     }
 
-//    @Transactional
-//    public boolean hasUserPurchasedCourse(Long userId, Long courseId) {
-//        return purchasedCourseRepository.existsByUserIdAndCourseId(userId, courseId);
-//    }
+    private void validatePaginationParams(int page, int size) {
+        if (page < 0) {
+            throw new IllegalArgumentException("Page number cannot be negative");
+        }
+        if (size <= 0 || size > 100) {
+            throw new IllegalArgumentException("Page size must be between 1 and 100");
+        }
+    }
 }

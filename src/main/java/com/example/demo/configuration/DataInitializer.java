@@ -212,7 +212,7 @@ public class DataInitializer {
                                       String name, int bannerIndex, List<String> tags) {
         CourseEntity course = new CourseEntity();
         course.setName(name);
-        course.setPrice(BigDecimal.valueOf(100 + Math.random() * 900));
+        course.setPrice(BigDecimal.valueOf((int)(Math.random() * 50)*50));
         course.setDuration(BigDecimal.valueOf(10 + Math.random() * 40));
         course.setUser(teacher);
         course.setTags(tags);

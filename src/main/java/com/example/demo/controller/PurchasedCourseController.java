@@ -6,6 +6,7 @@ import com.example.demo.exception.ApiException;
 import com.example.demo.model.UserPrincipals;
 import com.example.demo.service.entity.PurchasedCourseService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -60,14 +61,23 @@ public class PurchasedCourseController {
     }
 
     @GetMapping("/get-purchased")
-    public ResponseEntity<HttpResponseDTO> getPurchasedCourses(Authentication authentication) {
+    public ResponseEntity<HttpResponseDTO> getPurchasedCourses(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            Authentication authentication) {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         Long loggedInUserId = ((UserPrincipals) userDetails).getId();
 
         try {
-            List<CourseShopResponseDTO> purchasedCourses = purchasedCourseService.getPurchasedCourses(loggedInUserId);            return ResponseEntity.ok(HttpResponseDTO.builder()
+            Page<CourseShopResponseDTO> purchasedCourses = purchasedCourseService.getPurchasedCourses(loggedInUserId, page, size);
+            return ResponseEntity.ok(HttpResponseDTO.builder()
                     .timestamp(now().toString())
-                    .data(Map.of("courses", purchasedCourses))
+                    .data(Map.of(
+                            "courses", purchasedCourses.getContent(),
+                            "currentPage", purchasedCourses.getNumber(),
+                            "totalItems", purchasedCourses.getTotalElements(),
+                            "totalPages", purchasedCourses.getTotalPages()
+                    ))
                     .message("Retrieved purchased courses")
                     .status(HttpStatus.OK)
                     .statusCode(HttpStatus.OK.value())
