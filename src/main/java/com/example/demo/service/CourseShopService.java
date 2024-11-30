@@ -7,6 +7,7 @@ import com.example.demo.entity.UserProfileEntity;
 import com.example.demo.repository.CourseRepository;
 import com.example.demo.repository.PurchasedCourseRepository;
 import com.example.demo.repository.UserProfileRepository;
+import com.example.demo.service.entity.RoleService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +32,7 @@ public class CourseShopService {
     private final CourseRepository courseRepository;
     private final UserProfileRepository userProfileRepository;
     private final PurchasedCourseRepository purchasedCourseRepository;
-
+    private final RoleService roleService;
     @Autowired
     private CacheManager cacheManager;
 
@@ -178,6 +179,11 @@ public class CourseShopService {
                     })
                     .orElse(null);
 
+            Set<String> userRoles = roleService.getUserRoles(profile.getUserId())
+                    .stream()
+                    .map(Enum::name)
+                    .collect(Collectors.toSet());
+
             return OwnerDataDTO.builder()
                     .id(profile.getId())
                     .fullName(profile.getFullName())
@@ -186,6 +192,7 @@ public class CourseShopService {
                     .createdAt(profile.getCreatedAt())
                     .picture(pictureData)
                     .badgesVisible(profile.getBadgesVisible())
+                    .roles(userRoles)
                     .build();
 
         } catch (Exception e) {

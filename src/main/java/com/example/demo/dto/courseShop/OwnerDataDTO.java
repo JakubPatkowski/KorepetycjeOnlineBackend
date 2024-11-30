@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.util.Date;
 import java.util.Map;
+import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -20,4 +21,5 @@ public class OwnerDataDTO {
     private Date createdAt;
     private Map<String, Object> picture;
     private Boolean badgesVisible;
+    private Set<String> roles;
 }
