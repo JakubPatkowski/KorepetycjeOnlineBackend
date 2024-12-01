@@ -274,15 +274,46 @@ public class DataInitializer {
             "questions": [
                 {
                     "id": 1,
-                    "question": "Sample question?",
+                    "question": "Pytanie testowe?",
+                    "order": 1,
+                    "singleAnswer": true,
                     "answers": [
-                        {"id": 1, "text": "Answer 1", "correct": true},
-                        {"id": 2, "text": "Answer 2", "correct": false}
+                        {
+                            "id": 1,
+                            "order": 1,
+                            "answer": "Odpowiedź A",
+                            "isCorrect": true
+                        },
+                        {
+                            "id": 2,
+                            "order": 2,
+                            "answer": "Odpowiedź B",
+                            "isCorrect": false
+                        }
                     ]
                 }
             ]
         }
     """);
+
+
+
+//        quizContent.setQuizContent("""
+//        {
+//            "questions": [
+//                {
+//                    "id": 1,
+//                    "question": "Sample question?",
+//                    "answers": [
+//                        {"id": 1, "text": "Answer 1", "correct": true},
+//                        {"id": 2, "text": "Answer 2", "correct": false}
+//                    ]
+//                }
+//            ]
+//        }
+//    """);
+
+
         contentItemRepository.save(quizContent);
     }
 
