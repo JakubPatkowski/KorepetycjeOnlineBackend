@@ -219,10 +219,26 @@ public class ContentItemService {
         itemDTO.getQuizContent().ifPresent(quizData -> {
             try {
                 ObjectMapper mapper = new ObjectMapper();
-                JsonNode jsonNode = mapper.readTree(quizData);
-                item.setQuizContent(mapper.writeValueAsString(jsonNode));
+                JsonNode jsonNode;
+
+                // Konwersja wejścia na JsonNode
+                if (quizData instanceof String) {
+                    jsonNode = mapper.readTree((String) quizData);
+                } else {
+                    jsonNode = mapper.valueToTree(quizData);
+                }
+
+                // Sprawdź czy dane są już w poprawnym formacie
+                if (jsonNode.has("questions")) {
+                    item.setQuizContent(mapper.writeValueAsString(jsonNode));
+                } else {
+                    // Jeśli nie, owiń w obiekt z kluczem "questions"
+                    Map<String, JsonNode> wrappedContent = new HashMap<>();
+                    wrappedContent.put("questions", jsonNode);
+                    item.setQuizContent(mapper.writeValueAsString(wrappedContent));
+                }
             } catch (JsonProcessingException e) {
-                throw new ApiException("Invalid quiz data format", e);
+                throw new ApiException("Invalid quiz data format: " + e.getMessage());
             }
         });
     }

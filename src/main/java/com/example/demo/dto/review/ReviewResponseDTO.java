@@ -1,5 +1,6 @@
 package com.example.demo.dto.review;
 
+import com.example.demo.dto.userProfile.UserProfileResponseDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,5 +18,5 @@ public class ReviewResponseDTO {
     private Integer rating;
     private String content;
     private LocalDateTime lastModified; // created_at lub updated_at, cokolwiek jest późniejsze
-    private Map<String, Object> userProfile; // Podstawowe info o użytkowniku
+    private UserProfileResponseDTO userProfile;  // Zmienione z Map<String, Object>
 }

@@ -2,9 +2,11 @@ package com.example.demo.service.entity;
 
 import com.example.demo.dto.review.ReviewResponseDTO;
 import com.example.demo.dto.review.ReviewTargetType;
+import com.example.demo.dto.userProfile.UserProfileResponseDTO;
 import com.example.demo.entity.*;
 import com.example.demo.exception.ApiException;
 import com.example.demo.repository.*;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -16,10 +18,7 @@ import com.example.demo.dto.review.ReviewCreateDTO;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,6 +30,8 @@ public class ReviewService {
     private final UserRepository userRepository;
     private final PurchasedCourseRepository purchasedCourseRepository;
     private final UserProfileRepository userProfileRepository;
+    private final RoleService roleService;
+    private final TeacherProfileRepository teacherProfileRepository;
 
     @Transactional
     public void addCourseReview(Long courseId, Long userId, ReviewCreateDTO reviewDTO){
@@ -150,13 +151,33 @@ public class ReviewService {
         UserProfileEntity userProfile = userProfileRepository.findByUserId(review.getUser().getId())
                 .orElseThrow(() -> new ApiException("User profile not found"));
 
-        Map<String, Object> profileData = new HashMap<>();
-        profileData.put("fullName", userProfile.getFullName());
-        if (userProfile.getPicture() != null) {
-            Map<String, Object> pictureData = new HashMap<>();
-            pictureData.put("data", userProfile.getPicture());
-            pictureData.put("mimeType", userProfile.getPictureMimeType());
-            profileData.put("picture", pictureData);
+        // Pobierz role użytkownika
+        Set<String> roles = roleService.getUserRoles(review.getUser().getId())
+                .stream()
+                .map(Enum::name)
+                .collect(Collectors.toSet());
+
+        // Zbuduj pełny profil użytkownika
+        UserProfileResponseDTO userProfileDTO = UserProfileResponseDTO.builder()
+                .id(userProfile.getId())
+                .fullName(userProfile.getFullName())
+                .description(userProfile.getDescription())
+                .createdAt(userProfile.getCreatedAt())
+                .picture(createPictureData(userProfile))
+                .badgesVisible(userProfile.getBadgesVisible())
+                .roles(roles)
+                .build();
+
+        // Jeśli użytkownik jest nauczycielem, dodaj dane z profilu nauczyciela
+        if (roles.contains("TEACHER")) {
+            TeacherProfileEntity teacherProfile = teacherProfileRepository.findByUserId(review.getUser().getId())
+                    .orElseThrow(() -> new EntityNotFoundException("Teacher profile not found"));
+
+            userProfileDTO = userProfileDTO.toBuilder()
+                    .review(teacherProfile.getReview())
+                    .reviewNumber(teacherProfile.getReviewNumber())
+                    .teacherProfileCreatedAt(teacherProfile.getCreatedAt())
+                    .build();
         }
 
         return ReviewResponseDTO.builder()
@@ -164,8 +185,19 @@ public class ReviewService {
                 .rating(review.getRating())
                 .content(review.getContent())
                 .lastModified(review.getUpdatedAt() != null ? review.getUpdatedAt() : review.getCreatedAt())
-                .userProfile(profileData)
+                .userProfile(userProfileDTO)
                 .build();
+    }
+
+    private Map<String, Object> createPictureData(UserProfileEntity profile) {
+        if (profile.getPicture() == null) {
+            return null;
+        }
+
+        Map<String, Object> pictureData = new HashMap<>();
+        pictureData.put("data", profile.getPicture());
+        pictureData.put("mimeType", profile.getPictureMimeType());
+        return pictureData;
     }
 
     private void validateSearchParams(int page, int size, String sortBy, String sortDir) {
