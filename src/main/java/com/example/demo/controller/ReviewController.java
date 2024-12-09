@@ -86,16 +86,24 @@ public class ReviewController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "date") String sortBy,
-            @RequestParam(defaultValue = "desc") String sortDir) {
+            @RequestParam(defaultValue = "desc") String sortDir,
+            Authentication authentication) {
 
         try {
+            // Pobierz ID zalogowanego użytkownika (jeśli jest zalogowany)
+            Long loggedInUserId = null;
+            if (authentication != null && authentication.getPrincipal() instanceof UserPrincipals) {
+                loggedInUserId = ((UserPrincipals) authentication.getPrincipal()).getId();
+            }
+
             Page<ReviewResponseDTO> reviewsPage = reviewService.getReviews(
                     courseId,
                     ReviewTargetType.COURSE,
                     page,
                     size,
                     sortBy,
-                    sortDir
+                    sortDir,
+                    loggedInUserId
             );
 
             return ResponseEntity.ok(HttpResponseDTO.builder()
@@ -127,16 +135,24 @@ public class ReviewController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "date") String sortBy,
-            @RequestParam(defaultValue = "desc") String sortDir) {
+            @RequestParam(defaultValue = "desc") String sortDir,
+            Authentication authentication) {
 
         try {
+            // Pobierz ID zalogowanego użytkownika (jeśli jest zalogowany)
+            Long loggedInUserId = null;
+            if (authentication != null && authentication.getPrincipal() instanceof UserPrincipals) {
+                loggedInUserId = ((UserPrincipals) authentication.getPrincipal()).getId();
+            }
+
             Page<ReviewResponseDTO> reviewsPage = reviewService.getReviews(
                     chapterId,
                     ReviewTargetType.CHAPTER,
                     page,
                     size,
                     sortBy,
-                    sortDir
+                    sortDir,
+                    loggedInUserId
             );
 
             return ResponseEntity.ok(HttpResponseDTO.builder()

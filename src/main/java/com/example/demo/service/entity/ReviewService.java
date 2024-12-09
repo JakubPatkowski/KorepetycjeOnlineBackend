@@ -119,13 +119,14 @@ public class ReviewService {
             int page,
             int size,
             String sortBy,
-            String sortDir) {
+            String sortDir,
+            Long loggedInUserId) {  // Dodany parametr loggedInUserId
 
         try {
             validateSearchParams(page, size, sortBy, sortDir);
-
             long offset = calculateOffset(page, size);
 
+            // Pobierz reviews z bazy z uwzględnieniem sortowania
             List<ReviewEntity> reviews = reviewRepository.findReviewsWithSorting(
                     targetId,
                     targetType.name(),
@@ -135,7 +136,20 @@ public class ReviewService {
                     offset
             );
 
-            long total = reviewRepository.countReviews(targetId, targetType.name());
+            // Jeśli użytkownik jest zalogowany, odfiltruj jego recenzję
+            if (loggedInUserId != null) {
+                reviews = reviews.stream()
+                        .filter(review -> !review.getUser().getId().equals(loggedInUserId))
+                        .collect(Collectors.toList());
+            }
+
+            // Pobierz całkowitą liczbę recenzji (z wyłączeniem recenzji zalogowanego użytkownika jeśli istnieje)
+            long total;
+            if (loggedInUserId != null) {
+                total = reviewRepository.countReviewsExcludingUser(targetId, targetType.name(), loggedInUserId);
+            } else {
+                total = reviewRepository.countReviews(targetId, targetType.name());
+            }
 
             List<ReviewResponseDTO> dtos = reviews.stream()
                     .map(this::mapToReviewDTO)

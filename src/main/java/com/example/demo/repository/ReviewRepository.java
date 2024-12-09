@@ -17,7 +17,7 @@ public interface ReviewRepository extends JpaRepository<ReviewEntity, Long> {
     Optional<ReviewEntity> findByUserIdAndTargetIdAndTargetType(Long userId, Long targetId, ReviewTargetType targetType);
 
     @Query(value = """
-        SELECT r.* FROM reviews r
+        SELECT r.* FROM demo.reviews r
         WHERE r.target_id = :targetId 
         AND r.target_type = :targetType
         ORDER BY 
@@ -46,8 +46,51 @@ public interface ReviewRepository extends JpaRepository<ReviewEntity, Long> {
     );
 
     @Query(value = """
-        SELECT COUNT(*) FROM reviews r
+        SELECT COUNT(*) FROM demo.reviews r
         WHERE r.target_id = :targetId AND r.target_type = :targetType
         """, nativeQuery = true)
     long countReviews(@Param("targetId") Long targetId, @Param("targetType") String targetType);
+
+    @Query(value = """
+    SELECT r.* FROM demo.reviews r
+    WHERE r.target_id = :targetId 
+    AND r.target_type = :targetType
+    AND r.user_id != :userId
+    ORDER BY 
+    CASE 
+        WHEN :sortBy = 'rating' AND :sortDir = 'asc' THEN r.rating
+    END ASC,
+    CASE 
+        WHEN :sortBy = 'rating' AND :sortDir = 'desc' THEN r.rating
+    END DESC,
+    CASE 
+        WHEN :sortBy = 'date' AND :sortDir = 'asc' THEN COALESCE(r.updated_at, r.created_at)
+    END ASC,
+    CASE 
+        WHEN :sortBy = 'date' AND :sortDir = 'desc' THEN COALESCE(r.updated_at, r.created_at)
+    END DESC
+    LIMIT :pageSize
+    OFFSET :offset
+    """, nativeQuery = true)
+    List<ReviewEntity> findReviewsWithSortingExcludingUser(
+            @Param("targetId") Long targetId,
+            @Param("targetType") String targetType,
+            @Param("userId") Long userId,
+            @Param("sortBy") String sortBy,
+            @Param("sortDir") String sortDir,
+            @Param("pageSize") int pageSize,
+            @Param("offset") long offset
+    );
+
+    @Query(value = """
+    SELECT COUNT(*) FROM demo.reviews r
+    WHERE r.target_id = :targetId 
+    AND r.target_type = :targetType
+    AND r.user_id != :userId
+    """, nativeQuery = true)
+    long countReviewsExcludingUser(
+            @Param("targetId") Long targetId,
+            @Param("targetType") String targetType,
+            @Param("userId") Long userId
+    );
 }
