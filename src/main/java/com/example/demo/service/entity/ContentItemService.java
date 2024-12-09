@@ -71,18 +71,7 @@ public class ContentItemService {
 
                 case "quiz":
                     if (dto.getQuizContent() != null) {
-                        try {
-                            String quizDataJson;
-                            if (dto.getQuizContent() instanceof String) {
-                                quizDataJson = (String) dto.getQuizContent();
-                            } else {
-                                quizDataJson = objectMapper.writeValueAsString(dto.getQuizContent());
-                            }
-                            JsonNode jsonNode = objectMapper.readTree(quizDataJson);
-                            contentItem.setQuizContent(objectMapper.writeValueAsString(jsonNode));
-                        } catch (JsonProcessingException e) {
-                            throw new ApiException("Invalid quiz data format: " + e.getMessage());
-                        }
+                        processQuizContent(contentItem, dto.getQuizContent());
                     }
                     break;
 
@@ -94,6 +83,32 @@ public class ContentItemService {
         }
     }
 
+    private void processQuizContent(ContentItemEntity contentItem, Object quizContent) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            String quizDataJson;
+            JsonNode jsonNode;
+
+            // Konwersja wejścia na JsonNode
+            if (quizContent instanceof String) {
+                jsonNode = objectMapper.readTree((String) quizContent);
+            } else {
+                jsonNode = objectMapper.valueToTree(quizContent);
+            }
+
+            // Sprawdź czy dane są już w poprawnym formacie
+            if (jsonNode.has("questions")) {
+                contentItem.setQuizContent(objectMapper.writeValueAsString(jsonNode));
+            } else {
+                // Jeśli nie, owiń w obiekt z kluczem "questions"
+                Map<String, JsonNode> wrappedContent = new HashMap<>();
+                wrappedContent.put("questions", jsonNode);
+                contentItem.setQuizContent(objectMapper.writeValueAsString(wrappedContent));
+            }
+        } catch (JsonProcessingException e) {
+            throw new ApiException("Invalid quiz data format: " + e.getMessage());
+        }
+    }
 
     @Transactional
     public void updateContentItems(SubchapterEntity subchapter, List<ContentItemUpdateDTO> contentItemsDTO,
@@ -107,6 +122,12 @@ public class ContentItemService {
         // Aktualizuj lub dodaj nowe elementy
         for (ContentItemUpdateDTO itemDTO : contentItemsDTO) {
             if (itemDTO.getDeleted().orElse(false)) continue;
+
+            // TODO nie wiem powinno być coś takiego
+//            itemDTO.getQuizContent().ifPresent(quizData -> {
+//                processQuizContent(item, quizData);
+//            });
+
 
             if (itemDTO.getId() != null) {
                 ContentItemEntity item = subchapter.getContent().stream()
