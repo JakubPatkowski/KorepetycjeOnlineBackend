@@ -20,8 +20,8 @@ public class ContentItemResponseDTO {
     public String fontSize;
     public Boolean bolder;
     public String textColor;
-    public String Italics;
+    public String italics;
     public String underline;
     private Map<String, Object> file;
-    public Object quizContent;  // Changed from String to Object
+    public Object quizContent;
 }

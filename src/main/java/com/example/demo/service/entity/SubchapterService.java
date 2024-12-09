@@ -130,7 +130,8 @@ public class SubchapterService {
                 .id(item.getId())
                 .subchapterId(item.getSubchapter().getId())
                 .type(item.getType())
-                .order(item.getOrder());
+                .order(item.getOrder())
+                .quizContent(item.getQuizContent());
 
         switch (item.getType().toLowerCase()) {
             case "text":
@@ -138,7 +139,7 @@ public class SubchapterService {
                         .fontSize(item.getFontSize())
                         .bolder(item.getBolder())
                         .textColor(item.getTextColor())
-                        .Italics(String.valueOf(item.getItalics()))
+                        .italics(String.valueOf(item.getItalics()))
                         .underline(String.valueOf(item.getUnderline()));
                 break;
 

@@ -1,5 +1,6 @@
 package com.example.demo.configuration;
 
+import com.example.demo.dto.review.ReviewTargetType;
 import com.example.demo.entity.*;
 import com.example.demo.repository.*;
 import jakarta.annotation.PostConstruct;
@@ -15,9 +16,11 @@ import org.springframework.util.StreamUtils;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -31,10 +34,12 @@ public class DataInitializer {
     private final SubchapterRepository subchapterRepository;
     private final ContentItemRepository contentItemRepository;
     private final PurchasedCourseRepository purchasedCourseRepository;
-    private final BCryptPasswordEncoder passwordEncoder;
+    private final ReviewRepository reviewRepository;
     private final TeacherProfileRepository teacherProfileRepository;
 
+    private final BCryptPasswordEncoder passwordEncoder;
     private static final Logger logger = LoggerFactory.getLogger(DataInitializer.class);
+    private Random random = new Random();
 
     @PostConstruct
     public void init() {
@@ -70,72 +75,92 @@ public class DataInitializer {
 
         // Dodaj zakupione kursy
         createPurchasedCourses(users, courses);
-    }
 
-    private byte[] loadImage(String path) {
-        try {
-            ClassPathResource resource = new ClassPathResource(path);
-            return StreamUtils.copyToByteArray(resource.getInputStream());
-        } catch (IOException e) {
-            logger.warn("Failed to load image: " + path, e);
-            // Zwróć przykładowe dane jeśli nie można wczytać obrazu
-            return new byte[]{-119, 80, 78, 71, 13, 10, 26, 10}; // Minimalne nagłówek PNG
-        }
+        // Dodaj recenzje do kursów
+        createCourseReviews(users, courses);
     }
 
     private List<UserEntity> createUsers() {
         List<UserEntity> users = new ArrayList<>();
         String password = passwordEncoder.encode("Test123!@#");
 
-        String[][] userData = {
-                {"admin@example.com", "5000"},
-                {"teacher1@example.com", "2500"},
-                {"teacher2@example.com", "1800"},
-                {"teacher3@example.com", "3200"},
-                {"verified1@example.com", "500"},
-                {"verified2@example.com", "750"},
-                {"verified3@example.com", "300"},
-                {"verified4@example.com", "1200"},
-                {"verified5@example.com", "900"},
-                {"user@example.com", "100"}
-        };
+        // Admin
+        users.add(createSingleUser("admin@example.com", 5000, password));
 
-        for (String[] data : userData) {
-            UserEntity user = new UserEntity();
-            user.setEmail(data[0]);
-            user.setPassword(password);
-            user.setPoints(Integer.parseInt(data[1]));
-            user.setBlocked(false);
-            users.add(userRepository.save(user));
+        // 5 Teachers
+        for (int i = 1; i <= 5; i++) {
+            users.add(createSingleUser("teacher" + i + "@example.com", 2000 + random.nextInt(2000), password));
         }
+
+        // 50 Verified users
+        for (int i = 1; i <= 50; i++) {
+            users.add(createSingleUser("verified" + i + "@example.com", 300 + random.nextInt(1700), password));
+        }
+
+        // Regular user
+        users.add(createSingleUser("user@example.com", 100, password));
 
         return users;
     }
 
-    private void createUserProfiles(List<UserEntity> users) {
-        String[] names = {
-                "John Admin", "Alice Teacher", "Bob Instructor", "Carol Educator",
-                "David Student", "Eva Learner", "Frank Scholar", "Grace Reader",
-                "Henry Student", "Isabel Newbie"
-        };
-
-        for (int i = 0; i < users.size(); i++) {
-            UserProfileEntity profile = new UserProfileEntity();
-            profile.setUserId(users.get(i).getId());
-            profile.setFullName(names[i]);
-            profile.setDescription(getDescriptionForUser(i));
-            profile.setCreatedAt(new Date());
-            profile.setPicture(loadProfileImage(i + 1)); // Używamy odpowiedniego obrazu profilowego
-            profile.setPictureMimeType("image/png");
-            profile.setBadgesVisible(true);
-            userProfileRepository.save(profile);
-        }
+    private UserEntity createSingleUser(String email, int points, String password) {
+        UserEntity user = new UserEntity();
+        user.setEmail(email);
+        user.setPassword(password);
+        user.setPoints(points);
+        user.setBlocked(false);
+        return userRepository.save(user);
     }
 
-    private String getDescriptionForUser(int index) {
-        if (index == 0) return "Experienced administrator and course creator";
-        if (index < 4) return "Professional educator with extensive teaching experience";
-        return "Enthusiastic learner and knowledge seeker";
+    private void createUserProfiles(List<UserEntity> users) {
+        // Admin profile
+        createProfile(users.get(0), "John Admin", "Experienced administrator", 1);
+
+        // Teacher profiles (index 1-5)
+        String[] teacherNames = {
+                "Alice Teacher", "Bob Instructor", "Carol Educator",
+                "David Mentor", "Eva Professor"
+        };
+        for (int i = 0; i < 5; i++) {
+            createProfile(
+                    users.get(i + 1),
+                    teacherNames[i],
+                    "Professional educator with extensive teaching experience",
+                    2 + random.nextInt(3) // losowe zdjęcie 2-4
+            );
+        }
+
+        // Verified user profiles (index 6-56)
+        String[] firstNames = {"Emma", "Noah", "Olivia", "Liam", "Ava", "William", "Sophia", "James",
+                "Isabella", "Oliver", "Mia", "Benjamin", "Charlotte", "Elijah", "Amelia"};
+        String[] lastNames = {"Smith", "Johnson", "Brown", "Davis", "Wilson", "Moore", "Taylor",
+                "Anderson", "Thomas", "Jackson", "White", "Harris", "Martin", "Thompson"};
+
+        for (int i = 6; i <= 55; i++) {
+            String randomName = firstNames[random.nextInt(firstNames.length)] + " " +
+                    lastNames[random.nextInt(lastNames.length)];
+            createProfile(
+                    users.get(i),
+                    randomName,
+                    "Enthusiastic learner and knowledge seeker",
+                    5 + random.nextInt(6) // losowe zdjęcie 5-10
+            );
+        }
+
+        // Regular user profile
+        createProfile(users.get(56), "Regular User", "New learner", 5 + random.nextInt(6));
+    }
+
+    private void createProfile(UserEntity user, String fullName, String description, int profileImageIndex) {
+        UserProfileEntity profile = new UserProfileEntity();
+        profile.setUserId(user.getId());
+        profile.setFullName(fullName);
+        profile.setDescription(description);
+        profile.setCreatedAt(new Date());
+        profile.setPicture(loadProfileImage(profileImageIndex));
+        profile.setPictureMimeType("image/png");
+        profile.setBadgesVisible(true);
+        userProfileRepository.save(profile);
     }
 
     private void assignRoles(List<UserEntity> users) {
@@ -143,21 +168,20 @@ public class DataInitializer {
         addRoles(users.get(0), Set.of(RoleEntity.Role.ADMIN, RoleEntity.Role.TEACHER,
                 RoleEntity.Role.VERIFIED, RoleEntity.Role.USER));
 
-        // Teachers
-        for (int i = 1; i < 4; i++) {
+        // Teachers (1-5)
+        for (int i = 1; i <= 5; i++) {
             addRoles(users.get(i), Set.of(RoleEntity.Role.TEACHER,
                     RoleEntity.Role.VERIFIED, RoleEntity.Role.USER));
             createTeacherProfile(users.get(i));
-
         }
 
-        // Verified users
-        for (int i = 4; i < 9; i++) {
+        // Verified users (6-55)
+        for (int i = 6; i <= 55; i++) {
             addRoles(users.get(i), Set.of(RoleEntity.Role.VERIFIED, RoleEntity.Role.USER));
         }
 
         // Regular user
-        addRoles(users.get(9), Set.of(RoleEntity.Role.USER));
+        addRoles(users.get(56), Set.of(RoleEntity.Role.USER));
     }
 
     private void addRoles(UserEntity user, Set<RoleEntity.Role> roles) {
@@ -181,29 +205,40 @@ public class DataInitializer {
     private List<CourseEntity> createCourses(List<UserEntity> users) {
         List<CourseEntity> courses = new ArrayList<>();
 
-        // Kursy dla teacher1 (user index 1)
-        createCourse(courses, users.get(1), "Advanced Mathematics", 1,
-                Arrays.asList("mathematics", "science", "education"));
-        createCourse(courses, users.get(1), "Physics for Beginners", 2,
-                Arrays.asList("science", "physics", "beginners"));
-        createCourse(courses, users.get(1), "Calculus Fundamentals", 3,
-                Arrays.asList("mathematics", "calculus", "science"));
+        // Lista możliwych kursów z kategoriami
+        String[][] courseTemplates = {
+                {"Python Programming", "programming,python,backend"},
+                {"Web Development", "programming,web,frontend"},
+                {"Java Masterclass", "programming,java,backend"},
+                {"Data Science Basics", "data,science,programming"},
+                {"Machine Learning", "ai,programming,science"},
+                {"Advanced Mathematics", "mathematics,science,education"},
+                {"Business English", "language,business,english"},
+                {"Spanish for Beginners", "language,spanish,beginners"},
+                {"Digital Marketing", "business,marketing,social"},
+                {"Mobile App Development", "programming,mobile,development"}
+        };
 
-        // Kursy dla teacher2 (user index 2)
-        createCourse(courses, users.get(2), "Web Development Bootcamp", 4,
-                Arrays.asList("programming", "web", "frontend"));
-        createCourse(courses, users.get(2), "Python Programming", 5,
-                Arrays.asList("programming", "python", "backend"));
-        createCourse(courses, users.get(2), "Java Masterclass", 6,
-                Arrays.asList("programming", "java", "backend"));
+        // Dla każdego teachera (users[1] do users[5])
+        for (int i = 1; i <= 5; i++) {
+            UserEntity teacher = users.get(i);
+            int courseCount = 4 + random.nextInt(3); // 4-6 kursów
 
-        // Kursy dla teacher3 (user index 3)
-        createCourse(courses, users.get(3), "English for Business", 7,
-                Arrays.asList("language", "business", "english"));
-        createCourse(courses, users.get(3), "Spanish Basics", 8,
-                Arrays.asList("language", "spanish", "beginners"));
-        createCourse(courses, users.get(3), "French Culture & Language", 9,
-                Arrays.asList("language", "french", "culture"));
+            for (int j = 0; j < courseCount; j++) {
+                // Wybierz losowy template
+                String[] template = courseTemplates[random.nextInt(courseTemplates.length)];
+                String courseName = template[0] + " " + (j + 1);
+                List<String> tags = Arrays.asList(template[1].split(","));
+
+                createCourse(
+                        courses,
+                        teacher,
+                        courseName,
+                        1 + random.nextInt(9), // losowy banner 1-9
+                        tags
+                );
+            }
+        }
 
         return courses;
     }
@@ -216,8 +251,8 @@ public class DataInitializer {
         course.setDuration(BigDecimal.valueOf(10 + Math.random() * 40));
         course.setUser(teacher);
         course.setTags(tags);
-        course.setReview(BigDecimal.valueOf(3.5 + Math.random() * 1.5));
-        course.setReviewNumber((int) (10 + Math.random() * 90));
+//        course.setReview(BigDecimal.valueOf(3.5 + Math.random() * 1.5));
+//        course.setReviewNumber((int) (10 + Math.random() * 90));
         course.setDescription("Comprehensive course covering all aspects of " + name);
         course.setBanner(loadBannerImage(bannerIndex));
         course.setMimeType("image/png");
@@ -298,20 +333,7 @@ public class DataInitializer {
 
 
 
-//        quizContent.setQuizContent("""
-//        {
-//            "questions": [
-//                {
-//                    "id": 1,
-//                    "question": "Sample question?",
-//                    "answers": [
-//                        {"id": 1, "text": "Answer 1", "correct": true},
-//                        {"id": 2, "text": "Answer 2", "correct": false}
-//                    ]
-//                }
-//            ]
-//        }
-//    """);
+
 
 
         contentItemRepository.save(quizContent);
@@ -319,26 +341,27 @@ public class DataInitializer {
 
     private void createPurchasedCourses(List<UserEntity> users, List<CourseEntity> courses) {
         Random random = new Random();
-        // Dla każdego verified usera (indeksy 4-8)
-        for (int i = 4; i < 9; i++) {
+        // Dla każdego verified usera (indeksy 6-56)
+        for (int i = 6; i <= 55; i++) {
             UserEntity user = users.get(i);
-            // Losowo wybierz 1-3 kursy do zakupu
-            int coursesToBuy = 1 + random.nextInt(3);
+            // Każdy user kupuje 6-8 kursów
+            int coursesToBuy = 6 + random.nextInt(3);
             List<CourseEntity> shuffledCourses = new ArrayList<>(courses);
             Collections.shuffle(shuffledCourses);
 
             for (int j = 0; j < coursesToBuy && j < shuffledCourses.size(); j++) {
                 CourseEntity course = shuffledCourses.get(j);
-                PurchasedCourseEntity purchase = new PurchasedCourseEntity();
-                purchase.setUser(user);
-                purchase.setCourse(course);
-                purchase.setPurchaseDate(Instant.now().minusSeconds(random.nextInt(2592000))); // w ciągu ostatniego miesiąca
-                purchase.setPointsSpent(course.getPrice().intValue());
-                purchasedCourseRepository.save(purchase);
+                if (user.getPoints() >= course.getPrice().intValue()) {
+                    PurchasedCourseEntity purchase = new PurchasedCourseEntity();
+                    purchase.setUser(user);
+                    purchase.setCourse(course);
+                    purchase.setPurchaseDate(Instant.now().minusSeconds(random.nextInt(2592000)));
+                    purchase.setPointsSpent(course.getPrice().intValue());
+                    purchasedCourseRepository.save(purchase);
 
-                // Aktualizuj punkty użytkownika
-                user.setPoints(user.getPoints() - course.getPrice().intValue());
-                userRepository.save(user);
+                    user.setPoints(user.getPoints() - course.getPrice().intValue());
+                    userRepository.save(user);
+                }
             }
         }
     }
@@ -362,6 +385,67 @@ public class DataInitializer {
         } catch (IOException e) {
             logger.warn("Failed to load banner image: " + index, e);
             return new byte[0];
+        }
+    }
+
+    private void createCourseReviews(List<UserEntity> users, List<CourseEntity> courses) {
+        Random random = new Random();
+        List<UserEntity> verifiedUsers = users.subList(6, 56); // Wszyscy verified users (indeksy 6-55)
+
+        String[] reviewTemplates = {
+                "Excellent course with detailed explanations. Great practical examples.",
+                "Very informative content. The instructor explains concepts clearly.",
+                "Good course structure. Helped me understand the topic better.",
+                "Solid content and well-presented material. Would recommend.",
+                "Nice course with practical assignments. Looking forward to more courses.",
+                "Clear explanations and good examples. Worth the investment.",
+                "The course met my expectations. Good learning experience.",
+                "Comprehensive coverage of the topic. Engaging presentation."
+        };
+
+        for (CourseEntity course : courses) {
+            CourseEntity managedCourse = courseRepository.findById(course.getId())
+                    .orElseThrow(() -> new RuntimeException("Course not found"));
+
+            List<UserEntity> potentialReviewers = verifiedUsers.stream()
+                    .filter(user -> purchasedCourseRepository.existsByUserIdAndCourseId(user.getId(), managedCourse.getId()))
+                    .collect(Collectors.toList());
+
+            if (potentialReviewers.isEmpty()) {
+                continue;
+            }
+
+            // Zwiększona liczba recenzji - 80-100% kupujących dodaje recenzję
+            int reviewCount = (int)(potentialReviewers.size() * (0.8 + random.nextDouble() * 0.2));
+            Collections.shuffle(potentialReviewers);
+            List<UserEntity> selectedReviewers = potentialReviewers.subList(0, reviewCount);
+
+            BigDecimal totalRating = BigDecimal.ZERO;
+            List<ReviewEntity> courseReviews = new ArrayList<>();
+
+            for (UserEntity reviewer : selectedReviewers) {
+                // Więcej pozytywnych ocen (3-5 gwiazdek, z większą szansą na 4-5)
+                int rating = 3 + (random.nextDouble() < 0.8 ? 1 + random.nextInt(2) : 0);
+                totalRating = totalRating.add(BigDecimal.valueOf(rating));
+
+                ReviewEntity review = ReviewEntity.builder()
+                        .user(reviewer)
+                        .targetId(managedCourse.getId())
+                        .targetType(ReviewTargetType.COURSE)
+                        .rating(rating)
+                        .content(reviewTemplates[random.nextInt(reviewTemplates.length)] +
+                                (rating == 5 ? " Highly recommended!" : ""))
+                        .createdAt(LocalDateTime.now().minusDays(random.nextInt(30)))
+                        .build();
+
+                courseReviews.add(reviewRepository.save(review));
+            }
+
+            if (!courseReviews.isEmpty()) {
+                managedCourse.setReviewNumber(courseReviews.size());
+                managedCourse.setReview(totalRating.divide(BigDecimal.valueOf(courseReviews.size()), 2, RoundingMode.HALF_UP));
+                courseRepository.save(managedCourse);
+            }
         }
     }
 }
