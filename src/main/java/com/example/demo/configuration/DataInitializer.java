@@ -251,8 +251,8 @@ public class DataInitializer {
         course.setDuration(BigDecimal.valueOf(10 + Math.random() * 40));
         course.setUser(teacher);
         course.setTags(tags);
-//        course.setReview(BigDecimal.valueOf(3.5 + Math.random() * 1.5));
-//        course.setReviewNumber((int) (10 + Math.random() * 90));
+        course.setReview(BigDecimal.ZERO);
+        course.setReviewNumber(0);
         course.setDescription("Comprehensive course covering all aspects of " + name);
         course.setBanner(loadBannerImage(bannerIndex));
         course.setMimeType("image/png");
