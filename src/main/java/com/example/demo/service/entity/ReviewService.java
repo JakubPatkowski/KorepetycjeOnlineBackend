@@ -369,4 +369,59 @@ public class ReviewService {
         return mapToReviewDTO(review);
     }
 
+
+    @Transactional
+    public void addTeacherReview(Long teacherId, Long userId, ReviewCreateDTO reviewDTO) {
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new ApiException("User not found"));
+
+        TeacherProfileEntity teacherProfile = teacherProfileRepository.findByUserId(teacherId)
+                .orElseThrow(() -> new ApiException("Teacher not found"));
+
+        // Sprawdź czy użytkownik nie próbuje ocenić samego siebie
+        if (userId.equals(teacherId)) {
+            throw new ApiException("You cannot review yourself");
+        }
+
+        // Sprawdź czy już nie dodał recenzji
+        if (reviewRepository.existsByUserIdAndTargetIdAndTargetType(userId, teacherId, ReviewTargetType.TEACHER)) {
+            throw new ApiException("You have already reviewed this teacher");
+        }
+
+        // Sprawdź czy użytkownik kupił jakikolwiek kurs tego nauczyciela
+        boolean hasPurchasedCourse = purchasedCourseRepository.existsByUserIdAndCourseUserId(userId, teacherId);
+        if (!hasPurchasedCourse) {
+            throw new ApiException("You must purchase a course from this teacher to review them");
+        }
+
+        // TODO: W przyszłości dodać tutaj sprawdzenie czy użytkownik ma wykonane zadanie od nauczyciela
+        // boolean hasCompletedTask = taskRepository.existsByStudentIdAndTeacherIdAndStatus(userId, teacherId, TaskStatus.COMPLETED);
+        // if (!hasPurchasedCourse && !hasCompletedTask) {
+        //     throw new ApiException("You must either purchase a course or have a completed task from this teacher to review them");
+        // }
+
+        ReviewEntity review = ReviewEntity.builder()
+                .user(user)
+                .targetId(teacherId)
+                .targetType(ReviewTargetType.TEACHER)
+                .rating(reviewDTO.getRating())
+                .content(reviewDTO.getContent())
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        reviewRepository.save(review);
+
+        // Aktualizuj średnią ocenę nauczyciela
+        int currentReviewCount = teacherProfile.getReviewNumber();
+        BigDecimal currentAverage = teacherProfile.getReview() != null ? teacherProfile.getReview() : BigDecimal.ZERO;
+
+        BigDecimal newTotal = currentAverage.multiply(BigDecimal.valueOf(currentReviewCount))
+                .add(BigDecimal.valueOf(reviewDTO.getRating()));
+        BigDecimal newAverage = newTotal.divide(BigDecimal.valueOf(currentReviewCount + 1), 2, RoundingMode.HALF_UP);
+
+        teacherProfile.setReview(newAverage);
+        teacherProfile.setReviewNumber(currentReviewCount + 1);
+        teacherProfile.setUpdatedAt(LocalDateTime.now());
+        teacherProfileRepository.save(teacherProfile);
+    }
 }

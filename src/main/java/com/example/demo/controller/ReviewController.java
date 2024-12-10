@@ -320,4 +320,114 @@ public class ReviewController {
                             .build());
         }
     }
+
+    @PostMapping("/add/teacher/{teacherId}")
+    public ResponseEntity<HttpResponseDTO> addTeacherReview(
+            @PathVariable Long teacherId,
+            @RequestBody @Valid ReviewCreateDTO reviewDTO,
+            Authentication authentication) {
+        try {
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            Long loggedInUserId = ((UserPrincipals) userDetails).getId();
+
+            reviewService.addTeacherReview(teacherId, loggedInUserId, reviewDTO);
+
+            return ResponseEntity.ok(HttpResponseDTO.builder()
+                    .timestamp(now().toString())
+                    .message("Review added successfully")
+                    .status(HttpStatus.OK)
+                    .statusCode(HttpStatus.OK.value())
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(HttpResponseDTO.builder()
+                    .timestamp(now().toString())
+                    .message(e.getMessage())
+                    .status(HttpStatus.BAD_REQUEST)
+                    .statusCode(HttpStatus.BAD_REQUEST.value())
+                    .build());
+        }
+    }
+
+    @GetMapping("/get/teacher/{teacherId}")
+    public ResponseEntity<HttpResponseDTO> getTeacherReviews(
+            @PathVariable Long teacherId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "date") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir,
+            Authentication authentication) {
+        try {
+            Long loggedInUserId = null;
+            if (authentication != null && authentication.getPrincipal() instanceof UserPrincipals) {
+                loggedInUserId = ((UserPrincipals) authentication.getPrincipal()).getId();
+            }
+
+            Page<ReviewResponseDTO> reviewsPage = reviewService.getReviews(
+                    teacherId,
+                    ReviewTargetType.TEACHER,
+                    page,
+                    size,
+                    sortBy,
+                    sortDir,
+                    loggedInUserId
+            );
+
+            return ResponseEntity.ok(HttpResponseDTO.builder()
+                    .timestamp(now().toString())
+                    .data(Map.of(
+                            "reviews", reviewsPage.getContent(),
+                            "currentPage", reviewsPage.getNumber(),
+                            "totalItems", reviewsPage.getTotalElements(),
+                            "totalPages", reviewsPage.getTotalPages()
+                    ))
+                    .message("Reviews retrieved successfully")
+                    .status(HttpStatus.OK)
+                    .statusCode(HttpStatus.OK.value())
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(HttpResponseDTO.builder()
+                            .timestamp(now().toString())
+                            .message("Error retrieving reviews: " + e.getMessage())
+                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .build());
+        }
+    }
+
+    @GetMapping("/user/teacher/{teacherId}")
+    public ResponseEntity<HttpResponseDTO> getUserTeacherReview(
+            @PathVariable Long teacherId,
+            Authentication authentication) {
+        try {
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            Long loggedInUserId = ((UserPrincipals) userDetails).getId();
+
+            ReviewResponseDTO review = reviewService.getUserReview(teacherId, ReviewTargetType.TEACHER, loggedInUserId);
+
+            return ResponseEntity.ok(HttpResponseDTO.builder()
+                    .timestamp(now().toString())
+                    .data(Map.of("review", review))
+                    .message("User review retrieved successfully")
+                    .status(HttpStatus.OK)
+                    .statusCode(HttpStatus.OK.value())
+                    .build());
+        } catch (ApiException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(HttpResponseDTO.builder()
+                            .timestamp(now().toString())
+                            .message(e.getMessage())
+                            .status(HttpStatus.NOT_FOUND)
+                            .statusCode(HttpStatus.NOT_FOUND.value())
+                            .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(HttpResponseDTO.builder()
+                            .timestamp(now().toString())
+                            .message("Error retrieving review: " + e.getMessage())
+                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .build());
+        }
+    }
 }

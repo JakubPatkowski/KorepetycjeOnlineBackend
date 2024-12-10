@@ -12,4 +12,7 @@ public interface PurchasedCourseRepository extends JpaRepository<PurchasedCourse
     List<PurchasedCourseEntity> findByUserId(Long userId);
     Optional<PurchasedCourseEntity> findByUserIdAndCourseId(Long userId, Long courseId);
     boolean existsByUserIdAndCourseId(Long userId, Long courseId);
+
+    boolean existsByUserIdAndCourseUserId(Long userId, Long teacherId);
+
 }

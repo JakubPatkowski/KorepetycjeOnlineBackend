@@ -61,6 +61,7 @@ public class SecurityConfiguration {
                                 "chapter/get-by-course/**",
                                 "review/get/course/**",
                                 "review/get/chapter/**",
+                                "review/get/teacher/**",
                                 "user-profile/get/**",
                                 "user-profile/get-best"
 
@@ -93,9 +94,11 @@ public class SecurityConfiguration {
 
                         .requestMatchers("/review/add/course/**").hasAnyAuthority("USER")
                         .requestMatchers("/review/add/chapter/**").hasAnyAuthority("USER")
+                        .requestMatchers("/review/add/teacher/**").hasAnyAuthority("USER")
                         .requestMatchers("/review/delete/**").hasAnyAuthority("USER")
                         .requestMatchers("/review/user/course/**").hasAnyAuthority("USER")
                         .requestMatchers("/review/user/chapter/**").hasAnyAuthority("USER")
+                        .requestMatchers("/review/user/teacher/**").hasAnyAuthority("USER")
 
                         .anyRequest().authenticated()
 
