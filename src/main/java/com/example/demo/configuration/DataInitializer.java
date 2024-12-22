@@ -78,6 +78,10 @@ public class DataInitializer {
 
         // Dodaj recenzje do kursów
         createCourseReviews(users, courses);
+
+        // Dodaj recenzje do nauczycieli
+        createTeacherReviews(users);
+
     }
 
     private List<UserEntity> createUsers() {
@@ -196,8 +200,8 @@ public class DataInitializer {
     private void createTeacherProfile(UserEntity user) {
         TeacherProfileEntity teacherProfile = TeacherProfileEntity.builder()
                 .user(user)
-                .review(BigDecimal.valueOf(3.5 + Math.random() * 1.5))
-                .reviewNumber((int)(5 + Math.random() * 45))
+                .review(BigDecimal.ZERO)
+                .reviewNumber(0)
                 .build();
         teacherProfileRepository.save(teacherProfile);
     }
@@ -415,7 +419,6 @@ public class DataInitializer {
                 continue;
             }
 
-            // Zwiększona liczba recenzji - 80-100% kupujących dodaje recenzję
             int reviewCount = (int)(potentialReviewers.size() * (0.8 + random.nextDouble() * 0.2));
             Collections.shuffle(potentialReviewers);
             List<UserEntity> selectedReviewers = potentialReviewers.subList(0, reviewCount);
@@ -445,6 +448,73 @@ public class DataInitializer {
                 managedCourse.setReviewNumber(courseReviews.size());
                 managedCourse.setReview(totalRating.divide(BigDecimal.valueOf(courseReviews.size()), 2, RoundingMode.HALF_UP));
                 courseRepository.save(managedCourse);
+            }
+        }
+    }
+
+    private void createTeacherReviews(List<UserEntity> users) {
+        Random random = new Random();
+        List<UserEntity> verifiedUsers = users.subList(6, 56);
+        List<UserEntity> teachers = users.subList(1, 6);
+
+        String[] reviewTemplates = {
+                "Świetny nauczyciel, bardzo dobrze tłumaczy.",
+                "Profesjonalne podejście do nauczania.",
+                "Polecam tego nauczyciela, świetny kontakt.",
+                "Dobra metodyka nauczania, jasne tłumaczenia.",
+                "Bardzo pomocny i cierpliwy nauczyciel.",
+                "Wysoki poziom wiedzy i umiejętność jej przekazania.",
+                "Dobrze przygotowany do zajęć, polecam.",
+                "Świetne materiały i sposób nauczania."
+        };
+
+        for (UserEntity teacher : teachers) {
+            TeacherProfileEntity teacherProfile = teacherProfileRepository.findByUserId(teacher.getId())
+                    .orElseThrow(() -> new RuntimeException("Teacher profile not found"));
+
+            // Pobierz użytkowników, którzy kupili kursy tego nauczyciela
+            List<UserEntity> eligibleReviewers = verifiedUsers.stream()
+                    .filter(user -> purchasedCourseRepository.existsByUserIdAndCourseUserId(user.getId(), teacher.getId()))
+                    .collect(Collectors.toList());
+
+            if (eligibleReviewers.isEmpty()) {
+                continue;
+            }
+
+            // 80-100% uprawnionych użytkowników dodaje recenzję
+            int reviewCount = (int)(eligibleReviewers.size() * (0.8 + random.nextDouble() * 0.2));
+            Collections.shuffle(eligibleReviewers);
+            List<UserEntity> selectedReviewers = eligibleReviewers.subList(0, Math.min(reviewCount, eligibleReviewers.size()));
+
+            BigDecimal totalRating = BigDecimal.ZERO;
+            List<ReviewEntity> teacherReviews = new ArrayList<>();
+
+            for (UserEntity reviewer : selectedReviewers) {
+                // Więcej pozytywnych ocen (3-5 gwiazdek)
+                int rating = 3 + (random.nextDouble() < 0.8 ? 1 + random.nextInt(2) : 0);
+                totalRating = totalRating.add(BigDecimal.valueOf(rating));
+
+                ReviewEntity review = ReviewEntity.builder()
+                        .user(reviewer)
+                        .targetId(teacher.getId())
+                        .targetType(ReviewTargetType.TEACHER)
+                        .rating(rating)
+                        .content(reviewTemplates[random.nextInt(reviewTemplates.length)] +
+                                (rating == 5 ? " Zdecydowanie polecam!" : ""))
+                        .createdAt(LocalDateTime.now().minusDays(random.nextInt(30)))
+                        .build();
+
+                teacherReviews.add(reviewRepository.save(review));
+            }
+
+            if (!teacherReviews.isEmpty()) {
+                teacherProfile.setReviewNumber(teacherReviews.size());
+                teacherProfile.setReview(totalRating.divide(
+                        BigDecimal.valueOf(teacherReviews.size()),
+                        2,
+                        RoundingMode.HALF_UP
+                ));
+                teacherProfileRepository.save(teacherProfile);
             }
         }
     }
