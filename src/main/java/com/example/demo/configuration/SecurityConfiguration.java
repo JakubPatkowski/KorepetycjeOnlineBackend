@@ -74,6 +74,7 @@ public class SecurityConfiguration {
                         .requestMatchers("/course/edit").hasAnyAuthority("USER")
                         .requestMatchers("/course/buy").hasAnyAuthority("USER")
                         .requestMatchers("/course/get-purchased").hasAnyAuthority("USER")
+                        .requestMatchers("/course/can-review-teacher/").hasAnyAuthority("USER")
                         .requestMatchers("/chapter/get/**").hasAnyAuthority("USER")
                         .requestMatchers("/subchapter/get/**").hasAnyAuthority("USER")
 //                        .requestMatchers("course/get-one/**").hasAnyAuthority("USER")
@@ -99,6 +100,9 @@ public class SecurityConfiguration {
                         .requestMatchers("/review/user/course/**").hasAnyAuthority("USER")
                         .requestMatchers("/review/user/chapter/**").hasAnyAuthority("USER")
                         .requestMatchers("/review/user/teacher/**").hasAnyAuthority("USER")
+
+                        .requestMatchers("/payment/create-payment-intent").hasAnyAuthority("USER")
+                        .requestMatchers("/payment/webhook").hasAnyAuthority("USER")
 
                         .anyRequest().authenticated()
 

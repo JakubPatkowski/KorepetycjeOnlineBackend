@@ -91,4 +91,39 @@ public class PurchasedCourseController {
                     .build());
         }
     }
+
+    @GetMapping("/can-review-teacher/{teacherId}")
+    public ResponseEntity<HttpResponseDTO> canReviewTeacher(
+            @PathVariable Long teacherId,
+            Authentication authentication) {
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        Long loggedInUserId = ((UserPrincipals) userDetails).getId();
+
+        try {
+            boolean canReview = purchasedCourseService.canReviewTeacher(loggedInUserId, teacherId);
+
+            return ResponseEntity.ok(HttpResponseDTO.builder()
+                    .timestamp(now().toString())
+                    .data(Map.of("canReview", canReview))
+                    .message("Permission check completed")
+                    .status(HttpStatus.OK)
+                    .statusCode(HttpStatus.OK.value())
+                    .build());
+        } catch (ApiException e) {
+            return ResponseEntity.badRequest().body(HttpResponseDTO.builder()
+                    .timestamp(now().toString())
+                    .message(e.getMessage())
+                    .status(HttpStatus.BAD_REQUEST)
+                    .statusCode(HttpStatus.BAD_REQUEST.value())
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(HttpResponseDTO.builder()
+                            .timestamp(now().toString())
+                            .message("An error occurred: " + e.getMessage())
+                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .build());
+        }
+    }
 }

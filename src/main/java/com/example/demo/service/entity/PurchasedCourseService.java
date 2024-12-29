@@ -109,6 +109,16 @@ public class PurchasedCourseService {
         );
     }
 
+    @Transactional(readOnly = true)
+    public boolean canReviewTeacher(Long userId, Long teacherId) {
+        try {
+            // Sprawdzenie czy użytkownik kupił jakikolwiek kurs tego nauczyciela
+            return purchasedCourseRepository.existsByUserIdAndCourseUserId(userId, teacherId);
+        } catch (Exception e) {
+            throw new ApiException("Error checking review permission: " + e.getMessage());
+        }
+    }
+
     private void validatePaginationParams(int page, int size) {
         if (page < 0) {
             throw new IllegalArgumentException("Page number cannot be negative");
