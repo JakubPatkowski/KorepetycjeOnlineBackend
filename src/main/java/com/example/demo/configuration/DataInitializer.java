@@ -254,7 +254,9 @@ public class DataInitializer {
         course.setPrice(BigDecimal.valueOf((int)(Math.random() * 50)*50));
         course.setDuration(BigDecimal.valueOf(10 + Math.random() * 40));
         course.setUser(teacher);
-        course.setTags(tags);
+        course.setTags(tags.stream()
+                .map(String::toLowerCase)
+                .collect(Collectors.toList()));
         course.setReview(BigDecimal.ZERO);
         course.setReviewNumber(0);
         course.setDescription("Comprehensive course covering all aspects of " + name);

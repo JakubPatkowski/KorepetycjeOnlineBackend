@@ -71,6 +71,20 @@ public interface CourseRepository extends JpaRepository<CourseEntity, Long> {
             @Param("offset") long offset
     );
 
+    @Query(value = """
+    SELECT c.* FROM demo.courses c 
+    WHERE c.tags && cast(:tags as character varying[])
+    """ + BASE_SORT_QUERY + """
+    LIMIT :pageSize
+    OFFSET :offset
+    """, nativeQuery = true)
+    List<CourseEntity> findByTags(
+            @Param("tags") List<String> tags,
+            @Param("sortBy") String sortBy,
+            @Param("pageSize") int pageSize,
+            @Param("offset") long offset
+    );
+
     // 4. Wyszukiwanie po nazwie i tagu
     @Query(value = """
         SELECT c.* FROM demo.courses c 
@@ -83,6 +97,22 @@ public interface CourseRepository extends JpaRepository<CourseEntity, Long> {
     List<CourseEntity> findByNameAndTag(
             @Param("search") String search,
             @Param("tag") String tag,
+            @Param("sortBy") String sortBy,
+            @Param("pageSize") int pageSize,
+            @Param("offset") long offset
+    );
+
+    @Query(value = """
+    SELECT c.* FROM demo.courses c 
+    WHERE LOWER(c.name) LIKE LOWER(CONCAT('%', :search, '%'))
+    AND c.tags && cast(:tags as character varying[])
+    """ + BASE_SORT_QUERY + """
+    LIMIT :pageSize
+    OFFSET :offset
+    """, nativeQuery = true)
+    List<CourseEntity> findByNameAndTags(
+            @Param("search") String search,
+            @Param("tags") List<String> tags,
             @Param("sortBy") String sortBy,
             @Param("pageSize") int pageSize,
             @Param("offset") long offset
@@ -103,6 +133,12 @@ public interface CourseRepository extends JpaRepository<CourseEntity, Long> {
     long countByTag(@Param("tag") String tag);
 
     @Query(value = """
+    SELECT COUNT(*) FROM demo.courses c 
+    WHERE c.tags && cast(:tags as character varying[])
+    """, nativeQuery = true)
+    long countByTags(@Param("tags") List<String> tags);
+
+    @Query(value = """
         SELECT COUNT(*) FROM demo.courses c 
         WHERE LOWER(c.name) LIKE LOWER(CONCAT('%', :search, '%'))
         AND :tag = ANY(c.tags)
@@ -110,6 +146,16 @@ public interface CourseRepository extends JpaRepository<CourseEntity, Long> {
     long countByNameAndTag(
             @Param("search") String search,
             @Param("tag") String tag
+    );
+
+    @Query(value = """
+    SELECT COUNT(*) FROM demo.courses c 
+    WHERE LOWER(c.name) LIKE LOWER(CONCAT('%', :search, '%'))
+    AND c.tags && cast(:tags as character varying[])
+    """, nativeQuery = true)
+    long countByNameAndTags(
+            @Param("search") String search,
+            @Param("tags") List<String> tags
     );
 
     @Query(value = "SELECT COUNT(*) FROM demo.courses", nativeQuery = true)
@@ -172,6 +218,26 @@ public interface CourseRepository extends JpaRepository<CourseEntity, Long> {
     );
 
     @Query(value = """
+    SELECT c.* FROM demo.courses c 
+    WHERE c.user_id != :userId 
+    AND NOT EXISTS (
+        SELECT 1 FROM demo.purchased_courses pc 
+        WHERE pc.course_id = c.id AND pc.user_id = :userId
+    )
+    AND c.tags && cast(:tags as character varying[])
+    """ + BASE_SORT_QUERY + """
+    LIMIT :pageSize
+    OFFSET :offset
+    """, nativeQuery = true)
+    List<CourseEntity> findAvailableByTagsForUser(
+            @Param("tags") List<String> tags,
+            @Param("userId") Long userId,
+            @Param("sortBy") String sortBy,
+            @Param("pageSize") int pageSize,
+            @Param("offset") long offset
+    );
+
+    @Query(value = """
         SELECT c.* FROM demo.courses c 
         WHERE c.user_id != :userId 
         AND NOT EXISTS (
@@ -187,6 +253,28 @@ public interface CourseRepository extends JpaRepository<CourseEntity, Long> {
     List<CourseEntity> findAvailableByNameAndTagForUser(
             @Param("search") String search,
             @Param("tag") String tag,
+            @Param("userId") Long userId,
+            @Param("sortBy") String sortBy,
+            @Param("pageSize") int pageSize,
+            @Param("offset") long offset
+    );
+
+    @Query(value = """
+    SELECT c.* FROM demo.courses c 
+    WHERE c.user_id != :userId 
+    AND NOT EXISTS (
+        SELECT 1 FROM demo.purchased_courses pc 
+        WHERE pc.course_id = c.id AND pc.user_id = :userId
+    )
+    AND LOWER(c.name) LIKE LOWER(CONCAT('%', :search, '%'))
+    AND c.tags && cast(:tags as character varying[])
+    """ + BASE_SORT_QUERY + """
+    LIMIT :pageSize
+    OFFSET :offset
+    """, nativeQuery = true)
+    List<CourseEntity> findAvailableByNameAndTagsForUser(
+            @Param("search") String search,
+            @Param("tags") List<String> tags,
             @Param("userId") Long userId,
             @Param("sortBy") String sortBy,
             @Param("pageSize") int pageSize,
@@ -223,6 +311,20 @@ public interface CourseRepository extends JpaRepository<CourseEntity, Long> {
     );
 
     @Query(value = """
+    SELECT COUNT(*) FROM demo.courses c 
+    WHERE c.user_id != :userId 
+    AND NOT EXISTS (
+        SELECT 1 FROM demo.purchased_courses pc 
+        WHERE pc.course_id = c.id AND pc.user_id = :userId
+    )
+    AND  c.tags && cast(:tags as character varying[])
+    """, nativeQuery = true)
+    long countAvailableByTagsForUser(
+            @Param("tags") List<String> tags,
+            @Param("userId") Long userId
+    );
+
+    @Query(value = """
         SELECT COUNT(*) FROM demo.courses c 
         WHERE c.user_id != :userId 
         AND NOT EXISTS (
@@ -235,6 +337,22 @@ public interface CourseRepository extends JpaRepository<CourseEntity, Long> {
     long countAvailableByNameAndTagForUser(
             @Param("search") String search,
             @Param("tag") String tag,
+            @Param("userId") Long userId
+    );
+
+    @Query(value = """
+    SELECT COUNT(*) FROM demo.courses c 
+    WHERE c.user_id != :userId 
+    AND NOT EXISTS (
+        SELECT 1 FROM demo.purchased_courses pc 
+        WHERE pc.course_id = c.id AND pc.user_id = :userId
+    )
+    AND LOWER(c.name) LIKE LOWER(CONCAT('%', :search, '%'))
+    AND  c.tags && cast(:tags as character varying[])
+    """, nativeQuery = true)
+    long countAvailableByNameAndTagsForUser(
+            @Param("search") String search,
+            @Param("tags") List<String> tags,
             @Param("userId") Long userId
     );
 
@@ -284,16 +402,3 @@ public interface CourseRepository extends JpaRepository<CourseEntity, Long> {
     """, nativeQuery = true)
     List<CourseEntity> findBestCourses(@Param("userId") Long userId);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

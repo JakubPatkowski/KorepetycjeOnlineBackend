@@ -52,6 +52,7 @@ public class SecurityConfiguration {
                                 "/points/get-offers",
                                 "/course/tags/",
                                 "/course/get",
+                                "/course/search",
                                 "/course/get-best",
                                 "/course/get-one/**",
                                 "/course/tags/search",

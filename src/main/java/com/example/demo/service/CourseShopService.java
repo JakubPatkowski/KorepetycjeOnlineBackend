@@ -56,14 +56,14 @@ public class CourseShopService {
             // Logika dla zalogowanego użytkownika
             if (loggedInUserId != null) {
                 if (search != null && tag != null) {
-                    courses = courseRepository.findAvailableByNameAndTagForUser(search, tag, loggedInUserId, sortBy, size, offset);
-                    total = courseRepository.countAvailableByNameAndTagForUser(search, tag, loggedInUserId);
+                    courses = courseRepository.findAvailableByNameAndTagForUser(search, tag.toLowerCase(), loggedInUserId, sortBy, size, offset);
+                    total = courseRepository.countAvailableByNameAndTagForUser(search, tag.toLowerCase(), loggedInUserId);
                 } else if (search != null) {
                     courses = courseRepository.findAvailableByNameForUser(search, loggedInUserId, sortBy, size, offset);
                     total = courseRepository.countAvailableByNameForUser(search, loggedInUserId);
                 } else if (tag != null) {
-                    courses = courseRepository.findAvailableByTagForUser(tag, loggedInUserId, sortBy, size, offset);
-                    total = courseRepository.countAvailableByTagForUser(tag, loggedInUserId);
+                    courses = courseRepository.findAvailableByTagForUser(tag.toLowerCase(), loggedInUserId, sortBy, size, offset);
+                    total = courseRepository.countAvailableByTagForUser(tag.toLowerCase(), loggedInUserId);
                 } else {
                     courses = courseRepository.findAllAvailableForUser(loggedInUserId, sortBy, size, offset);
                     total = courseRepository.countAllAvailableForUser(loggedInUserId);
@@ -72,14 +72,14 @@ public class CourseShopService {
             // Logika dla niezalogowanego użytkownika (pozostaje bez zmian)
             else {
                 if (search != null && tag != null) {
-                    courses = courseRepository.findByNameAndTag(search, tag, sortBy, size, offset);
-                    total = courseRepository.countByNameAndTag(search, tag);
+                    courses = courseRepository.findByNameAndTag(search, tag.toLowerCase(), sortBy, size, offset);
+                    total = courseRepository.countByNameAndTag(search, tag.toLowerCase());
                 } else if (search != null) {
                     courses = courseRepository.findByNameContaining(search, sortBy, size, offset);
                     total = courseRepository.countByNameContaining(search);
                 } else if (tag != null) {
-                    courses = courseRepository.findByTag(tag, sortBy, size, offset);
-                    total = courseRepository.countByTag(tag);
+                    courses = courseRepository.findByTag(tag.toLowerCase(), sortBy, size, offset);
+                    total = courseRepository.countByTag(tag.toLowerCase());
                 } else {
                     courses = courseRepository.findAllCoursesPaged(sortBy, size, offset);
                     total = courseRepository.countAll();
@@ -97,6 +97,60 @@ public class CourseShopService {
         }
     }
 
+    @Transactional(readOnly = true)
+    public Page<CourseShopResponseDTO> searchCoursesWithTags(
+            String search,
+            List<String> tags,
+            int page,
+            int size,
+            String sortBy,
+            Long loggedInUserId) {
+
+        try {
+            validateSearchParams(page, size);
+            sortBy = validateAndGetSortBy(sortBy);
+            long offset = calculateOffset(page, size);
+
+            List<CourseEntity> courses;
+            long total;
+
+            // Logika dla zalogowanego użytkownika
+            if (loggedInUserId != null) {
+                if (search != null) {
+                    // Używamy metod dla wielu tagów
+                    courses = courseRepository.findAvailableByNameAndTagsForUser(
+                            search, tags, loggedInUserId, sortBy, size, offset);
+                    total = courseRepository.countAvailableByNameAndTagsForUser(
+                            search, tags, loggedInUserId);
+                } else {
+                    courses = courseRepository.findAvailableByTagsForUser(
+                            tags, loggedInUserId, sortBy, size, offset);
+                    total = courseRepository.countAvailableByTagsForUser(
+                            tags, loggedInUserId);
+                }
+            }
+            // Logika dla niezalogowanego użytkownika
+            else {
+                if (search != null) {
+                    courses = courseRepository.findByNameAndTags(
+                            search, tags, sortBy, size, offset);
+                    total = courseRepository.countByNameAndTags(search, tags);
+                } else {
+                    courses = courseRepository.findByTags(tags, sortBy, size, offset);
+                    total = courseRepository.countByTags(tags);
+                }
+            }
+
+            List<CourseShopResponseDTO> dtos = courses.stream()
+                    .map(this::mapToCourseShopResponseDTO)
+                    .collect(Collectors.toList());
+
+            return new PageImpl<>(dtos, PageRequest.of(page, size), total);
+        } catch (Exception e) {
+            log.error("Unexpected error in searchCoursesWithTags: {}", e.getMessage());
+            throw new ServiceException("Error processing course search", e);
+        }
+    }
 
     @Transactional
     public List<String> searchTags(String search) {
