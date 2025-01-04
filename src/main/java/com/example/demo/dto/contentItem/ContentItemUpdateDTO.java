@@ -25,7 +25,7 @@ public class ContentItemUpdateDTO {
     private Optional<String> textColor;
 
     // Pole dla typu 'quiz'
-    private Optional<String> quizContent;
+    private Optional<Object> quizContent;
 
     private Optional<Map<String, Object>> file;
 

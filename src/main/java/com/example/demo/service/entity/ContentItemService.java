@@ -287,6 +287,20 @@ public class ContentItemService {
             fileData.put("mimeType", item.getMimeType());
         }
 
+        Optional<Object> quizContentOpt = Optional.empty();
+        if (item.getQuizContent() != null) {
+            try {
+                ObjectMapper mapper = new ObjectMapper();
+                JsonNode rootNode = mapper.readTree(item.getQuizContent());
+                // Pobierz tablicę questions
+                if (rootNode.has("questions")) {
+                    quizContentOpt = Optional.of(rootNode.get("questions"));
+                }
+            } catch (JsonProcessingException e) {
+                throw new ApiException("Error parsing quiz content: " + e.getMessage());
+            }
+        }
+
         return ContentItemUpdateDTO.builder()
                 .id(item.getId())
                 .type(Optional.ofNullable(item.getType()))
@@ -297,7 +311,7 @@ public class ContentItemService {
                 .italics(Optional.ofNullable(item.getItalics()))
                 .underline(Optional.ofNullable(item.getUnderline()))
                 .textColor(Optional.ofNullable(item.getTextColor()))
-                .quizContent(Optional.ofNullable(item.getQuizContent()))
+                .quizContent(quizContentOpt)
                 .file(Optional.ofNullable(fileData))
                 .deleted(Optional.of(false))
                 .updateFile(Optional.of(false))
