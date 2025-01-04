@@ -124,7 +124,7 @@ CREATE TABLE points_offers (
     id BIGSERIAL PRIMARY KEY,
     points INTEGER NOT NULL,
     price INTEGER NOT NULL,
-    active BOOLEAN NOT NULL
+    offer_type VARCHAR(10) NOT NULL DEFAULT 'BUY'
 );
 
 CREATE TABLE purchased_courses (

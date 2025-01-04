@@ -26,14 +26,29 @@ public class PointsController {
     private final PointsService pointsService;
 
     @GetMapping("get-offers")
-    public ResponseEntity<HttpResponseDTO> getActiveOffers() {
-        List<PointsOfferDTO> offers = pointsService.getActiveOffers();
+    public ResponseEntity<HttpResponseDTO> getBuyOffers() {
+        List<PointsOfferDTO> offers = pointsService.getBuyOffers();
 
         return ResponseEntity.ok(
                 HttpResponseDTO.builder()
                         .timestamp(now().toString())
                         .data(of("offers", offers))
                         .message("Active offers retrieved successfully")
+                        .status(HttpStatus.OK)
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
+    }
+
+    @GetMapping("/get-withdrawal-offers")
+    public ResponseEntity<HttpResponseDTO> getWithdrawalOffers() {
+        List<PointsOfferDTO> offers = pointsService.getWithdrawalOffers();
+
+        return ResponseEntity.ok(
+                HttpResponseDTO.builder()
+                        .timestamp(now().toString())
+                        .data(of("offers", offers))
+                        .message("Withdrawal offers retrieved successfully")
                         .status(HttpStatus.OK)
                         .statusCode(HttpStatus.OK.value())
                         .build()
@@ -86,6 +101,42 @@ public class PointsController {
                             .status(HttpStatus.BAD_REQUEST)
                             .statusCode(HttpStatus.BAD_REQUEST.value())
                             .build());
+        }
+    }
+
+    @PostMapping("/withdraw/{offerId}")
+    public ResponseEntity<HttpResponseDTO> withdrawPoints(
+            @PathVariable Long offerId,
+            Authentication authentication) {
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        Long loggedInUserId = ((UserPrincipals) userDetails).getId();
+
+        try {
+            boolean withdrawn = pointsService.withdrawPoints(offerId, loggedInUserId);
+            if (withdrawn) {
+                int currentPoints = pointsService.getUserPoints(loggedInUserId);
+                return ResponseEntity.ok(HttpResponseDTO.builder()
+                        .timestamp(now().toString())
+                        .message("Points withdrawn successfully")
+                        .data(of("currentPoints", currentPoints))
+                        .status(HttpStatus.OK)
+                        .statusCode(HttpStatus.OK.value())
+                        .build());
+            } else {
+                return ResponseEntity.badRequest().body(HttpResponseDTO.builder()
+                        .timestamp(now().toString())
+                        .message("Failed to withdraw points")
+                        .status(HttpStatus.BAD_REQUEST)
+                        .statusCode(HttpStatus.BAD_REQUEST.value())
+                        .build());
+            }
+        } catch (ApiException e) {
+            return ResponseEntity.badRequest().body(HttpResponseDTO.builder()
+                    .timestamp(now().toString())
+                    .message(e.getMessage())
+                    .status(HttpStatus.BAD_REQUEST)
+                    .statusCode(HttpStatus.BAD_REQUEST.value())
+                    .build());
         }
     }
 }

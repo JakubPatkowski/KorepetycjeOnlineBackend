@@ -26,7 +26,13 @@ public class PointsOfferEntity {
     @Column(nullable = false)
     private Integer price;
 
-    @Column(nullable = false)
-    private Boolean active;
+    @Column(name = "offer_type", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private OfferType offerType;  // Zamiast boolean active
+
+    public enum OfferType {
+        BUY,    // Użytkownik kupuje punkty
+        SELL    // Nauczyciel wypłaca punkty
+    }
 
 }

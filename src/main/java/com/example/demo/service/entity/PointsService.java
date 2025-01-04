@@ -2,6 +2,7 @@ package com.example.demo.service.entity;
 
 import com.example.demo.dto.pointsOffer.PointsOfferDTO;
 import com.example.demo.entity.PointsOfferEntity;
+import com.example.demo.entity.RoleEntity;
 import com.example.demo.entity.UserEntity;
 import com.example.demo.exception.ApiException;
 import com.example.demo.repository.PointsOfferRepository;
@@ -20,9 +21,10 @@ import java.util.stream.Collectors;
 public class PointsService {
     private final PointsOfferRepository pointsOfferRepository;
     private final UserRepository userRepository;
+    private final RoleService roleService;
 
-    public List<PointsOfferDTO> getActiveOffers() {
-        return pointsOfferRepository.findByActiveTrue()
+    public List<PointsOfferDTO> getBuyOffers() {
+        return pointsOfferRepository.findByOfferType(PointsOfferEntity.OfferType.BUY)
                 .stream()
                 .map(offer -> new PointsOfferDTO(
                         offer.getId(),
@@ -32,14 +34,45 @@ public class PointsService {
                 .collect(Collectors.toList());
     }
 
-    public Optional<PointsOfferEntity> getActiveOfferById(Long id) {
-        return pointsOfferRepository.findById(id)
-                .filter(PointsOfferEntity::getActive);
+    public List<PointsOfferDTO> getWithdrawalOffers() {
+        return pointsOfferRepository.findByOfferType(PointsOfferEntity.OfferType.SELL)
+                .stream()
+                .map(offer -> new PointsOfferDTO(
+                        offer.getId(),
+                        offer.getPoints(),
+                        offer.getPrice()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public boolean withdrawPoints(Long offerId, Long loggedInUserId) {
+        PointsOfferEntity offer = pointsOfferRepository.findByIdAndOfferType(offerId, PointsOfferEntity.OfferType.SELL)
+                .orElseThrow(() -> new ApiException("Invalid withdrawal offer"));
+
+        UserEntity user = userRepository.findById(loggedInUserId)
+                .orElseThrow(() -> new ApiException("User not found"));
+
+        // Sprawdź czy użytkownik jest nauczycielem
+        if (!roleService.getUserRoles(loggedInUserId).contains(RoleEntity.Role.TEACHER)) {
+            throw new ApiException("Only teachers can withdraw points");
+        }
+
+        // Sprawdź czy użytkownik ma wystarczająco punktów
+        if (user.getPoints() < offer.getPoints()) {
+            throw new ApiException("Insufficient points balance");
+        }
+
+        // Odejmij punkty
+        user.setPoints(user.getPoints() - offer.getPoints());
+        userRepository.save(user);
+
+        return true;
     }
 
     @Transactional
     public boolean buyPoints(Long offerId, Long loggedInUserId) {
-        PointsOfferEntity offer = getActiveOfferById(offerId)
+        PointsOfferEntity offer = pointsOfferRepository.findByIdAndOfferType(offerId, PointsOfferEntity.OfferType.BUY)
                 .orElseThrow(() -> new ApiException("Invalid or inactive offer"));
 
         UserEntity user = userRepository.findById(loggedInUserId)
@@ -48,9 +81,7 @@ public class PointsService {
         // Tutaj normalnie byłaby integracja z systemem płatności
         // Zakładamy, że płatność przeszła pomyślnie
 
-        user.setPoints(user.getPoints() + offer.getPoints());
-        userRepository.save(user);
-
+        addPoints(loggedInUserId, offer.getPoints());
         return true;
     }
 
