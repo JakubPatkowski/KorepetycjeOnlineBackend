@@ -31,6 +31,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import jakarta.persistence.EntityNotFoundException;
 import com.example.demo.dto.courseShop.CourseDataDTO;
+import org.springframework.cache.annotation.CacheEvict;
+
 
 
 
@@ -61,6 +63,7 @@ public class CourseService {
     @Autowired
     private final ObjectMapper objectMapper;
 
+    @CacheEvict(value = "courses", allEntries = true)
     @Transactional
     public boolean createCourse(
             CourseCreateDTO createDTO,
@@ -115,10 +118,11 @@ public class CourseService {
 
             return true;
         } catch (Exception exception) {
-            throw new ApiException("Error occurred while creating course", exception);
+            throw new ApiException("Error occurred while creating course"+exception.getMessage(), exception);
         }
     }
 
+    @CacheEvict(value = "courses", allEntries = true)
     @Transactional
     public boolean updateCourse(
             String courseDataJson,

@@ -12,7 +12,7 @@ SET
 search_path TO demo;
 
 -- Usuwanie tabel jeśli istnieją
-DROP TABLE IF EXISTS users, user_profiles, refresh_tokens, verification_tokens, courses, chapters, subchapters, content_items, files, points_offers, purchased_courses, roles, reviews, teacher_profiles CASCADE;
+DROP TABLE IF EXISTS users, user_profiles, refresh_tokens, verification_tokens, courses, chapters, subchapters, content_items, files, points_offers, purchased_courses, roles, reviews, teacher_profiles, tasks CASCADE;
 
 -- Tworzenie tabeli Users
 CREATE TABLE users
@@ -163,4 +163,38 @@ CREATE TABLE teacher_profiles (
                                   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                                   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                                   CONSTRAINT unique_teacher_profile UNIQUE (user_id)
-)
+);
+
+CREATE TABLE demo.tasks (
+                            id BIGSERIAL PRIMARY KEY,
+                            title VARCHAR(255) NOT NULL,
+                            content TEXT NOT NULL,
+                            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            end_date TIMESTAMP NOT NULL,
+                            file BYTEA,
+                            mime_type VARCHAR(255),
+                            price INTEGER NOT NULL,
+                            solution_time_minutes INTEGER NOT NULL,
+                            is_public BOOLEAN DEFAULT true,
+                            is_active BOOLEAN DEFAULT true,
+                            student_id BIGINT NOT NULL REFERENCES users(id),
+                            assigned_teacher_id BIGINT REFERENCES users(id),
+                            assigned_at TIMESTAMP,
+                            solution_deadline TIMESTAMP,
+                            status VARCHAR(20) NOT NULL DEFAULT 'OPEN',
+                            CHECK (status IN ('OPEN', 'ASSIGNED', 'COMPLETED', 'EXPIRED'))
+);
+
+CREATE INDEX IF NOT EXISTS courses_name_idx ON courses(name);
+CREATE INDEX IF NOT EXISTS courses_tags_idx ON courses USING gin(tags);
+CREATE INDEX IF NOT EXISTS courses_review_idx ON courses(review);
+CREATE INDEX IF NOT EXISTS courses_review_number_idx ON courses(review_number);
+
+CREATE INDEX IF NOT EXISTS chapters_course_id_idx ON chapters(course_id);
+CREATE INDEX IF NOT EXISTS subchapters_chapter_id_idx ON subchapters(chapter_id);
+
+CREATE INDEX IF NOT EXISTS tasks_student_id_idx ON demo.tasks(student_id);
+CREATE INDEX IF NOT EXISTS tasks_assigned_teacher_id_idx ON demo.tasks(assigned_teacher_id);
+CREATE INDEX IF NOT EXISTS tasks_status_idx ON demo.tasks(status);
+CREATE INDEX IF NOT EXISTS tasks_is_public_idx ON demo.tasks(is_public);
+CREATE INDEX IF NOT EXISTS tasks_is_active_idx ON demo.tasks(is_active);

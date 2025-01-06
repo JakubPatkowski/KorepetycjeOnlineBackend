@@ -17,6 +17,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
+
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -24,6 +28,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@CacheConfig(cacheNames = "chapters")
 public class ChapterService {
     @Autowired
     private final ChapterRepository chapterRepository;
@@ -34,6 +39,7 @@ public class ChapterService {
     @Autowired
     private final CourseRepository courseRepository;
 
+    @CacheEvict(value = {"chapters", "courses"}, allEntries = true)
     @Transactional
     public ChapterEntity createChapter(ChapterCreateDTO dto, CourseEntity course, int order) {
         ChapterEntity chapter = ChapterEntity.builder()
@@ -47,6 +53,7 @@ public class ChapterService {
         return chapterRepository.save(chapter);
     }
 
+    @Cacheable(key = "#chapterId + '_user_' + #userId")
     @Transactional(readOnly = true)
     public ChapterDetailsDTO getChapterDetails(Long chapterId, Long userId){
         ChapterEntity chapter = chapterRepository.findById(chapterId)
@@ -82,6 +89,7 @@ public class ChapterService {
                 .build();
     }
 
+    @CacheEvict(value = {"chapters", "courses"}, allEntries = true)
     @Transactional
     public void updateChapters(CourseEntity course, List<ChapterUpdateDTO> chaptersDTO, MultipartFile[] contentFiles) {
         Map<Long, Integer> fileIndexMap = new HashMap<>();
@@ -152,6 +160,7 @@ public class ChapterService {
                 .build();
     }
 
+    @Cacheable(key = "'course_chapters_' + #courseId")
     @Transactional(readOnly = true)
     public List<ChapterShortDTO> getCourseChapters(Long courseId) {
         CourseEntity course = courseRepository.findById(courseId)

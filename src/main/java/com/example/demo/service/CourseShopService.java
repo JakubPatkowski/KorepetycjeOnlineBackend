@@ -14,7 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.hibernate.service.spi.ServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
-import org.springframework.dao.DataAccessException;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -28,6 +29,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 @Slf4j
+@CacheConfig(cacheNames = "courses")
 public class CourseShopService {
     private final CourseRepository courseRepository;
     private final UserProfileRepository userProfileRepository;
@@ -36,6 +38,7 @@ public class CourseShopService {
     @Autowired
     private CacheManager cacheManager;
 
+    @Cacheable(key = "'search_' + #search + '_tag_' + #tag + '_page_' + #page + '_size_' + #size + '_sortBy_' + #sortBy + '_userId_' + #loggedInUserId")
     @Transactional(readOnly = true, isolation = Isolation.READ_COMMITTED)
     public Page<CourseShopResponseDTO> searchCourses(
             String search,
@@ -284,6 +287,7 @@ public class CourseShopService {
         return (long) page * size;
     }
 
+    @Cacheable(key = "'course_details_' + #course.id + '_user_' + #loggedInUserId")
     @Transactional
     public CourseShopDetailsResponseDTO getCourseWithDetails(CourseEntity course, Long loggedInUserId) {
         List<ChapterShortDTO> chapters = course.getChapters().stream()
@@ -355,6 +359,7 @@ public class CourseShopService {
         return CourseRelationshipType.AVAILABLE;
     }
 
+    @Cacheable(key = "'best_courses_' + #loggedInUserId")
     @Transactional(readOnly = true)
     public List<CourseShopResponseDTO> getBestCourses(Long loggedInUserId) {
         try {
@@ -366,5 +371,10 @@ public class CourseShopService {
             log.error("Error while fetching best courses: {}", e.getMessage());
             throw new ServiceException("Error retrieving best courses", e);
         }
+    }
+
+    @CacheEvict(value = "courses", allEntries = true)
+    public void evictBestCoursesCache(Long userId) {
+        // Cache zostanie automatycznie usunięty przez adnotację @CacheEvict
     }
 }

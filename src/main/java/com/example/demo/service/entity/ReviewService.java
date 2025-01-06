@@ -6,6 +6,7 @@ import com.example.demo.dto.userProfile.UserProfileResponseDTO;
 import com.example.demo.entity.*;
 import com.example.demo.exception.ApiException;
 import com.example.demo.repository.*;
+import com.example.demo.service.CourseShopService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -32,6 +33,7 @@ public class ReviewService {
     private final UserProfileRepository userProfileRepository;
     private final RoleService roleService;
     private final TeacherProfileRepository teacherProfileRepository;
+    private final CourseShopService courseShopService;
 
     @Transactional
     public void addCourseReview(Long courseId, Long userId, ReviewCreateDTO reviewDTO){
@@ -70,6 +72,7 @@ public class ReviewService {
         course.setReview(newAverage);
         course.setReviewNumber(currentReviewCount + 1);
         courseRepository.save(course);
+        courseShopService.evictBestCoursesCache(userId);
 
     }
 
@@ -110,6 +113,9 @@ public class ReviewService {
         chapter.setReview(newAverage);
         chapter.setReviewNumber(currentReviewCount + 1);
         chapterRepository.save(chapter);
+
+        courseShopService.evictBestCoursesCache(userId);
+
     }
 
     @Transactional(readOnly = true)
@@ -264,6 +270,9 @@ public class ReviewService {
         if (ratingChanged) {
             updateTargetRatingAfterEdit(review.getTargetId(), review.getTargetType(), oldRating, updateDTO.getRating());
         }
+
+        courseShopService.evictBestCoursesCache(userId);
+
     }
 
     private void updateTargetRatingAfterEdit(Long targetId, ReviewTargetType targetType, int oldRating, int newRating) {
@@ -282,6 +291,7 @@ public class ReviewService {
                 BigDecimal newAverage = currentTotal.divide(BigDecimal.valueOf(reviewCount), 2, RoundingMode.HALF_UP);
                 course.setReview(newAverage);
                 courseRepository.save(course);
+
             }
             case CHAPTER -> {
                 ChapterEntity chapter = chapterRepository.findById(targetId)
@@ -316,6 +326,9 @@ public class ReviewService {
 
         // Usuń recenzję
         reviewRepository.delete(review);
+
+        courseShopService.evictBestCoursesCache(userId);
+
     }
 
     private void updateTargetRatingAfterDelete(ReviewEntity review) {

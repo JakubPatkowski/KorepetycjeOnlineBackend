@@ -1,6 +1,5 @@
 package com.example.demo.service.entity;
 
-import com.example.demo.dto.contentItem.ContentItemCreateDTO;
 import com.example.demo.dto.contentItem.ContentItemResponseDTO;
 import com.example.demo.dto.subchapter.SubchapterCreateDTO;
 import com.example.demo.dto.subchapter.SubchapterDetailsDTO;
@@ -10,27 +9,27 @@ import com.example.demo.entity.ContentItemEntity;
 import com.example.demo.entity.CourseEntity;
 import com.example.demo.entity.SubchapterEntity;
 import com.example.demo.exception.ApiException;
-import com.example.demo.repository.ChapterRepository;
 import com.example.demo.repository.PurchasedCourseRepository;
 import com.example.demo.repository.SubchapterRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.annotation.JsonAppend;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 
-import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@CacheConfig(cacheNames = "subchapters")
 public class SubchapterService {
     @Autowired
     private final SubchapterRepository subchapterRepository;
@@ -40,6 +39,7 @@ public class SubchapterService {
     
     private final PurchasedCourseRepository purchasedCourseRepository;
 
+    @CacheEvict(value = {"subchapters", "chapters", "contentItems"}, allEntries = true)
     @Transactional
     public SubchapterEntity createSubchapter(SubchapterCreateDTO dto, ChapterEntity chapter, int order) {
         SubchapterEntity subchapter = SubchapterEntity.builder()
@@ -51,6 +51,7 @@ public class SubchapterService {
         return subchapterRepository.save(subchapter);
     }
 
+    @CacheEvict(value = {"subchapters", "chapters", "contentItems"}, allEntries = true)
     @Transactional
     public void updateSubchapters(ChapterEntity chapter, List<SubchapterUpdateDTO> subchaptersDTO,
                                   MultipartFile[] contentFiles, Map<Long, Integer> fileIndexMap) {
@@ -92,6 +93,7 @@ public class SubchapterService {
         }
     }
 
+    @Cacheable(key = "#subchapterId + '_user_' + #userId")
     @Transactional(readOnly = true)
     public SubchapterDetailsDTO getSubchapterDetails(Long subchapterId, Long userId){
         SubchapterEntity subchapter = subchapterRepository.findById(subchapterId)

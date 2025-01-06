@@ -401,4 +401,10 @@ public interface CourseRepository extends JpaRepository<CourseEntity, Long> {
     LIMIT 3
     """, nativeQuery = true)
     List<CourseEntity> findBestCourses(@Param("userId") Long userId);
+
+    @Query("SELECT c FROM CourseEntity c " +
+            "LEFT JOIN FETCH c.chapters ch " +
+            "LEFT JOIN FETCH ch.subchapters " +
+            "WHERE c.id = :courseId")
+    Optional<CourseEntity> findByIdWithChaptersAndSubchapters(@Param("courseId") Long courseId);
 }

@@ -6,7 +6,6 @@ import com.example.demo.entity.ContentItemEntity;
 import com.example.demo.entity.SubchapterEntity;
 import com.example.demo.exception.ApiException;
 import com.example.demo.repository.ContentItemRepository;
-import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.cache.annotation.CacheConfig;
 
 import java.io.IOException;
 import java.util.*;
@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@CacheConfig(cacheNames = "contentItems")
 public class ContentItemService {
     @Autowired
     private final ContentItemRepository contentItemRepository;
@@ -123,10 +124,7 @@ public class ContentItemService {
         for (ContentItemUpdateDTO itemDTO : contentItemsDTO) {
             if (itemDTO.getDeleted().orElse(false)) continue;
 
-            // TODO nie wiem powinno być coś takiego
-//            itemDTO.getQuizContent().ifPresent(quizData -> {
-//                processQuizContent(item, quizData);
-//            });
+
 
 
             if (itemDTO.getId() != null) {
