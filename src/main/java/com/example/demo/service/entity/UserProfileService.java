@@ -99,6 +99,11 @@ public class UserProfileService {
         return builder.build();
     }
 
+    public UserProfileEntity getUserProfileEntity(Long userId) {
+        return userProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User profile not found"));
+    }
+
     private Map<String, Object> createPictureData(UserProfileEntity profile) {
         if (profile.getPicture() == null) {
             return null;

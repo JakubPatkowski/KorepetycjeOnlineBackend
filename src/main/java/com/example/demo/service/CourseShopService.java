@@ -242,7 +242,7 @@ public class CourseShopService {
                     .collect(Collectors.toSet());
 
             return OwnerDataDTO.builder()
-                    .id(profile.getId())
+                    .id(profile.getUserId())
                     .fullName(profile.getFullName())
                     .userId(profile.getUserId())
                     .description(profile.getDescription())

@@ -65,7 +65,8 @@ public class SecurityConfiguration {
                                 "review/get/chapter/**",
                                 "review/get/teacher/**",
                                 "user-profile/get/**",
-                                "user-profile/get-best"
+                                "user-profile/get-best",
+                                "task/get/**"
 
 
                                 ).permitAll()
@@ -106,6 +107,8 @@ public class SecurityConfiguration {
 
                         .requestMatchers("/payment/create-payment-intent").hasAnyAuthority("USER")
                         .requestMatchers("/payment/webhook").hasAnyAuthority("USER")
+
+                        .requestMatchers("/task/create").hasAnyAuthority("USER")
 
                         .anyRequest().authenticated()
 
