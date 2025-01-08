@@ -65,6 +65,9 @@ import java.util.stream.Collectors;
     @Autowired
     private final RoleService roleService;
 
+    @Autowired
+    private final LoginAttemptService loginAttemptService;
+
     private final BCryptPasswordEncoder encoder;
 
     private final AuthenticationManager authenticationManager;
@@ -75,48 +78,37 @@ import java.util.stream.Collectors;
 
     @Transactional
     public UserResponseDTO login(UserLoginDTO userLoginDTO, String clientIp) {
+        logger.debug("Starting login process for email: {}", userLoginDTO.email());
+
         try {
 
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(userLoginDTO.email(), userLoginDTO.password())
-            );
-
-            if (authentication.isAuthenticated()) {
-                UserEntity userEntity = userRepository.findByEmail(userLoginDTO.email().trim().toLowerCase());
-                String accessToken = jwtService.generateAccessToken(userLoginDTO.email());
-                String refreshToken = refreshTokenService.generateRefreshToken(userEntity.getId(), clientIp);
-
-                UserResponseDTO userDTO = new UserResponseDTO();
-
-                userDTO.setAccessToken(accessToken);
-                userDTO.setRefreshToken(refreshToken);
-
-                userDTO.setId(userEntity.getId());
-                UserProfileEntity userProfileEntity = userProfileRepository.findByUserId(userEntity.getId())
-                        .orElseThrow(() -> new EntityNotFoundException("User Profile not found"));
-
-                userDTO.setBadgesVisible(false);
-
-                userDTO.setFullName(userProfileEntity.getFullName());
-                userDTO.setEmail(userEntity.getEmail());
-                userDTO.setPoints(userEntity.getPoints());
-                userDTO.setCreatedAt(userProfileEntity.getCreatedAt());
-                userDTO.setRoles(userEntity.getRoles().stream()
-                        .map(role -> role.getRole().toString())
-                        .collect(Collectors.toSet()));
-                userDTO.setPicture(createPictureData(userProfileEntity.getPicture(), userProfileEntity.getPictureMimeType()));
-                userDTO.setDescription(userProfileEntity.getDescription());
-                return userDTO;
-
+            if (loginAttemptService.isAccountBlocked(userLoginDTO.email(), clientIp)) {
+                loginAttemptService.recordLoginAttempt(userLoginDTO.email(), clientIp, false);
+                throw new ApiException("Account is temporarily blocked due to too many failed attempts");
             }
-            else {
 
+            Authentication authentication;
 
-                throw new ApiException("Wrong password");
+            try {
+                authentication = authenticationManager.authenticate(
+                        new UsernamePasswordAuthenticationToken(userLoginDTO.email(), userLoginDTO.password())
+                );
+            } catch (AuthenticationException e) {
+                // Record failed attempt in separate transaction
+                loginAttemptService.recordLoginAttempt(userLoginDTO.email(), clientIp, false);
+                throw new ApiException("Authentication failed: " + e.getMessage(), e);
             }
-        } catch (AuthenticationException e) {
-            System.err.println(e.getMessage());
-            throw new ApiException(STR."Authentication failed: \{e.getMessage()}", e);
+
+            UserEntity userEntity = userRepository.findByEmail(userLoginDTO.email().trim().toLowerCase());
+            String accessToken = jwtService.generateAccessToken(userLoginDTO.email());
+            String refreshToken = refreshTokenService.generateRefreshToken(userEntity.getId(), clientIp);
+
+            loginAttemptService.recordLoginAttempt(userLoginDTO.email(), clientIp, true);
+
+            return createUserResponse(userEntity, accessToken, refreshToken);
+        } catch (Exception e) {
+            logger.error("Error during login process", e);
+            throw e;
         }
     }
 
@@ -310,6 +302,27 @@ import java.util.stream.Collectors;
         }
     }
 
+    private UserResponseDTO createUserResponse(UserEntity userEntity, String accessToken, String refreshToken) {
+        UserProfileEntity userProfileEntity = userProfileRepository.findByUserId(userEntity.getId())
+                .orElseThrow(() -> new EntityNotFoundException("User Profile not found"));
+
+        UserResponseDTO userDTO = new UserResponseDTO();
+        userDTO.setAccessToken(accessToken);
+        userDTO.setRefreshToken(refreshToken);
+        userDTO.setId(userEntity.getId());
+        userDTO.setFullName(userProfileEntity.getFullName());
+        userDTO.setEmail(userEntity.getEmail());
+        userDTO.setPoints(userEntity.getPoints());
+        userDTO.setCreatedAt(userProfileEntity.getCreatedAt());
+        userDTO.setRoles(userEntity.getRoles().stream()
+                .map(role -> role.getRole().toString())
+                .collect(Collectors.toSet()));
+        userDTO.setPicture(createPictureData(userProfileEntity.getPicture(), userProfileEntity.getPictureMimeType()));
+        userDTO.setDescription(userProfileEntity.getDescription());
+        userDTO.setBadgesVisible(userProfileEntity.getBadgesVisible());
+
+        return userDTO;
+    }
 
     private Map<String, Object> createPictureData(byte[] picture, String mimeType) {
         Map<String, Object> pictureData = new HashMap<>();

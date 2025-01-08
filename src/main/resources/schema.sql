@@ -12,7 +12,7 @@ SET
 search_path TO demo;
 
 -- Usuwanie tabel jeśli istnieją
-DROP TABLE IF EXISTS users, user_profiles, refresh_tokens, verification_tokens, courses, chapters, subchapters, content_items, files, points_offers, purchased_courses, roles, reviews, teacher_profiles, tasks CASCADE;
+DROP TABLE IF EXISTS users, user_profiles, refresh_tokens, verification_tokens, courses, chapters, subchapters, content_items, files, points_offers, purchased_courses, roles, reviews, teacher_profiles, tasks, demo.login_attempts CASCADE;
 
 -- Tworzenie tabeli Users
 CREATE TABLE users
@@ -185,6 +185,14 @@ CREATE TABLE demo.tasks (
                             CHECK (status IN ('OPEN', 'ASSIGNED', 'COMPLETED', 'EXPIRED'))
 );
 
+CREATE TABLE IF NOT EXISTS demo.login_attempts (
+                                                   id BIGSERIAL PRIMARY KEY,
+                                                   email VARCHAR(255) NOT NULL,
+                                                   ip_address VARCHAR(45) NOT NULL,
+                                                   attempt_time TIMESTAMP NOT NULL,
+                                                   successful BOOLEAN NOT NULL
+);
+
 CREATE INDEX IF NOT EXISTS courses_name_idx ON courses(name);
 CREATE INDEX IF NOT EXISTS courses_tags_idx ON courses USING gin(tags);
 CREATE INDEX IF NOT EXISTS courses_review_idx ON courses(review);
@@ -198,3 +206,6 @@ CREATE INDEX IF NOT EXISTS tasks_assigned_teacher_id_idx ON demo.tasks(assigned_
 CREATE INDEX IF NOT EXISTS tasks_status_idx ON demo.tasks(status);
 CREATE INDEX IF NOT EXISTS tasks_is_public_idx ON demo.tasks(is_public);
 CREATE INDEX IF NOT EXISTS tasks_is_active_idx ON demo.tasks(is_active);
+
+CREATE INDEX IF NOT EXISTS idx_login_attempts_email ON demo.login_attempts(email, attempt_time);
+CREATE INDEX IF NOT EXISTS idx_login_attempts_ip ON demo.login_attempts(ip_address, attempt_time);
