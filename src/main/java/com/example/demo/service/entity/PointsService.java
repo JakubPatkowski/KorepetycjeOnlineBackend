@@ -1,12 +1,14 @@
 package com.example.demo.service.entity;
 
 import com.example.demo.dto.pointsOffer.PointsOfferDTO;
+import com.example.demo.entity.PaymentHistoryEntity;
 import com.example.demo.entity.PointsOfferEntity;
 import com.example.demo.entity.RoleEntity;
 import com.example.demo.entity.UserEntity;
 import com.example.demo.exception.ApiException;
 import com.example.demo.repository.PointsOfferRepository;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.service.EmailService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,6 +24,8 @@ public class PointsService {
     private final PointsOfferRepository pointsOfferRepository;
     private final UserRepository userRepository;
     private final RoleService roleService;
+    private final PaymentHistoryService paymentHistoryService;
+    private final EmailService emailService;
 
     public List<PointsOfferDTO> getBuyOffers() {
         return pointsOfferRepository.findByOfferType(PointsOfferEntity.OfferType.BUY)
@@ -64,8 +68,24 @@ public class PointsService {
         }
 
         // Odejmij punkty
-        user.setPoints(user.getPoints() - offer.getPoints());
-        userRepository.save(user);
+        deductPoints(user.getId(), offer.getPoints());
+
+        paymentHistoryService.addTransaction(
+                loggedInUserId,
+                PaymentHistoryEntity.TransactionType.POINTS_WITHDRAWAL,
+                -offer.getPoints(),
+                "Withdraw points",
+                null,
+                null
+        );
+
+        emailService.sendPointsWithdrawalConfirmation(
+                user.getEmail(),
+                offer.getPoints(),
+                offer.getPrice(),
+                user.getPoints()
+        );
+
 
         return true;
     }
@@ -82,6 +102,23 @@ public class PointsService {
         // Zakładamy, że płatność przeszła pomyślnie
 
         addPoints(loggedInUserId, offer.getPoints());
+
+        paymentHistoryService.addTransaction(
+                loggedInUserId,
+                PaymentHistoryEntity.TransactionType.POINTS_PURCHASE,
+                offer.getPoints(),
+                "Purchase of Points",
+                null,
+                null
+        );
+
+        emailService.sendPointsPurchaseConfirmation(
+                user.getEmail(),
+                offer.getPoints(),
+                offer.getPrice(),
+                user.getPoints()
+        );
+
         return true;
     }
 

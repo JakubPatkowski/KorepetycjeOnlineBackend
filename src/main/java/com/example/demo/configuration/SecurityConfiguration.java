@@ -110,6 +110,8 @@ public class SecurityConfiguration {
 
                         .requestMatchers("/task/create").hasAnyAuthority("USER")
 
+                        .requestMatchers("/payment-history").hasAnyAuthority("USER")
+
                         .anyRequest().authenticated()
 
                 )

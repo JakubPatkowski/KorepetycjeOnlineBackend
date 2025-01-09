@@ -43,4 +43,66 @@ public class EmailService {
         message.setText("Your verification code to change your password is: \n" + code + "\nThis code will expire in 15 minutes.");
         mailSender.send(message);
     }
+
+    @Async
+    public void sendPointsPurchaseConfirmation(String toEmail, int points, int price, int newBalance) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(fromEmail);
+        message.setTo(toEmail);
+        message.setSubject("Points Purchase Confirmation");
+        message.setText(String.format("""
+            Thank you for your purchase!
+            
+            Transaction details:
+            - Points purchased: %d
+            - Price: %d PLN
+            - Current balance: %d points
+            
+            Thank you for using our service!
+            """, points, price, newBalance));
+
+        mailSender.send(message);
+    }
+
+    @Async
+    public void sendPointsWithdrawalConfirmation(String toEmail, int points, int price, int newBalance) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(fromEmail);
+        message.setTo(toEmail);
+        message.setSubject("Points Withdrawal Confirmation");
+        message.setText(String.format("""
+            Points withdrawal confirmation
+            
+            Transaction details:
+            - Points withdrawn: %d
+            - Value: %d PLN
+            - Remaining balance: %d points
+            
+            The funds will be transferred to your account within 24 hours.
+            Thank you for using our service!
+            """, points, price, newBalance));
+
+        mailSender.send(message);
+    }
+
+    @Async
+    public void sendCoursePurchaseConfirmation(String toEmail, String courseName, int pointsSpent, int newBalance) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(fromEmail);
+        message.setTo(toEmail);
+        message.setSubject("Course Purchase Confirmation");
+        message.setText(String.format("""
+            Thank you for purchasing the course!
+            
+            Transaction details:
+            - Course: %s
+            - Points spent: %d
+            - Remaining balance: %d points
+            
+            You can now access your course in your account.
+            Happy learning!
+            """, courseName, pointsSpent, newBalance));
+
+        mailSender.send(message);
+    }
 }

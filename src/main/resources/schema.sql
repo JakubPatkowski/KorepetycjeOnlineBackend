@@ -12,7 +12,7 @@ SET
 search_path TO demo;
 
 -- Usuwanie tabel jeśli istnieją
-DROP TABLE IF EXISTS users, user_profiles, refresh_tokens, verification_tokens, courses, chapters, subchapters, content_items, files, points_offers, purchased_courses, roles, reviews, teacher_profiles, tasks, demo.login_attempts CASCADE;
+DROP TABLE IF EXISTS users, user_profiles, refresh_tokens, verification_tokens, courses, chapters, subchapters, content_items, files, points_offers, purchased_courses, roles, reviews, teacher_profiles, tasks, demo.login_attempts, payment_history CASCADE;
 
 -- Tworzenie tabeli Users
 CREATE TABLE users
@@ -193,10 +193,32 @@ CREATE TABLE IF NOT EXISTS demo.login_attempts (
                                                    successful BOOLEAN NOT NULL
 );
 
+CREATE TABLE payment_history (
+                                 id BIGSERIAL PRIMARY KEY,
+                                 user_id BIGINT NOT NULL REFERENCES users(id),
+                                 transaction_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                 transaction_type VARCHAR(50) NOT NULL,
+                                 points_amount INTEGER NOT NULL,
+                                 description TEXT NOT NULL,
+                                 balance_after INTEGER NOT NULL,
+                                 related_entity_id BIGINT,  -- ID powiązanego kursu lub zadania
+                                 related_entity_type VARCHAR(50) -- 'COURSE', 'TASK' itp.
+);
+
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_points ON users(points);
+
+CREATE INDEX IF NOT EXISTS idx_reviews_target ON reviews(target_type, target_id);
+CREATE INDEX IF NOT EXISTS idx_reviews_created_at ON reviews(created_at);
+CREATE INDEX IF NOT EXISTS idx_reviews_user ON reviews(user_id);
+
 CREATE INDEX IF NOT EXISTS courses_name_idx ON courses(name);
 CREATE INDEX IF NOT EXISTS courses_tags_idx ON courses USING gin(tags);
 CREATE INDEX IF NOT EXISTS courses_review_idx ON courses(review);
 CREATE INDEX IF NOT EXISTS courses_review_number_idx ON courses(review_number);
+CREATE INDEX IF NOT EXISTS idx_courses_user ON courses(user_id);
+CREATE INDEX IF NOT EXISTS idx_courses_dates ON courses(created_at, updated_at);
+CREATE INDEX IF NOT EXISTS idx_courses_price ON courses(price);
 
 CREATE INDEX IF NOT EXISTS chapters_course_id_idx ON chapters(course_id);
 CREATE INDEX IF NOT EXISTS subchapters_chapter_id_idx ON subchapters(chapter_id);
@@ -209,3 +231,7 @@ CREATE INDEX IF NOT EXISTS tasks_is_active_idx ON demo.tasks(is_active);
 
 CREATE INDEX IF NOT EXISTS idx_login_attempts_email ON demo.login_attempts(email, attempt_time);
 CREATE INDEX IF NOT EXISTS idx_login_attempts_ip ON demo.login_attempts(ip_address, attempt_time);
+
+CREATE INDEX IF NOT EXISTS idx_payment_history_user ON payment_history(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_teacher_profiles_review ON teacher_profiles(review DESC, review_number DESC);

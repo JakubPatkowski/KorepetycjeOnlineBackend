@@ -1,8 +1,8 @@
 package com.example.demo.service.entity;
 
-import com.example.demo.dto.course.CourseInfoDTO;
 import com.example.demo.dto.courseShop.CourseShopResponseDTO;
 import com.example.demo.entity.CourseEntity;
+import com.example.demo.entity.PaymentHistoryEntity;
 import com.example.demo.entity.PurchasedCourseEntity;
 import com.example.demo.entity.UserEntity;
 import com.example.demo.exception.ApiException;
@@ -10,6 +10,7 @@ import com.example.demo.repository.CourseRepository;
 import com.example.demo.repository.PurchasedCourseRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.service.CourseShopService;
+import com.example.demo.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -29,6 +30,8 @@ public class PurchasedCourseService {
     private final UserRepository userRepository;
     private final PointsService pointsService;
     private final CourseShopService courseShopService;
+    private final PaymentHistoryService paymentHistoryService;
+    private final EmailService emailService;
 
     @Transactional
     public boolean purchaseCourse(Long courseId, Long buyerId) {
@@ -73,6 +76,32 @@ public class PurchasedCourseService {
                     .build();
 
             purchasedCourseRepository.save(purchase);
+
+            paymentHistoryService.addTransaction(
+                    buyerId,
+                    PaymentHistoryEntity.TransactionType.COURSE_PURCHASE,
+                    -coursePrice,
+                    "Purchase of course" + course.getName(),
+                    courseId,
+                    PaymentHistoryEntity.RelatedEntityType.COURSE
+            );
+
+            paymentHistoryService.addTransaction(
+                    courseOwner.getId(),
+                    PaymentHistoryEntity.TransactionType.COURSE_SOLD,
+                    calculateOwnerShare(coursePrice),
+                    "purchased access to the course: " + course.getName(),
+                    courseId,
+                    PaymentHistoryEntity.RelatedEntityType.COURSE
+            );
+
+            emailService.sendCoursePurchaseConfirmation(
+                    buyer.getEmail(),
+                    course.getName(),
+                    coursePrice,
+                    buyer.getPoints()
+            );
+
             return true;
 
         } catch (Exception e) {
