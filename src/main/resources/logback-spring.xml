@@ -37,7 +37,7 @@
     </appender>
 
     <!-- Logger configuration -->
-    <logger name="com.example.demo" level="INFO" additivity="false">
+    <logger name="com.example.ekorki" level="INFO" additivity="false">
         <appender-ref ref="Console" />
         <appender-ref ref="File" />
         <appender-ref ref="ErrorFile" />

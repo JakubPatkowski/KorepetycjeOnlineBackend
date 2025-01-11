@@ -1,5 +1,5 @@
 -- Tworzenie schematu 'demo'
-CREATE SCHEMA IF NOT EXISTS demo;
+CREATE SCHEMA IF NOT EXISTS e_korki;
 
 -- Ustawienia kodowania znaków oraz strefy czasowej
 SET
@@ -9,7 +9,7 @@ TIMEZONE TO 'Europe/Warsaw';
 
 -- Używanie schematu 'demo'
 SET
-search_path TO demo;
+search_path TO e_korki;
 
 -- Usuwanie tabel jeśli istnieją
 DROP TABLE IF EXISTS users, user_profiles, refresh_tokens, verification_tokens, courses, chapters, subchapters, content_items, files, points_offers, purchased_courses, roles, reviews, teacher_profiles, tasks, demo.login_attempts, payment_history CASCADE;
@@ -165,7 +165,7 @@ CREATE TABLE teacher_profiles (
                                   CONSTRAINT unique_teacher_profile UNIQUE (user_id)
 );
 
-CREATE TABLE demo.tasks (
+CREATE TABLE e_korki.tasks (
                             id BIGSERIAL PRIMARY KEY,
                             title VARCHAR(255) NOT NULL,
                             content TEXT NOT NULL,
@@ -185,7 +185,7 @@ CREATE TABLE demo.tasks (
                             CHECK (status IN ('OPEN', 'ASSIGNED', 'COMPLETED', 'EXPIRED'))
 );
 
-CREATE TABLE IF NOT EXISTS demo.login_attempts (
+CREATE TABLE IF NOT EXISTS e_korki.login_attempts (
                                                    id BIGSERIAL PRIMARY KEY,
                                                    email VARCHAR(255) NOT NULL,
                                                    ip_address VARCHAR(45) NOT NULL,
@@ -223,14 +223,14 @@ CREATE INDEX IF NOT EXISTS idx_courses_price ON courses(price);
 CREATE INDEX IF NOT EXISTS chapters_course_id_idx ON chapters(course_id);
 CREATE INDEX IF NOT EXISTS subchapters_chapter_id_idx ON subchapters(chapter_id);
 
-CREATE INDEX IF NOT EXISTS tasks_student_id_idx ON demo.tasks(student_id);
-CREATE INDEX IF NOT EXISTS tasks_assigned_teacher_id_idx ON demo.tasks(assigned_teacher_id);
-CREATE INDEX IF NOT EXISTS tasks_status_idx ON demo.tasks(status);
-CREATE INDEX IF NOT EXISTS tasks_is_public_idx ON demo.tasks(is_public);
-CREATE INDEX IF NOT EXISTS tasks_is_active_idx ON demo.tasks(is_active);
+CREATE INDEX IF NOT EXISTS tasks_student_id_idx ON e_korki.tasks(student_id);
+CREATE INDEX IF NOT EXISTS tasks_assigned_teacher_id_idx ON e_korki.tasks(assigned_teacher_id);
+CREATE INDEX IF NOT EXISTS tasks_status_idx ON e_korki.tasks(status);
+CREATE INDEX IF NOT EXISTS tasks_is_public_idx ON e_korki.tasks(is_public);
+CREATE INDEX IF NOT EXISTS tasks_is_active_idx ON e_korki.tasks(is_active);
 
-CREATE INDEX IF NOT EXISTS idx_login_attempts_email ON demo.login_attempts(email, attempt_time);
-CREATE INDEX IF NOT EXISTS idx_login_attempts_ip ON demo.login_attempts(ip_address, attempt_time);
+CREATE INDEX IF NOT EXISTS idx_login_attempts_email ON e_korki.login_attempts(email, attempt_time);
+CREATE INDEX IF NOT EXISTS idx_login_attempts_ip ON e_korki.login_attempts(ip_address, attempt_time);
 
 CREATE INDEX IF NOT EXISTS idx_payment_history_user ON payment_history(user_id);
 
