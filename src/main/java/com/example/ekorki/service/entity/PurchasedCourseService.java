@@ -12,6 +12,7 @@ import com.example.ekorki.repository.UserRepository;
 import com.example.ekorki.service.CourseShopService;
 import com.example.ekorki.service.EmailService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -34,6 +35,7 @@ public class PurchasedCourseService {
     private final EmailService emailService;
 
     @Transactional
+    @CacheEvict(value = "courses", allEntries = true)
     public boolean purchaseCourse(Long courseId, Long buyerId) {
         // Sprawdzenie czy kurs istnieje
         CourseEntity course = courseRepository.findById(courseId)

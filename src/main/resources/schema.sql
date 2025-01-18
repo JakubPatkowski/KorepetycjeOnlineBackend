@@ -1,4 +1,4 @@
--- Tworzenie schematu 'demo'
+-- Tworzenie schematu 'e_korki'
 CREATE SCHEMA IF NOT EXISTS e_korki;
 
 -- Ustawienia kodowania znaków oraz strefy czasowej
@@ -7,12 +7,27 @@ CLIENT_ENCODING TO 'UTF8';
 SET
 TIMEZONE TO 'Europe/Warsaw';
 
--- Używanie schematu 'demo'
+-- Używanie schematu 'e_korki'
 SET
 search_path TO e_korki;
 
 -- Usuwanie tabel jeśli istnieją
-DROP TABLE IF EXISTS users, user_profiles, refresh_tokens, verification_tokens, courses, chapters, subchapters, content_items, files, points_offers, purchased_courses, roles, reviews, teacher_profiles, tasks, demo.login_attempts, payment_history CASCADE;
+DROP TABLE IF EXISTS
+    users,
+    user_profiles,
+    refresh_tokens,
+    verification_tokens,
+    courses,
+    chapters,
+    subchapters,
+    content_items,
+    files, points_offers,
+    purchased_courses,
+    roles, reviews,
+    teacher_profiles,
+    tasks,
+    login_attempts,
+    payment_history CASCADE;
 
 -- Tworzenie tabeli Users
 CREATE TABLE users

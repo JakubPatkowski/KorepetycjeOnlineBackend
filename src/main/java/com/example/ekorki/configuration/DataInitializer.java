@@ -81,7 +81,6 @@ public class DataInitializer {
 
         // Dodaj recenzje do nauczycieli
         createTeacherReviews(users);
-
     }
 
     private List<UserEntity> createUsers() {
