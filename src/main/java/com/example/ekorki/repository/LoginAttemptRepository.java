@@ -20,15 +20,11 @@ public interface LoginAttemptRepository extends JpaRepository<LoginAttemptEntity
                             @Param("timeThreshold") LocalDateTime timeThreshold);
 
     @Query(value = """
-        SELECT COUNT(*) FROM e_korki.login_attempts 
-        WHERE email = :email 
-        AND ip_address = :ipAddress
-        AND successful = false 
-        AND attempt_time > :timeThreshold
-    """, nativeQuery = true)
-    int countFailedAttemptsByEmailAndIp(
-            @Param("email") String email,
-            @Param("ipAddress") String ipAddress,
-            @Param("timeThreshold") LocalDateTime timeThreshold
-    );
+    SELECT COUNT(*) FROM e_korki.login_attempts 
+    WHERE ip_address = :hashedIp 
+    AND successful = false 
+    AND attempt_time > :timeThreshold
+""", nativeQuery = true)
+    int countFailedAttemptsFromIp(@Param("hashedIp") String hashedIp,
+                                  @Param("timeThreshold") LocalDateTime timeThreshold);
 }

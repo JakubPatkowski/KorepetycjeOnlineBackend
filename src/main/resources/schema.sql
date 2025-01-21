@@ -152,72 +152,72 @@ CREATE TABLE purchased_courses (
 );
 
 CREATE TABLE roles (
-                            id BIGSERIAL PRIMARY KEY,
-                            user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
-                            role VARCHAR(50) NOT NULL,
-                            UNIQUE(user_id, role)
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+    role VARCHAR(50) NOT NULL,
+    UNIQUE(user_id, role)
 );
 
 CREATE TABLE reviews (
-                         id BIGSERIAL PRIMARY KEY,
-                         user_id BIGINT REFERENCES users(id),
-                         target_id BIGINT NOT NULL,
-                         target_type VARCHAR(50) NOT NULL CHECK (target_type IN ('COURSE', 'CHAPTER', 'TEACHER')),
-                         rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
-                         content TEXT,
-                         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                         updated_at TIMESTAMP,
-                         UNIQUE(user_id, target_id, target_type)
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT REFERENCES users(id),
+    target_id BIGINT NOT NULL,
+    target_type VARCHAR(50) NOT NULL CHECK (target_type IN ('COURSE', 'CHAPTER', 'TEACHER')),
+    rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+    content TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP,
+    UNIQUE(user_id, target_id, target_type)
 );
 
 CREATE TABLE teacher_profiles (
-                                  id BIGSERIAL PRIMARY KEY,
-                                  user_id BIGINT NOT NULL REFERENCES users(id),
-                                  review DECIMAL(2,1) CHECK (review >= 0 AND review <= 5),
-                                  review_number INTEGER DEFAULT 0,
-                                  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                                  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                                  CONSTRAINT unique_teacher_profile UNIQUE (user_id)
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES users(id),
+    review DECIMAL(2,1) CHECK (review >= 0 AND review <= 5),
+    review_number INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_teacher_profile UNIQUE (user_id)
 );
 
-CREATE TABLE e_korki.tasks (
-                            id BIGSERIAL PRIMARY KEY,
-                            title VARCHAR(255) NOT NULL,
-                            content TEXT NOT NULL,
-                            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                            end_date TIMESTAMP NOT NULL,
-                            file BYTEA,
-                            mime_type VARCHAR(255),
-                            price INTEGER NOT NULL,
-                            solution_time_minutes INTEGER NOT NULL,
-                            is_public BOOLEAN DEFAULT true,
-                            is_active BOOLEAN DEFAULT true,
-                            student_id BIGINT NOT NULL REFERENCES users(id),
-                            assigned_teacher_id BIGINT REFERENCES users(id),
-                            assigned_at TIMESTAMP,
-                            solution_deadline TIMESTAMP,
-                            status VARCHAR(20) NOT NULL DEFAULT 'OPEN',
-                            CHECK (status IN ('OPEN', 'ASSIGNED', 'COMPLETED', 'EXPIRED'))
-);
+-- CREATE TABLE e_korki.tasks (
+--     id BIGSERIAL PRIMARY KEY,
+--     title VARCHAR(255) NOT NULL,
+--     content TEXT NOT NULL,
+--     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+--     end_date TIMESTAMP NOT NULL,
+--     file BYTEA,
+--     mime_type VARCHAR(255),
+--     price INTEGER NOT NULL,
+--     solution_time_minutes INTEGER NOT NULL,
+--     is_public BOOLEAN DEFAULT true,
+--     is_active BOOLEAN DEFAULT true,
+--     student_id BIGINT NOT NULL REFERENCES users(id),
+--     assigned_teacher_id BIGINT REFERENCES users(id),
+--     assigned_at TIMESTAMP,
+--     solution_deadline TIMESTAMP,
+--     status VARCHAR(20) NOT NULL DEFAULT 'OPEN',
+--     CHECK (status IN ('OPEN', 'ASSIGNED', 'COMPLETED', 'EXPIRED'))
+-- );
 
 CREATE TABLE IF NOT EXISTS e_korki.login_attempts (
-                                                   id BIGSERIAL PRIMARY KEY,
-                                                   email VARCHAR(255) NOT NULL,
-                                                   ip_address VARCHAR(45) NOT NULL,
-                                                   attempt_time TIMESTAMP NOT NULL,
-                                                   successful BOOLEAN NOT NULL
+    id BIGSERIAL PRIMARY KEY,
+    email VARCHAR(255) NOT NULL,
+    ip_address VARCHAR(45) NOT NULL,
+    attempt_time TIMESTAMP NOT NULL,
+    successful BOOLEAN NOT NULL
 );
 
 CREATE TABLE payment_history (
-                                 id BIGSERIAL PRIMARY KEY,
-                                 user_id BIGINT NOT NULL REFERENCES users(id),
-                                 transaction_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                                 transaction_type VARCHAR(50) NOT NULL,
-                                 points_amount INTEGER NOT NULL,
-                                 description TEXT NOT NULL,
-                                 balance_after INTEGER NOT NULL,
-                                 related_entity_id BIGINT,  -- ID powiązanego kursu lub zadania
-                                 related_entity_type VARCHAR(50) -- 'COURSE', 'TASK' itp.
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES users(id),
+    transaction_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    transaction_type VARCHAR(50) NOT NULL,
+    points_amount INTEGER NOT NULL,
+    description TEXT NOT NULL,
+    balance_after INTEGER NOT NULL,
+    related_entity_id BIGINT,  -- ID powiązanego kursu lub zadania
+    related_entity_type VARCHAR(50) -- 'COURSE', 'TASK' itp.
 );
 
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
@@ -238,11 +238,7 @@ CREATE INDEX IF NOT EXISTS idx_courses_price ON courses(price);
 CREATE INDEX IF NOT EXISTS chapters_course_id_idx ON chapters(course_id);
 CREATE INDEX IF NOT EXISTS subchapters_chapter_id_idx ON subchapters(chapter_id);
 
-CREATE INDEX IF NOT EXISTS tasks_student_id_idx ON e_korki.tasks(student_id);
-CREATE INDEX IF NOT EXISTS tasks_assigned_teacher_id_idx ON e_korki.tasks(assigned_teacher_id);
-CREATE INDEX IF NOT EXISTS tasks_status_idx ON e_korki.tasks(status);
-CREATE INDEX IF NOT EXISTS tasks_is_public_idx ON e_korki.tasks(is_public);
-CREATE INDEX IF NOT EXISTS tasks_is_active_idx ON e_korki.tasks(is_active);
+
 
 CREATE INDEX IF NOT EXISTS idx_login_attempts_email ON e_korki.login_attempts(email, attempt_time);
 CREATE INDEX IF NOT EXISTS idx_login_attempts_ip ON e_korki.login_attempts(ip_address, attempt_time);
@@ -250,3 +246,9 @@ CREATE INDEX IF NOT EXISTS idx_login_attempts_ip ON e_korki.login_attempts(ip_ad
 CREATE INDEX IF NOT EXISTS idx_payment_history_user ON payment_history(user_id);
 
 CREATE INDEX IF NOT EXISTS idx_teacher_profiles_review ON teacher_profiles(review DESC, review_number DESC);
+
+-- CREATE INDEX IF NOT EXISTS tasks_student_id_idx ON e_korki.tasks(student_id);
+-- CREATE INDEX IF NOT EXISTS tasks_assigned_teacher_id_idx ON e_korki.tasks(assigned_teacher_id);
+-- CREATE INDEX IF NOT EXISTS tasks_status_idx ON e_korki.tasks(status);
+-- CREATE INDEX IF NOT EXISTS tasks_is_public_idx ON e_korki.tasks(is_public);
+-- CREATE INDEX IF NOT EXISTS tasks_is_active_idx ON e_korki.tasks(is_active);

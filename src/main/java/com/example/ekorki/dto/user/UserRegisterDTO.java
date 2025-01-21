@@ -19,7 +19,7 @@ public record UserRegisterDTO(
         @NotNull(message = "Password cannot be null")
         @NotBlank(message = "Password cannot be blank")
         @NotEmpty(message = "Password cannot be empty")
-        @Size(min = 8, message = "Password must be at least 8 characters long")
+        @Size(min = 12, message = "Password must be at least 12 characters long")
         @ValidPassword
         String password
 ) {

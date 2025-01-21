@@ -15,7 +15,7 @@ public interface CourseRepository extends JpaRepository<CourseEntity, Long> {
 
     Optional<CourseEntity> findByUserIdAndId(Long userId, Long courseId);
 
-    // Podstawowa kwerenda dla wszystkich przypadków
+    // Base q
     String BASE_SORT_QUERY = """
         ORDER BY 
         CASE 

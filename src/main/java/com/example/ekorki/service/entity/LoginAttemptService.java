@@ -1,6 +1,8 @@
 package com.example.ekorki.service.entity;
 
 import com.example.ekorki.entity.LoginAttemptEntity;
+import com.example.ekorki.service.IpHasher;
+
 import com.example.ekorki.repository.LoginAttemptRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -20,33 +22,35 @@ public class LoginAttemptService {
     @Autowired
     private LoginAttemptRepository loginAttemptRepository;
 
-    private static final int MAX_FAILED_ATTEMPTS = 3;
+    @Autowired
+    private IpHasher ipHasher;
+    private static final int MAX_FAILED_ATTEMPTS = 5;
     private static final int BLOCK_DURATION_MINUTES = 5;
 
     @Transactional(readOnly = true)
-    public boolean isAccountBlocked(String email, String ipAddress) {
+    public boolean isAccountBlocked(String email, String clientIp) {
         LocalDateTime threshold = LocalDateTime.now().minusMinutes(BLOCK_DURATION_MINUTES);
 
         // Check failed attempts for email
         int emailFailedAttempts = loginAttemptRepository.countFailedAttempts(email, threshold);
         logger.info("Failed login attempts for email {}: {}", email, emailFailedAttempts);
 
-        // Sprawdzamy blokadę dla konkretnej kombinacji email + IP
-        int failedAttempts = loginAttemptRepository.countFailedAttemptsByEmailAndIp(
-                email,
-                ipAddress,
-                threshold
-        );
+        String hashedIp = ipHasher.hashIp(clientIp);
+        int ipFailedAttempts = loginAttemptRepository.countFailedAttemptsFromIp(hashedIp, threshold);
 
-        return failedAttempts >= MAX_FAILED_ATTEMPTS;
+        if (ipFailedAttempts >= MAX_FAILED_ATTEMPTS) {
+            return true;
+        }
+        return false;
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void recordLoginAttempt(String email, String ipAddress, boolean successful) {
+    public void recordLoginAttempt(String email, String clientIp, boolean successful) {
         try {
+            String hashedIp = ipHasher.hashIp(clientIp);
             LoginAttemptEntity attempt = LoginAttemptEntity.builder()
                     .email(email)
-                    .ipAddress(ipAddress)
+                    .ipAddress(hashedIp)
                     .attemptTime(LocalDateTime.now())
                     .successful(successful)
                     .build();
@@ -54,7 +58,7 @@ public class LoginAttemptService {
             loginAttemptRepository.save(attempt);
 
             if (!successful) {
-                logger.warn("Failed login attempt recorded - Email: {}, IP: {}", email, ipAddress);
+                logger.warn("Failed login attempt recorded - Email: {}, IP: {}", email, clientIp);
             } else {
                 logger.info("Successful login recorded - Email: {}", email);
             }

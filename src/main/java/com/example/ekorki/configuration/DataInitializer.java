@@ -85,7 +85,7 @@ public class DataInitializer {
 
     private List<UserEntity> createUsers() {
         List<UserEntity> users = new ArrayList<>();
-        String password = passwordEncoder.encode("Test123!@#");
+        String password = passwordEncoder.encode("TestTest123!@#");
 
         // Admin
         users.add(createSingleUser("admin@example.com", 5000, password));

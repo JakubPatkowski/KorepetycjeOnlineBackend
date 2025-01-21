@@ -5,6 +5,7 @@ import com.example.ekorki.entity.UserEntity;
 import com.example.ekorki.exception.ApiException;
 import com.example.ekorki.repository.RefreshTokenRepository;
 import com.example.ekorki.repository.UserRepository;
+import com.example.ekorki.service.IpHasher;
 import com.example.ekorki.service.JWTService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,11 +26,15 @@ public class RefreshTokenService {
     @Autowired
     private JWTService jwtService;
 
+    @Autowired
+    private IpHasher ipHasher;
+
     @Value("${jwt.refreshTokenExpiration}")
     private int refreshTokenExpirationTime;
 
     public String generateRefreshToken(Long userId, String clientIp) {
-        Optional<RefreshTokenEntity> existingToken = refreshTokenRepository.findByUserIdAndIp(userId, clientIp);
+        String hashedIp = ipHasher.hashIp(clientIp);
+        Optional<RefreshTokenEntity> existingToken = refreshTokenRepository.findByUserIdAndIp(userId, hashedIp);
         RefreshTokenEntity refreshTokenEntity;
 
         if (existingToken.isPresent()) {
@@ -37,7 +42,7 @@ public class RefreshTokenService {
         } else {
             refreshTokenEntity = new RefreshTokenEntity();
             refreshTokenEntity.setUserId(userId);
-            refreshTokenEntity.setIp(clientIp);
+            refreshTokenEntity.setIp(hashedIp);
         }
 
         String token = UUID.randomUUID().toString();
@@ -57,9 +62,15 @@ public class RefreshTokenService {
     }
 
     public String generateNewAccessToken(String userRefreshToken, String clientIp) {
-        RefreshTokenEntity refreshTokenEntity = refreshTokenRepository.findByRefreshTokenAndIp(userRefreshToken, clientIp);
+        String hashedIp = ipHasher.hashIp(clientIp);
+        RefreshTokenEntity refreshTokenEntity = refreshTokenRepository.findByRefreshTokenAndIp(userRefreshToken, hashedIp);
+
         if (refreshTokenEntity == null) {
             throw new RuntimeException("Refresh token not found");
+        }
+
+        if (!ipHasher.compareIp(clientIp, refreshTokenEntity.getIp())) {
+            throw new RuntimeException("Invalid IP address");
         }
 
         Optional<UserEntity> user = userRepository.findById(refreshTokenEntity.getUserId());

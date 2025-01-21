@@ -37,93 +37,97 @@ public class SecurityConfiguration {
     @Autowired
     private JWTFilter jwtFilter;
 
+    // Define the security filter chain for HTTP requests
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // CORS configuration
-                .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers(
-                                "/user/register",
-                                "/user/login",
-                                "/user/verify-email",
-                                "/user/access-token",
-                                "/points/get-offers",
-                                "points/get-withdrawal-offers",
-                                "/course/tags/",
-                                "/course/get",
-                                "/course/search",
-                                "/course/get-best",
-                                "/course/get-one/**",
-                                "/course/tags/search",
-                                "/course/get-info/**",
-                                "/course/user/*",
-                                "course/get-all",
-                                "chapter/get-by-course/**",
-                                "review/get/course/**",
-                                "review/get/chapter/**",
-                                "review/get/teacher/**",
-                                "user-profile/get/**",
-                                "user-profile/get-best",
-                                "task/get/**"
+            // Configure Cross-Origin Resource Sharing (CORS)
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            // Disable Cross-Site Request Forgery (CSRF) protection
+            .csrf(AbstractHttpConfigurer::disable)
+            // Define authorization rules for endpoints
+            .authorizeHttpRequests(authorize -> authorize
+                // Allow public access to specific endpoints
+                .requestMatchers(
+                    "/user/register",
+                    "/user/login",
+                    "/user/verify-email",
+                    "/user/access-token",
+                    "/points/get-offers",
+                    "points/get-withdrawal-offers",
+                    "/course/tags/",
+                    "/course/get",
+                    "/course/search",
+                    "/course/get-best",
+                    "/course/get-one/**",
+                    "/course/tags/search",
+                    "/course/get-info/**",
+                    "/course/user/*",
+                    "course/get-all",
+                    "chapter/get-by-course/**",
+                    "review/get/course/**",
+                    "review/get/chapter/**",
+                    "review/get/teacher/**",
+                    "user-profile/get/**",
+                    "user-profile/get-best",
+                    "task/get/**"
+                ).permitAll()
+                // Restrict access to endpoints based on roles
+                .requestMatchers("/course/create").hasAnyAuthority("USER")
+                .requestMatchers("/course/update").hasAnyAuthority("USER")
+                .requestMatchers("/course/data").hasAnyAuthority("USER")
+                .requestMatchers("/course/edit").hasAnyAuthority("USER")
+                .requestMatchers("/course/buy").hasAnyAuthority("USER")
+                .requestMatchers("/course/get-purchased").hasAnyAuthority("USER")
+                .requestMatchers("/course/can-review-teacher/").hasAnyAuthority("USER")
+                .requestMatchers("/chapter/get/**").hasAnyAuthority("USER")
+                .requestMatchers("/subchapter/get/**").hasAnyAuthority("USER")
+                .requestMatchers("course/get-one/**").hasAnyAuthority("USER")
 
+                .requestMatchers("/user/change-email/initiate").hasAnyAuthority("USER")
+                .requestMatchers("/user/change-email/complete").hasAnyAuthority("USER")
+                .requestMatchers("/user/change-password/initiate").hasAnyAuthority("USER")
+                .requestMatchers("/user/change-password/complete").hasAnyAuthority("USER")
+                .requestMatchers("/user/resend-verification").hasAnyAuthority("USER")
+                .requestMatchers("/user/get").hasAnyAuthority("USER")
+                .requestMatchers("/user/upgrade-to-teacher").hasAnyAuthority("USER")
+                .requestMatchers("/user/logout").hasAnyAuthority("USER")
 
-                                ).permitAll()
-                        //for testing all user
-                        .requestMatchers("/course/create").hasAnyAuthority("USER")
-                        .requestMatchers("/course/update").hasAnyAuthority("USER")
-                        .requestMatchers("/course/data").hasAnyAuthority("USER")
-                        .requestMatchers("/course/edit").hasAnyAuthority("USER")
-                        .requestMatchers("/course/buy").hasAnyAuthority("USER")
-                        .requestMatchers("/course/get-purchased").hasAnyAuthority("USER")
-                        .requestMatchers("/course/can-review-teacher/").hasAnyAuthority("USER")
-                        .requestMatchers("/chapter/get/**").hasAnyAuthority("USER")
-                        .requestMatchers("/subchapter/get/**").hasAnyAuthority("USER")
-//                        .requestMatchers("course/get-one/**").hasAnyAuthority("USER")
+                .requestMatchers("/user-profile/update").hasAnyAuthority("USER")
+                .requestMatchers("/user-profile/get-logged-in").hasAnyAuthority("USER")
 
-                        .requestMatchers("/user/change-email/initiate").hasAnyAuthority("USER")
-                        .requestMatchers("/user/change-email/complete").hasAnyAuthority("USER")
-                        .requestMatchers("/user/change-password/initiate").hasAnyAuthority("USER")
-                        .requestMatchers("/user/change-password/complete").hasAnyAuthority("USER")
-                        .requestMatchers("/user/resend-verification").hasAnyAuthority("USER")
-                        .requestMatchers("/user/get").hasAnyAuthority("USER")
-                        .requestMatchers("/user/upgrade-to-teacher").hasAnyAuthority("USER")
-                        .requestMatchers("/user/logout").hasAnyAuthority("USER")
+                .requestMatchers("/points/buy").hasAnyAuthority("USER")
+                .requestMatchers("/points/withdraw/").hasAnyAuthority("USER")
 
-                        .requestMatchers("/user-profile/update").hasAnyAuthority("USER")
-                        .requestMatchers("/user-profile/get-logged-in").hasAnyAuthority("USER")
+                .requestMatchers("/review/add/course/**").hasAnyAuthority("USER")
+                .requestMatchers("/review/add/chapter/**").hasAnyAuthority("USER")
+                .requestMatchers("/review/add/teacher/**").hasAnyAuthority("USER")
+                .requestMatchers("/review/delete/**").hasAnyAuthority("USER")
+                .requestMatchers("/review/user/course/**").hasAnyAuthority("USER")
+                .requestMatchers("/review/user/chapter/**").hasAnyAuthority("USER")
+                .requestMatchers("/review/user/teacher/**").hasAnyAuthority("USER")
 
-                        .requestMatchers("/points/buy").hasAnyAuthority("USER")
-                        .requestMatchers("/points/withdraw/").hasAnyAuthority("USER")
+                .requestMatchers("/payment/create-payment-intent").hasAnyAuthority("USER")
+                .requestMatchers("/payment/webhook").hasAnyAuthority("USER")
 
-                        .requestMatchers("/review/add/course/**").hasAnyAuthority("USER")
-                        .requestMatchers("/review/add/chapter/**").hasAnyAuthority("USER")
-                        .requestMatchers("/review/add/teacher/**").hasAnyAuthority("USER")
-                        .requestMatchers("/review/delete/**").hasAnyAuthority("USER")
-                        .requestMatchers("/review/user/course/**").hasAnyAuthority("USER")
-                        .requestMatchers("/review/user/chapter/**").hasAnyAuthority("USER")
-                        .requestMatchers("/review/user/teacher/**").hasAnyAuthority("USER")
+                .requestMatchers("/task/create").hasAnyAuthority("USER")
 
-                        .requestMatchers("/payment/create-payment-intent").hasAnyAuthority("USER")
-                        .requestMatchers("/payment/webhook").hasAnyAuthority("USER")
+                .requestMatchers("/payment-history").hasAnyAuthority("USER")
 
-                        .requestMatchers("/task/create").hasAnyAuthority("USER")
-
-                        .requestMatchers("/payment-history").hasAnyAuthority("USER")
-
-                        .anyRequest().authenticated()
-
-                )
-
-                .httpBasic(Customizer.withDefaults())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-
+                // Require authentication for all other requests
+                .anyRequest().authenticated()
+            )
+            // Use basic HTTP authentication
+            .httpBasic(Customizer.withDefaults())
+            // Configure stateless session management
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            // Add the JWT filter to the filter chain
+            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
-
+    // Define the authentication provider for user authentication
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
@@ -132,11 +136,13 @@ public class SecurityConfiguration {
         return provider;
     }
 
+    // Define the authentication manager
     @Bean
     AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
+    // Define role hierarchy for role-based access control
     @Bean
     public RoleHierarchy roleHierarchy() {
         RoleHierarchyImpl roleHierarchy = new RoleHierarchyImpl();
@@ -145,6 +151,7 @@ public class SecurityConfiguration {
         return roleHierarchy;
     }
 
+    // Define custom expression handler to support role hierarchy in security expressions
     @Bean
     public DefaultWebSecurityExpressionHandler customWebSecurityExpressionHandler() {
         DefaultWebSecurityExpressionHandler expressionHandler = new DefaultWebSecurityExpressionHandler();
@@ -152,6 +159,7 @@ public class SecurityConfiguration {
         return expressionHandler;
     }
 
+    // Define CORS configuration
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
