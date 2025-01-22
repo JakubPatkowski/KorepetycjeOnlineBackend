@@ -11,6 +11,7 @@ import com.example.ekorki.entity.RoleEntity;
 import com.example.ekorki.repository.UserProfileRepository;
 import com.example.ekorki.repository.UserRepository;
 import com.example.ekorki.service.EmailService;
+import com.example.ekorki.service.EmailVerificationService;
 import com.example.ekorki.service.JWTService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -57,7 +58,7 @@ import java.util.stream.Collectors;
     private final VerificationTokenService verificationTokenService;
 
     @Autowired
-    private final EmailService emailService;
+    private final EmailService emailServicfuil7e;
 
     @Autowired
     private final TeacherProfileService teacherProfileService;
@@ -67,6 +68,9 @@ import java.util.stream.Collectors;
 
     @Autowired
     private final LoginAttemptService loginAttemptService;
+
+    @Autowired
+    private final EmailVerificationService emailVerificationService;
 
     private final BCryptPasswordEncoder encoder;
 
@@ -128,93 +132,13 @@ import java.util.stream.Collectors;
 
             userProfileService.addUserProfileToUser(userRegisterDTO.fullName(), userEntity.getId());
 
-            String verificationToken = verificationTokenService.generateEmailVerificationToken(userEntity);
-            String verificationLink = "http://localhost:8080/user/verify-email?token="+verificationToken;
-            emailService.sendEmailVerificationLink(userEntity.getEmail(), verificationLink);
+            emailVerificationService.sendInitialVerificationEmail(userEntity);
 
             return true;
         } catch (Exception exception) {
             System.err.println(exception.getMessage());
             throw new ApiException("Error occurred", exception);
         }
-    }
-
-    @Transactional
-    public boolean verifyEmail(String token) {
-        Optional<UserEntity> optionalUser = verificationTokenService.getUserByToken(token, VerificationTokenEntity.TokenType.EMAIL_VERIFICATION);
-
-        if (optionalUser.isEmpty()) {
-            throw new ApiException("Invalid or expired verification token");
-        }
-
-        UserEntity user = optionalUser.get();
-        roleService.addRoleToUser(user, RoleEntity.Role.VERIFIED);
-
-        userRepository.save(user);
-        verificationTokenService.deleteToken(token);
-        return true;
-    }
-
-    @Transactional
-    public boolean initiateEmailChange(Long loggedInUserId){
-        UserEntity user = userRepository.findById(loggedInUserId)
-                .orElseThrow(() -> new ApiException("User not found"));
-        String code = verificationTokenService.generateEmailChangeCode(user);
-        emailService.sendEmailChangeCode(user.getEmail(), code);
-        return true;
-    }
-    @Transactional
-    public boolean completeEmailChange(String code, String newEmail, Long loggedInUserId){
-        Optional<UserEntity> optionalUser = verificationTokenService.getUserByToken(code, VerificationTokenEntity.TokenType.EMAIL_CHANGE);
-        if (optionalUser.isPresent()){
-            UserEntity userEntity = optionalUser.get();
-            if(!userEntity.getId().equals(loggedInUserId)){
-                throw new AccessDeniedException("You do not have permission to change this email");
-
-            }
-            if (userRepository.existsByEmail(newEmail)){
-                throw new ApiException("Email alredy in use");
-            }
-            roleService.removeRoleFromUser(userEntity, RoleEntity.Role.VERIFIED);
-            userEntity.getRoles().removeIf(role -> role.getRole() == RoleEntity.Role.VERIFIED);
-
-            userEntity.setEmail(newEmail);
-            userRepository.save(userEntity);
-            verificationTokenService.deleteToken(code);
-
-            String verificationToken = verificationTokenService.generateEmailVerificationToken(userEntity);
-            String verificationLink = "http://localhost:8080/user/verify-email?token="+verificationToken;
-            emailService.sendEmailVerificationLink(userEntity.getEmail(), verificationLink);
-
-            return true;
-        }
-        return false;
-    }
-
-
-
-    @Transactional
-    public boolean initiatePasswordChange(Long loggedInUserId) {
-        UserEntity user = userRepository.findById(loggedInUserId)
-                .orElseThrow(() -> new ApiException("User not found"));
-        String code = verificationTokenService.generatePasswordChangeCode(user);
-        emailService.sendPasswordChangeCode(user.getEmail(), code);
-        return true;
-    }
-    @Transactional
-    public boolean completePasswordChange(String code, String newPassword, Long loggedInUserId) {
-        Optional<UserEntity> optionalUser = verificationTokenService.getUserByToken(code, VerificationTokenEntity.TokenType.PASSWORD_CHANGE);
-        if (optionalUser.isPresent()) {
-            UserEntity userEntity = optionalUser.get();
-            if (!userEntity.getId().equals(loggedInUserId)) {
-                throw new AccessDeniedException("You do not have permission to change this password");
-            }
-            userEntity.setPassword(encoder.encode(newPassword));
-            userRepository.save(userEntity);
-            verificationTokenService.deleteToken(code);
-            return true;
-        }
-        return false;
     }
 
     @Transactional
@@ -245,32 +169,6 @@ import java.util.stream.Collectors;
         } else {
             throw new EntityNotFoundException("User not found");
         }
-    }
-
-    @Transactional
-    public boolean resendVerificationEmail(Long userId) {
-        UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() -> new ApiException("User not found"));
-
-        if(roleService.getUserRoles(userId).contains(RoleEntity.Role.VERIFIED)){
-            throw new ApiException("User is already verified");
-        }
-
-//        // Sprawdź czy użytkownik już nie jest zweryfikowany
-//        if (user.hasRole(UserEntity.Role.VERIFIED) ||
-//                user.hasRole(UserEntity.Role.TEACHER) ||
-//                user.hasRole(UserEntity.Role.ADMIN)) {
-//            throw new ApiException("User is already verified");
-//        }
-
-        // Wygeneruj nowy token weryfikacyjny
-        String verificationToken = verificationTokenService.generateEmailVerificationToken(user);
-        String verificationLink = "http://localhost:8080/user/verify-email?token=" + verificationToken;
-
-        // Wyślij email
-        emailService.sendEmailVerificationLink(user.getEmail(), verificationLink);
-
-        return true;
     }
 
     @Transactional

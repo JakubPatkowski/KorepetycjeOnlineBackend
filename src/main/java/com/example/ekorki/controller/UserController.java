@@ -4,6 +4,7 @@ import com.example.ekorki.dto.user.*;
 import com.example.ekorki.dto.http.HttpResponseDTO;
 import com.example.ekorki.exception.ApiException;
 import com.example.ekorki.model.UserPrincipals;
+import com.example.ekorki.service.EmailVerificationService;
 import com.example.ekorki.service.entity.RefreshTokenService;
 import com.example.ekorki.service.entity.UserService;
 import jakarta.persistence.EntityNotFoundException;
@@ -11,6 +12,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -36,6 +38,9 @@ import org.slf4j.LoggerFactory;
 @RequestMapping(path = "/user")
 @RequiredArgsConstructor
 public class UserController {
+    @Autowired
+    private final EmailVerificationService emailVerificationService;
+
     private final UserService userService;
 
     private final RefreshTokenService refreshTokenService;
@@ -146,7 +151,7 @@ public class UserController {
     @GetMapping("/verify-email")
     public ResponseEntity<String> verifyEmail(@RequestParam String token) throws IOException {
         try {
-            boolean verified = userService.verifyEmail(token);
+            boolean verified = emailVerificationService.verifyEmail(token);
             String htmlSuccess = getVerificationSuccessHtml();
             return ResponseEntity.ok().contentType(MediaType.TEXT_HTML).body(htmlSuccess);
         } catch (ApiException e) {
@@ -162,7 +167,7 @@ public class UserController {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         Long loggedInUserId = ((UserPrincipals) userDetails).getId();
         try{
-            boolean initiated = userService.initiateEmailChange(loggedInUserId);
+            boolean initiated = emailVerificationService.initiateEmailChange(loggedInUserId);
             if(initiated){
                 return ResponseEntity.ok(HttpResponseDTO.builder()
                         .timestamp(now().toString())
@@ -207,7 +212,7 @@ public class UserController {
         Long loggedInUserId = ((UserPrincipals) userDetails).getId();
 
         try {
-            boolean changed = userService.completeEmailChange(emailChangeDTO.code(), emailChangeDTO.newEmail(), loggedInUserId);
+            boolean changed = emailVerificationService.completeEmailChange(emailChangeDTO.code(), emailChangeDTO.newEmail(), loggedInUserId);
 
             if(changed){
                 return ResponseEntity.ok(HttpResponseDTO.builder()
@@ -249,7 +254,7 @@ public class UserController {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         Long loggedInUserId = ((UserPrincipals) userDetails).getId();
         try {
-            boolean initiated = userService.initiatePasswordChange(loggedInUserId);
+            boolean initiated = emailVerificationService.initiatePasswordChange(loggedInUserId);
             if (initiated) {
                 return ResponseEntity.ok(HttpResponseDTO.builder()
                         .timestamp(now().toString())
@@ -291,7 +296,7 @@ public class UserController {
         Long loggedInUserId = ((UserPrincipals) userDetails).getId();
 
         try{
-            boolean changed = userService.completePasswordChange(passwordChangeDTO.code(), passwordChangeDTO.newPassword(), loggedInUserId);
+            boolean changed = emailVerificationService.completePasswordChange(passwordChangeDTO.code(), passwordChangeDTO.newPassword(), loggedInUserId);
 
             if (changed) {
                 return ResponseEntity.ok(HttpResponseDTO.builder()
@@ -384,7 +389,7 @@ public class UserController {
         Long loggedInUserId = ((UserPrincipals) userDetails).getId();
 
         try {
-            boolean sent = userService.resendVerificationEmail(loggedInUserId);
+            boolean sent = emailVerificationService.resendVerificationEmail(loggedInUserId);
             if (sent) {
                 return ResponseEntity.ok(HttpResponseDTO.builder()
                         .timestamp(now().toString())
