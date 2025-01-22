@@ -82,7 +82,9 @@ public class RefreshTokenService {
     }
 
     public void logout(String refreshToken, String clientIp, Long userId) {
-        RefreshTokenEntity token = refreshTokenRepository.findByRefreshTokenAndIp(refreshToken, clientIp);
+        String hashedIp = ipHasher.hashIp(clientIp);
+        RefreshTokenEntity token = refreshTokenRepository.findByRefreshTokenAndIp(refreshToken, hashedIp);
+
         if (token == null) {
             throw new ApiException("Invalid refresh token");
         }
