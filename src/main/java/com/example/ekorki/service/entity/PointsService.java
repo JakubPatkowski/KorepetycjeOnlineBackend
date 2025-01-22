@@ -11,6 +11,8 @@ import com.example.ekorki.repository.UserRepository;
 import com.example.ekorki.service.EmailService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -48,6 +50,11 @@ public class PointsService {
                 .collect(Collectors.toList());
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "users", key = "#loggedInUserId"),
+            @CacheEvict(value = "userProfiles", key = "#loggedInUserId"),
+            @CacheEvict(value = "courses", allEntries = true)
+    })
     @Transactional
     public boolean withdrawPoints(Long offerId, Long loggedInUserId) {
         PointsOfferEntity offer = pointsOfferRepository.findByIdAndOfferType(offerId, PointsOfferEntity.OfferType.SELL)
@@ -89,6 +96,11 @@ public class PointsService {
         return true;
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "users", key = "#loggedInUserId"),
+            @CacheEvict(value = "userProfiles", key = "#loggedInUserId"),
+            @CacheEvict(value = "courses", allEntries = true)
+    })
     @Transactional
     public boolean buyPoints(Long offerId, Long loggedInUserId) {
         PointsOfferEntity offer = pointsOfferRepository.findByIdAndOfferType(offerId, PointsOfferEntity.OfferType.BUY)
@@ -121,6 +133,11 @@ public class PointsService {
         return true;
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "users", key = "#userId"),
+            @CacheEvict(value = "userProfiles", key = "#userId"),
+            @CacheEvict(value = "courses", allEntries = true)
+    })
     @Transactional
     public void deductPoints(Long userId, int points) {
         UserEntity user = userRepository.findById(userId)
@@ -134,6 +151,11 @@ public class PointsService {
         userRepository.save(user);
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "users", key = "#userId"),
+            @CacheEvict(value = "userProfiles", key = "#userId"),
+            @CacheEvict(value = "courses", allEntries = true)
+    })
     @Transactional
     public void addPoints(Long userId, int points) {
         UserEntity user = userRepository.findById(userId)

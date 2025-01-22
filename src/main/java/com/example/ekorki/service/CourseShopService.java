@@ -72,7 +72,7 @@ public class CourseShopService {
                     total = courseRepository.countAllAvailableForUser(loggedInUserId);
                 }
             }
-            // Logika dla niezalogowanego użytkownika (pozostaje bez zmian)
+            // Logika dla niezalogowanego użytkownika
             else {
                 if (search != null && tag != null) {
                     courses = courseRepository.findByNameAndTag(search, tag.toLowerCase(), sortBy, size, offset);
@@ -270,7 +270,7 @@ public class CourseShopService {
             throw new IllegalArgumentException("Page number cannot be negative");
         }
         if (size <= 0 || size > 100) {
-            throw new IllegalArgumentException("Page size must be between 1 and 100");
+            throw new IllegalArgumentException("Page size must be between 0 and 100");
         }
     }
 
