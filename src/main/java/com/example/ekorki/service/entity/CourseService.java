@@ -294,8 +294,8 @@ public class CourseService {
 
 
     private void validateFile(MultipartFile file) {
-        if (file.getSize() > 10 * 1024 * 1024) { // 10MB limit
-            throw new ApiException("File size exceeds maximum limit of 10MB");
+        if (file.getSize() > 100 * 1024 * 1024) { // 100MB limit
+            throw new ApiException("File size exceeds maximum limit of 100MB");
         }
 
         String contentType = file.getContentType();
