@@ -72,46 +72,6 @@ public class CourseShopController {
         }
     }
 
-    @GetMapping("/search")
-    public ResponseEntity<HttpResponseDTO> searchCoursesWithTags(
-            @RequestParam(required = false) String search,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) List<String> tags,
-            Authentication authentication) {
-
-        try {
-            Long loggedInUserId = null;
-            if (authentication != null && authentication.getPrincipal() instanceof UserPrincipals) {
-                loggedInUserId = ((UserPrincipals) authentication.getPrincipal()).getId();
-            }
-
-            Page<CourseShopResponseDTO> coursesPage = shopService.searchCoursesWithTags(search, tags, page, size, sortBy, loggedInUserId);
-
-            return ResponseEntity.ok(HttpResponseDTO.builder()
-                    .timestamp(LocalDateTime.now().toString())
-                    .data(Map.of(
-                            "courses", coursesPage.getContent(),
-                            "currentPage", coursesPage.getNumber(),
-                            "totalItems", coursesPage.getTotalElements(),
-                            "totalPages", coursesPage.getTotalPages()
-                    ))
-                    .message("Courses retrieved successfully")
-                    .status(HttpStatus.OK)
-                    .statusCode(HttpStatus.OK.value())
-                    .build());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(HttpResponseDTO.builder()
-                            .timestamp(LocalDateTime.now().toString())
-                            .message("An error occurred while retrieving courses: " + e.getMessage())
-                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                            .build());
-        }
-    }
-
     @GetMapping("/tags/search")
     public ResponseEntity<HttpResponseDTO> searchTags(
             @RequestParam(required = false) String search) {

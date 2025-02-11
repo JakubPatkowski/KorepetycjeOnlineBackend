@@ -96,7 +96,7 @@ public class CourseShopService {
             return new PageImpl<>(dtos, PageRequest.of(page, size), total);
         } catch (Exception e) {
             log.error("Unexpected error in searchCourses: {}", e.getMessage());
-            throw new ServiceException("Error processing course search", e);
+            throw e;
         }
     }
 
@@ -136,8 +136,16 @@ public class CourseShopService {
             else {
                 if (search != null) {
                     courses = courseRepository.findByNameAndTags(
-                            search, tags, sortBy, size, offset);
-                    total = courseRepository.countByNameAndTags(search, tags);
+                            search,
+                            tags.toArray(new String[0]),  // Konwersja List<String> na String[]
+                            sortBy,
+                            size,
+                            offset
+                    );
+                    total = courseRepository.countByNameAndTags(
+                            search,
+                            tags.toArray(new String[0])  // Konwersja List<String> na String[]
+                    );
                 } else {
                     courses = courseRepository.findByTags(tags, sortBy, size, offset);
                     total = courseRepository.countByTags(tags);
@@ -151,7 +159,7 @@ public class CourseShopService {
             return new PageImpl<>(dtos, PageRequest.of(page, size), total);
         } catch (Exception e) {
             log.error("Unexpected error in searchCoursesWithTags: {}", e.getMessage());
-            throw new ServiceException("Error processing course search", e);
+            throw e;
         }
     }
 

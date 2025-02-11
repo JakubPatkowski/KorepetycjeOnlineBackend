@@ -1,5 +1,6 @@
 package com.example.ekorki.controller;
 
+import com.example.ekorki.dto.token.AccessTokenRequestDTO;
 import com.example.ekorki.exception.ApiException;
 import com.example.ekorki.dto.http.HttpResponseDTO;
 import com.example.ekorki.service.entity.RefreshTokenService;
@@ -30,9 +31,11 @@ public class RefreshTokenController {
     private RefreshTokenService refreshTokenService;
 
     @PostMapping("/access-token")
-    public ResponseEntity<HttpResponseDTO> generateNewAccessToken(@Valid @RequestBody Map<String, String> body,
-                                                                  BindingResult result,
-                                                                  HttpServletRequest request) {
+    public ResponseEntity<HttpResponseDTO> generateNewAccessToken(
+        @Valid @RequestBody AccessTokenRequestDTO requestDTO,
+        BindingResult result,
+        HttpServletRequest request)
+    {
         if (result.hasErrors()) {
             Map<String, List<String>> errors = new HashMap<>();
 
@@ -54,7 +57,7 @@ public class RefreshTokenController {
 
         try {
             String clientIp = request.getRemoteAddr();
-            String newAccessToken = refreshTokenService.generateNewAccessToken(body.get("token"), clientIp);
+            String newAccessToken = refreshTokenService.generateNewAccessToken(requestDTO.token(), clientIp);
 
             return ResponseEntity.ok().body(
                     HttpResponseDTO.builder()

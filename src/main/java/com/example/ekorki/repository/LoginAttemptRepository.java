@@ -21,7 +21,7 @@ public interface LoginAttemptRepository extends JpaRepository<LoginAttemptEntity
 
     @Query(value = """
     SELECT COUNT(*) FROM e_korki.login_attempts 
-    WHERE ip_address = :hashedIp 
+    WHERE ip = :hashedIp 
     AND successful = false 
     AND attempt_time > :timeThreshold
 """, nativeQuery = true)

@@ -100,16 +100,16 @@ public interface CourseRepository extends JpaRepository<CourseEntity, Long> {
     );
 
     @Query(value = """
-    SELECT c.* FROM e_korki.courses c 
-    WHERE LOWER(c.name) LIKE LOWER(CONCAT('%', :search, '%'))
-    AND c.tags && cast(:tags as character varying[])
-    """ + BASE_SORT_QUERY + """
-    LIMIT :pageSize
-    OFFSET :offset
-    """, nativeQuery = true)
+        SELECT c.* FROM e_korki.courses c 
+        WHERE LOWER(c.name) LIKE LOWER(CONCAT('%', :search, '%'))
+        AND c.tags && ARRAY[:tags]
+        """ + BASE_SORT_QUERY + """
+        LIMIT :pageSize
+        OFFSET :offset
+        """, nativeQuery = true)
     List<CourseEntity> findByNameAndTags(
             @Param("search") String search,
-            @Param("tags") List<String> tags,
+            @Param("tags") String[] tags,  // Zmień List<String> na String[]
             @Param("sortBy") String sortBy,
             @Param("pageSize") int pageSize,
             @Param("offset") long offset
@@ -152,7 +152,7 @@ public interface CourseRepository extends JpaRepository<CourseEntity, Long> {
     """, nativeQuery = true)
     long countByNameAndTags(
             @Param("search") String search,
-            @Param("tags") List<String> tags
+            @Param("tags") String[] tags
     );
 
     @Query(value = "SELECT COUNT(*) FROM e_korki.courses", nativeQuery = true)

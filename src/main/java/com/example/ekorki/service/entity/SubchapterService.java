@@ -36,8 +36,9 @@ public class SubchapterService {
 
     @Autowired
     private final ContentItemService contentItemService;
-    
-    private final PurchasedCourseRepository purchasedCourseRepository;
+
+    @Autowired
+    private final PurchasedCourseService purchasedCourseService;
 
     @CacheEvict(value = {"subchapters", "chapters", "contentItems"}, allEntries = true)
     @Transactional
@@ -101,7 +102,7 @@ public class SubchapterService {
 
         CourseEntity course =subchapter.getChapter().getCourse();
         if (!course.getUser().getId().equals(userId)) {
-            boolean hasPurchased = purchasedCourseRepository.existsByUserIdAndCourseId(userId, course.getId());
+            boolean hasPurchased = purchasedCourseService.hasUserPurchasedCourse(userId, course.getId());
             if (!hasPurchased) {
                 throw new ApiException("You don't have access to this subchapter");
             }

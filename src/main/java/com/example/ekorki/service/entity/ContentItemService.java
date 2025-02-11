@@ -124,14 +124,11 @@ public class ContentItemService {
         for (ContentItemUpdateDTO itemDTO : contentItemsDTO) {
             if (itemDTO.getDeleted().orElse(false)) continue;
 
-
-
-
             if (itemDTO.getId() != null) {
                 ContentItemEntity item = subchapter.getContent().stream()
                         .filter(content -> content.getId().equals(itemDTO.getId()))
                         .findFirst()
-                        .orElseThrow(() -> new ApiException("Content item not found: " + itemDTO.getId()));
+                        .orElseThrow(() -> new ApiException(STR."Content item not found: \{itemDTO.getId()}"));
 
                 updateContentItemFields(item, itemDTO, contentFiles, fileIndexMap);
                 contentItemRepository.save(item);
@@ -146,53 +143,6 @@ public class ContentItemService {
             }
         }
     }
-
-//    private void processContentItem(ContentItemEntity contentItem, ContentItemCreateDTO dto,
-//                                    MultipartFile[] contentFiles, int fileIndex, ObjectMapper objectMapper) {
-//        switch (dto.getType().toLowerCase()) {
-//            case "text":
-//                contentItem.setText(dto.getText());
-//                contentItem.setFontSize(dto.getFontSize());
-//                contentItem.setBolder(dto.getBolder());
-//                contentItem.setItalics(dto.getItalics());
-//                contentItem.setUnderline(dto.getUnderline());
-//                contentItem.setTextColor(dto.getTextColor());
-//                break;
-//            case "video":
-//            case "image":
-//                if (contentFiles != null && fileIndex < contentFiles.length) {
-//                    try {
-//                        MultipartFile file = contentFiles[fileIndex];
-//                        validateFile(file);
-//                        contentItem.setFile(file.getBytes());
-//                    } catch (IOException e) {
-//                        throw new ApiException("Error processing file", e);
-//                    }
-//                }
-//                break;
-//            case "quiz":
-//                if (dto.getQuizContent() != null) {
-//                    try {
-//                        // Konwertuj Object na String JSON
-//                        String quizDataJson;
-//                        if (dto.getQuizContent() instanceof String) {
-//                            quizDataJson = (String) dto.getQuizContent();
-//                        } else {
-//                            quizDataJson = objectMapper.writeValueAsString(dto.getQuizContent());
-//                        }
-//
-//                        // Waliduj JSON
-//                        JsonNode jsonNode = objectMapper.readTree(quizDataJson);
-//                        contentItem.setQuizContent(objectMapper.writeValueAsString(jsonNode));
-//                    } catch (JsonProcessingException e) {
-//                        throw new ApiException("Invalid quiz data format: " + e.getMessage(), e);
-//                    }
-//                }
-//                break;
-//            default:
-//                throw new ApiException("Invalid content type: " + dto.getType());
-//        }
-//    }
 
     private void updateContentItemFields(ContentItemEntity item, ContentItemUpdateDTO itemDTO,
                                          MultipartFile[] contentFiles, Map<Long, Integer> fileIndexMap) {
@@ -236,7 +186,7 @@ public class ContentItemService {
                     item.setQuizContent(mapper.writeValueAsString(wrappedContent));
                 }
             } catch (JsonProcessingException e) {
-                throw new ApiException("Invalid quiz data format: " + e.getMessage());
+                throw new ApiException(STR."Invalid quiz data format: \{e.getMessage()}");
             }
         });
     }

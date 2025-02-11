@@ -21,7 +21,7 @@ public class LoginAttemptEntity {
     @Column(nullable = false)
     private String email;
 
-    @Column(name = "ip_address", nullable = false)
+    @Column(name = "ip", nullable = false)
     private String ipAddress;
 
     @Column(name = "attempt_time", nullable = false)

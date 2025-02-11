@@ -59,7 +59,7 @@ CREATE TABLE refresh_tokens
     id         BIGSERIAL PRIMARY KEY,
     ref_token  VARCHAR(100) NOT NULL,
     user_id    BIGINT    NOT NULL REFERENCES users (id),
-    ip         VARCHAR(200) NOT NULL,
+    ip         VARCHAR(44) NOT NULL,
     expiration TIMESTAMP    NOT NULL,
     created_at TIMESTAMP    NOT NULL
 );
@@ -81,7 +81,7 @@ CREATE TABLE courses
     name VARCHAR(255) NOT NULL,
     banner BYTEA,
     mime_type VARCHAR(255),
-    review DECIMAL(2,1),
+    review DECIMAL,
     price DECIMAL(10,2) NOT NULL,
     duration DECIMAL(10,2),
     user_id BIGINT REFERENCES users(id),
@@ -98,7 +98,7 @@ CREATE TABLE chapters
     course_id BIGINT REFERENCES courses(id) ON DELETE CASCADE,
     name      VARCHAR(255) NOT NULL,
     "order"     INTEGER NOT NULL,
-    review    DECIMAL(2,1) DEFAULT  0,
+    review    DECIMAL DEFAULT  0,
     review_number INTEGER DEFAULT 0
 );
 
@@ -173,7 +173,7 @@ CREATE TABLE reviews (
 CREATE TABLE teacher_profiles (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL REFERENCES users(id),
-    review DECIMAL(2,1) CHECK (review >= 0 AND review <= 5),
+    review DECIMAL CHECK (review >= 0 AND review <= 5),
     review_number INTEGER DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -203,7 +203,7 @@ CREATE TABLE teacher_profiles (
 CREATE TABLE IF NOT EXISTS e_korki.login_attempts (
     id BIGSERIAL PRIMARY KEY,
     email VARCHAR(255) NOT NULL,
-    ip_address VARCHAR(45) NOT NULL,
+    ip VARCHAR(44) NOT NULL,
     attempt_time TIMESTAMP NOT NULL,
     successful BOOLEAN NOT NULL
 );
@@ -241,7 +241,7 @@ CREATE INDEX IF NOT EXISTS subchapters_chapter_id_idx ON subchapters(chapter_id)
 
 
 CREATE INDEX IF NOT EXISTS idx_login_attempts_email ON e_korki.login_attempts(email, attempt_time);
-CREATE INDEX IF NOT EXISTS idx_login_attempts_ip ON e_korki.login_attempts(ip_address, attempt_time);
+CREATE INDEX IF NOT EXISTS idx_login_attempts_ip ON e_korki.login_attempts(ip, attempt_time);
 
 CREATE INDEX IF NOT EXISTS idx_payment_history_user ON payment_history(user_id);
 

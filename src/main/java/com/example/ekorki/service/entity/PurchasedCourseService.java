@@ -150,6 +150,11 @@ public class PurchasedCourseService {
         }
     }
 
+    @Transactional(readOnly = true)
+    public boolean hasUserPurchasedCourse(Long userId, Long courseId) {
+        return purchasedCourseRepository.existsByUserIdAndCourseId(userId, courseId);
+    }
+
     private void validatePaginationParams(int page, int size) {
         if (page < 0) {
             throw new IllegalArgumentException("Page number cannot be negative");

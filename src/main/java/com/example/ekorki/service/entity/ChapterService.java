@@ -34,8 +34,10 @@ public class ChapterService {
     private final ChapterRepository chapterRepository;
     @Autowired
     private final SubchapterService subchapterService;
+
     @Autowired
-    private final PurchasedCourseRepository purchasedCourseRepository;
+    private final PurchasedCourseService purchasedCourseService;
+
     @Autowired
     private final CourseRepository courseRepository;
 
@@ -62,9 +64,9 @@ public class ChapterService {
         CourseEntity course = chapter.getCourse();
         
         if(!course.getUser().getId().equals(userId)){
-            boolean hasPurchased = purchasedCourseRepository.existsByUserIdAndCourseId(userId, course.getId());
+            boolean hasPurchased = purchasedCourseService.hasUserPurchasedCourse(userId, course.getId());
             if(!hasPurchased){
-                throw new ApiException("You don`t have access to this chapter");
+                throw new ApiException("You don't have access to this chapter");
             }
         }
         return mapToChapterDetailsDTO(chapter);
