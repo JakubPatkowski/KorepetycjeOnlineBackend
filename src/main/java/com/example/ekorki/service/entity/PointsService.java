@@ -114,6 +114,10 @@ public class PointsService {
 
         addPoints(loggedInUserId, offer.getPoints());
 
+        if (!roleService.getUserRoles(loggedInUserId).contains(RoleEntity.Role.VERIFIED)) {
+            throw new ApiException("Only verified can buy points");
+        }
+
         paymentHistoryService.addTransaction(
                 loggedInUserId,
                 PaymentHistoryEntity.TransactionType.POINTS_PURCHASE,

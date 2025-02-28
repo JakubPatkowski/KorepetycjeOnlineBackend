@@ -251,7 +251,9 @@ public class DataInitializer {
         CourseEntity course = new CourseEntity();
         course.setName(name);
         course.setPrice(BigDecimal.valueOf((int)(Math.random() * 50)*50));
-        course.setDuration(BigDecimal.valueOf(10 + Math.random() * 40));
+        int durationHours = 5 + random.nextInt(76);
+
+        course.setDuration(BigDecimal.valueOf(durationHours));
         course.setUser(teacher);
         course.setTags(tags.stream()
                 .map(String::toLowerCase)
@@ -261,8 +263,8 @@ public class DataInitializer {
         course.setDescription("Comprehensive course covering all aspects of " + name);
         course.setBanner(loadBannerImage(bannerIndex));
         course.setMimeType("image/png");
-        course.setCreatedAt(LocalDateTime.now().minusMonths(1));
-        course.setUpdatedAt(LocalDateTime.now());
+        course.setCreatedAt(LocalDateTime.now().minusMonths(6 + random.nextInt(24)).minusDays(random.nextInt(24)));
+        course.setUpdatedAt(LocalDateTime.now().minusMonths(random.nextInt(5)));
         CourseEntity savedCourse = courseRepository.save(course);
         courses.add(savedCourse);
         return savedCourse;
