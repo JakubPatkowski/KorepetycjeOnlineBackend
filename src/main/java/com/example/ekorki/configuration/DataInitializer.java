@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
-@Profile("!prod") // Nie uruchamiaj na produkcji
+@Profile("dev")
 public class DataInitializer {
     private final UserRepository userRepository;
     private final UserProfileRepository userProfileRepository;
