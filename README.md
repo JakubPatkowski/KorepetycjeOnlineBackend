@@ -11,7 +11,7 @@
 
 Backend REST API for an e-learning platform that enables creating and selling online courses. This project was developed as an engineering thesis at Lublin University of Technology.
 
-> **Frontend application:** [InzynierkaFrontend](https://github.com/Hiubertus/InzynierkaFrontend) (Angular)
+> **Frontend application:** [InzynierkaFrontend](https://github.com/Hiubertus/InzynierkaFrontend) (React)
 
 ---
 ## 📖 About
@@ -163,7 +163,7 @@ spring.mail.password=your_app_password
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                        CLIENT                               │
-│                  (Angular Frontend)                         │
+│                  (React Frontend)                         │
 └──────────────────────────┬──────────────────────────────────┘
                            │ HTTP/REST
                            ▼
