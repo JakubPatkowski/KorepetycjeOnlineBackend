@@ -1,0 +1,80 @@
+services:
+  # ==========================================
+  # PostgreSQL Database
+  # ==========================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: korki-db
+    environment:
+      POSTGRES_DB: korki_online
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Auto-initialize schema on first run
+      - ./src/main/resources/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d korki_online"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - korki-network
+
+  # ==========================================
+  # Spring Boot Application
+  # ==========================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: korki-api
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Database connection
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/korki_online
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres123
+      
+      # JPA/Hibernate settings
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none
+      SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: e_korki
+      SPRING_SQL_INIT_MODE: never
+      
+      # JWT configuration (change these in production!)
+      JWT_SECRET: your-super-secret-jwt-key-change-in-production-min-256-bits
+      JWT_ACCESSTOKENEXPIRATION: "86400000"
+      JWT_REFRESHTOKENEXPIRATION: "604800000"
+      
+      # Logging (reduce verbosity for Docker)
+      LOGGING_LEVEL_ROOT: INFO
+      LOGGING_LEVEL_COM_EXAMPLE_EKORKI: INFO
+      SPRING_JPA_SHOW_SQL: "false"
+      
+      # Email - OPTIONAL (account verification won't work without this)
+      # Uncomment and fill in to enable email features:
+      # SPRING_MAIL_HOST: smtp.gmail.com
+      # SPRING_MAIL_PORT: 587
+      # SPRING_MAIL_USERNAME: your_email@gmail.com
+      # SPRING_MAIL_PASSWORD: your_app_password
+    ports:
+      - "8080:8080"
+    networks:
+      - korki-network
+    restart: unless-stopped
+
+# ==========================================
+# Volumes & Networks
+# ==========================================
+volumes:
+  postgres_data:
+    name: korki-postgres-data
+
+networks:
+  korki-network:
+    name: korki-network
+    driver: bridge

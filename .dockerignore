@@ -1,0 +1,39 @@
+# Git
+.git
+.gitignore
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+
+# Build output
+target/
+!target/*.jar
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Docker
+Dockerfile*
+docker-compose*
+.docker/
+
+# CI/CD
+.github/
+
+# Other
+*.bak
+*.tmp

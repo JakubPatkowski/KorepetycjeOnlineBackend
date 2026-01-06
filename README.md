@@ -1,174 +1,286 @@
-# E-Learning Platform - Backend
+# 🎓 E-Learning Platform - Backend API
 
-This repository contains the backend component of an e-learning platform built as an engineering thesis project. The application enables users to create accounts, publish courses, purchase access to educational content, leave reviews, and interact through a points-based economy system.
 
-## Table of Contents
+[![Java](https://img.shields.io/badge/Java-22-ED8B00?logo=openjdk&logoColor=white)](https://openjdk.org/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.2-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Release](https://img.shields.io/github/v/release/JakubPatkowski/KorepetycjeOnlineBackend)](https://github.com/JakubPatkowski/KorepetycjeOnlineBackend/releases)
+[![Java CI](https://github.com/JakubPatkowski/KorepetycjeOnlineBackend/actions/workflows/build.yml/badge.svg)](https://github.com/JakubPatkowski/KorepetycjeOnlineBackend/actions/workflows/build.yml)
 
-- [Technologies](#technologies)
-- [Features](#features)
-- [Prerequisites](#prerequisites)
-- [Setup & Configuration](#setup--configuration)
-    - [Database Setup](#database-setup)
-    - [IntelliJ Database Configuration](#intellij-database-configuration)
-    - [Application Properties](#application-properties)
-    - [Email Configuration](#email-configuration)
-- [Running the Application](#running-the-application)
-- [API Documentation](#api-documentation)
-- [Security](#security)
 
-## Technologies
+Backend REST API for an e-learning platform that enables creating and selling online courses. This project was developed as an engineering thesis at Lublin University of Technology.
 
-- Java 22
-- Spring Boot 3.3.2
-- Spring Security
-- Spring Data JPA
-- PostgreSQL
-- JWT Authentication
-- Maven
-- Hibernate
-- Caffeine Cache
-- JavaMail API
+> **Frontend application:** [InzynierkaFrontend](https://github.com/Hiubertus/InzynierkaFrontend) (Angular)
 
-## Features
+---
+## 📖 About
 
-- **User Management**: Registration, authentication, email verification, profile management
-- **Role-Based Authorization**: Different access levels (User, Verified, Teacher, Admin)
-- **Course Management**: Creation, updating, and publishing educational content
-- **Content Organization**: Courses, chapters, subchapters, and various content items (text, quiz, image, video)
-- **Points System**: Virtual currency for purchasing courses and teacher payouts
-- **Reviews & Ratings**: Users can rate and review courses, chapters, and teachers
-- **Caching System**: Performance optimization using Caffeine cache
-- **Security**: JWT-based authentication, brute force prevention, password encryption
+![ERD Diagram](docs/images/ekorki_frontend.png)
+Frontend Main Page
 
-## Prerequisites
+![ERD Diagram](docs/images/ekorki_erd_diagram.png)
+Database ERD diagram
 
-- Java JDK 22
-- PostgreSQL 16 or newer
-- IntelliJ IDEA (recommended)
-- SMTP Server access (for email verification)
-- Maven 3.8+ (if not using IntelliJ's embedded Maven)
+![ERD Diagram](docs/images/ekorki_swagger.png)
+Swagger Documentation
 
-## Setup & Configuration
+![ERD Diagram](docs/images/ekorki_tests.png)
+Jmeter tests
 
-### Database Setup
 
-- Install PostgreSQL if you don't have it already
-- Create a new database:
-  ```sql
-  CREATE DATABASE korki_online;
-  ```
-- No need to create tables manually - the application uses the included schema.sql file to automatically generate the database schema at first startup
+The system enables:
+- **User registration and verification** - with email confirmation
+- **Course publishing** - with chapters, subchapters, and various content types (text, quiz, video, images)
+- **Points system** - virtual currency for purchasing courses
+- **Reviews and ratings** - rating courses and teachers
+- **User roles** - permission hierarchy (User → Verified → Teacher → Admin)
 
-### IntelliJ Database Configuration
-
-- Open IntelliJ IDEA and navigate to Database tool window (or press Alt+1, then select Database)
-- Click on the + icon and select Data Source → PostgreSQL
-- Configure the connection with these settings:
-  ```
-  Name: korki_online@localhost
-  Host: localhost
-  Port: 5432
-  Database: korki_online
-  User: postgres (or your PostgreSQL username)
-  Password: your PostgreSQL password
-  ```
-- Click Test Connection to verify everything is working
-- Navigate to the Schemas tab and make sure demo schema is selected
-- Click OK to save the configuration
-
-### Application Properties
-
-Configure your application.properties file in src/main/resources/ with the following settings (adjust as needed for your environment):
-
-```properties
-# Database Configuration
-spring.datasource.url=jdbc:postgresql://localhost:5432/korki_online
-spring.datasource.username=postgres
-spring.datasource.password=your_password
-
-# JPA/Hibernate
-spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
-spring.jpa.generate-ddl=false
-spring.jpa.hibernate.ddl-auto=none
-spring.jpa.properties.hibernate.globally_quoted_identifiers=true
-spring.jpa.properties.hibernate.format_sql=true
-
-# Initialize schema
-spring.sql.init.mode=always
-
-# JWT Configuration
-jwt.accessTokenExpiration=86400000
-jwt.refreshTokenExpiration=604800000
-
-# Logging
-logging.level.org.springframework.web=DEBUG
-logging.level.com.example.demo=DEBUG
-
-# Caching
-spring.cache.type=caffeine
-```
-
-### Email Configuration
-
-For the email verification system to work, configure the SMTP settings in application.properties:
-
-```properties
-# Email (SMTP) Configuration
-spring.mail.host=your_smtp_server
-spring.mail.port=587
-spring.mail.username=your_email@example.com
-spring.mail.password=your_email_password
-spring.mail.properties.mail.smtp.auth=true
-spring.mail.properties.mail.smtp.starttls.enable=true
-```
-
-If using Gmail as your SMTP provider:
-
-- Use smtp.gmail.com as the host
-- Enable 2FA on your Google account
-- Generate an App Password for this application
-- Use this App Password instead of your regular Gmail password
-
-## Running the Application
-
-### From IntelliJ IDEA
-
-- Import the project into IntelliJ IDEA
-- Make sure you have configured the database as described above
-- Navigate to com.example.demo.DemoApplication.java
-- Right-click and select Run DemoApplication
-
-### Using Maven
-
-- Navigate to the project directory in a terminal
-- Run: `mvn spring-boot:run`
-
-The application should now be running at http://localhost:8080
-
-## API Documentation
-
-The main API endpoints are organized by controllers:
-
-- `/user/**` - User management endpoints (registration, login, profile)
-- `/course/**` - Course management and discovery
-- `/chapter/**` - Chapter management within courses
-- `/subchapter/**` - Subchapter management
-- `/review/**` - Review creation and retrieval
-- `/points/**` - Points system management (buying/withdrawing)
-
-Each controller implements proper error handling and follows REST principles.
-
-## Security
-
-The application implements several security features:
-
-- Password encryption using BCrypt
-- JWT-based authentication
-- Brute force prevention with login attempt tracking
-- Role-based access control
-- Email verification for new accounts
-- HTTPS support (configure SSL in production)
 
 ---
 
-This application is part of an engineering thesis project. For more information or assistance, please refer to the source code documentation or contact the repository owner.
+## 🛠 Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| Language | Java 22 |
+| Framework | Spring Boot 3.3.2 |
+| Security | Spring Security + JWT |
+| Database | PostgreSQL 16 |
+| ORM | Hibernate / Spring Data JPA |
+| Cache | Caffeine |
+| Build | Maven |
+| API Docs | Swagger UI (SpringDoc OpenAPI) |
+
+---
+
+## 🚀 Quick Start (Docker)
+
+### Prerequisites
+- [Docker](https://www.docker.com/get-started) and Docker Compose
+
+### Running the Application
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/JakubPatkowski/KorepetycjeOnlineBackend.git
+cd KorepetycjeOnlineBackend
+
+# 2. Start the application
+docker compose up -d
+
+# 3. Check status
+docker compose ps
+```
+
+The application will be available at:
+- **API:** http://localhost:8080
+- **Swagger UI:** http://localhost:8080/swagger-ui/index.html
+
+### Demo Accounts
+
+The application automatically creates demo data on first run (non-production profile):
+
+| Role | Email | Password |
+|------|-------|----------|
+| Admin | `admin@example.com` | `TestTest123!@#` |
+| Teacher | `teacher1@example.com` | `TestTest123!@#` |
+| Verified User | `verified1@example.com` | `TestTest123!@#` |
+| Regular User | `user@example.com` | `TestTest123!@#` |
+
+> **Note:** 5 teachers (`teacher1-5@example.com`) and 50 verified users (`verified1-50@example.com`) are created with sample courses, reviews, and purchases.
+
+### Stopping
+
+```bash
+docker compose down        # stop containers
+docker compose down -v     # stop and remove data (including database)
+```
+
+---
+
+## ⚙️ Configuration
+
+### Environment Variables (Docker)
+
+The `docker-compose.yml` configures the application through environment variables:
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `SPRING_DATASOURCE_URL` | Database connection URL | `jdbc:postgresql://postgres:5432/korki_online` |
+| `SPRING_DATASOURCE_USERNAME` | Database username | `postgres` |
+| `SPRING_DATASOURCE_PASSWORD` | Database password | `postgres123` |
+| `JWT_ACCESSTOKENEXPIRATION` | Access token lifetime (ms) | `86400000` (24h) |
+| `JWT_REFRESHTOKENEXPIRATION` | Refresh token lifetime (ms) | `604800000` (7 days) |
+
+### Local Development (without Docker)
+
+1. **Create PostgreSQL database:**
+```sql
+CREATE DATABASE korki_online;
+```
+
+2. **Run the schema script:**
+```bash
+psql -U postgres -d korki_online -f src/main/resources/schema.sql
+```
+
+3. **Configure `application.properties`:**
+```properties
+# Database
+spring.datasource.url=jdbc:postgresql://localhost:5432/korki_online
+spring.datasource.username=postgres
+spring.datasource.password=your_password
+spring.jpa.properties.hibernate.default_schema=e_korki
+
+# JWT
+jwt.accessTokenExpiration=86400000
+jwt.refreshTokenExpiration=604800000
+
+# Email (optional - required for account verification)
+spring.mail.host=smtp.gmail.com
+spring.mail.port=587
+spring.mail.username=your_email@gmail.com
+spring.mail.password=your_app_password
+```
+
+4. **Run the application:**
+```bash
+./mvnw spring-boot:run
+```
+
+### Important Configuration Notes
+
+- **Schema:** The application uses PostgreSQL schema `e_korki`. This is configured in `application.properties` via `spring.jpa.properties.hibernate.default_schema`
+- **Preview Features:** Java 22 String Templates are used - the `pom.xml` includes `--enable-preview` compiler flag
+- **Demo Data:** `DataInitializer` runs automatically on non-production profiles and populates the database with sample users, courses, and reviews
+- **Logging:** Logs are written to `logs/` directory (configured in `logback-spring.xml`)
+
+---
+
+## 🏗 Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                        CLIENT                               │
+│                  (Angular Frontend)                         │
+└──────────────────────────┬──────────────────────────────────┘
+                           │ HTTP/REST
+                           ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    SPRING BOOT API                          │
+├─────────────────────────────────────────────────────────────┤
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐          │
+│  │ Controllers │  │  Security   │  │   Config    │          │
+│  │             │  │ JWT Filter  │  │   Beans     │          │
+│  └──────┬──────┘  └──────┬──────┘  └─────────────┘          │
+│         │                │                                  │
+│         ▼                ▼                                  │
+│  ┌─────────────────────────────────────────────────┐        │
+│  │              SERVICE LAYER                      │        │
+│  │  UserService, CourseService, ReviewService...   │        │
+│  └───────────────────────┬─────────────────────────┘        │
+│                          │                                  │
+│         ┌────────────────┼────────────────┐                 │
+│         ▼                ▼                ▼                 │
+│  ┌────────────┐     ┌───────────┐   ┌───────────┐           │
+│  │   JPA      │     │ Caffeine  │   │   SMTP    │           │
+│  │Repositories│     │   Cache   │   │  (Email)  │           │
+│  └────────────┘     └───────────┘   └───────────┘           │
+└───────────────────────────┼─────────────────────────────────┘
+                            │
+                            ▼
+                   ┌─────────────────┐
+                   │   PostgreSQL    │
+                   │   (e_korki)     │
+                   └─────────────────┘
+```
+
+---
+
+## 🔐 Security
+
+- **JWT Authentication** - Access Token (24h) + Refresh Token (7 days)
+- **Password encryption** - BCrypt (strength 10)
+- **Brute-force protection** - failed login attempt tracking
+- **Email verification** - activation tokens
+- **Role hierarchy** - `ADMIN > TEACHER > VERIFIED > USER`
+
+---
+
+## 📚 API Endpoints
+
+| Endpoint | Description | Auth Required |
+|----------|-------------|---------------|
+| `POST /user/register` | User registration | No |
+| `POST /user/login` | Login (returns JWT) | No |
+| `GET /course/get` | List all courses | No |
+| `GET /course/get-one/{id}` | Get course details | No |
+| `POST /course/create` | Create new course | Yes (Teacher) |
+| `POST /course/buy` | Purchase a course | Yes |
+| `POST /review/add/course/{id}` | Add course review | Yes |
+| `GET /points/get-offers` | Get points packages | No |
+
+Full API documentation available at **Swagger UI** after starting the application.
+
+---
+
+## 📁 Project Structure
+
+```
+src/main/java/com/example/ekorki/
+├── configuration/   # Spring, Security, Cache, DataInitializer
+├── controller/      # REST Controllers
+├── dto/             # Data Transfer Objects
+├── entity/          # JPA Entities
+├── repository/      # Spring Data Repositories
+├── service/         # Business logic
+├── filter/          # JWT Filter
+└── exception/       # Exception handling
+```
+
+---
+
+## 🧪 Testing the API
+
+After starting, test the API with demo credentials:
+
+```bash
+# 1. Login to get JWT token
+curl -X POST http://localhost:8080/user/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@example.com","password":"TestTest123!@#"}'
+
+# 2. Use the returned accessToken for authenticated requests
+curl http://localhost:8080/user/get \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+Or use **Swagger UI**: http://localhost:8080/swagger-ui/index.html
+1. Click "Authorize" button
+2. Enter: `Bearer YOUR_ACCESS_TOKEN`
+
+---
+
+## 📝 Notes
+
+This is an engineering thesis project - it is not intended for production use. It demonstrates skills in:
+- REST API design
+- Security implementation (JWT, roles, hierarchy)
+- Database operations (JPA/Hibernate, PostgreSQL)
+- Caching and optimization (Caffeine)
+- Docker containerization
+
+---
+
+## 👥 Authors
+
+**Backend:** [Jakub Patkowski](https://github.com/JakubPatkowski)
+
+**Frontend:** [Hubert Ozarowski](https://github.com/Hiubertus) - [See frontend repository](https://github.com/Hiubertus/InzynierkaFrontend)
+
+---
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE) file for details
